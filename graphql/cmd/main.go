@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"flookybooky/graphql/model"
 	pb "flookybooky/graphql/proto"
@@ -10,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/handler"
@@ -43,43 +41,8 @@ func main() {
 	// }
 
 	client := dbConn()
-	http.Handle("/graphql",
-		authMiddleware(
-			handler.GraphQL(resolver.NewSchema(client)),
-		),
-	)
-	http.Handle("/",
-		authMiddleware(
-			handler.Playground("App", "/graphql"),
-		),
-	)
-	// http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-	// 	if r.Method == "POST" {
-	// 		var user model.User
-	// 		err := json.NewDecoder(r.Body).Decode(&user)
-	// 		if err != nil {
-	// 			http.Error(w, "Bad Request", http.StatusBadRequest)
-	// 			return
-	// 		}
-	// 		for _, u := range users {
-	// 			if u.Role == user.Role {
-	// 				token, err := generateToken(u)
-	// 				if err != nil {
-	// 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 					return
-	// 				}
-	// 				w.Write([]byte(token))
-	// 				return
-	// 			} else {
-	// 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	// 				return
-	// 			}
-	// 		}
-	// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	// 		return
-	// 	}
-	// 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	// })
+	http.Handle("/graphql", handler.GraphQL(resolver.NewSchema(client)))
+	http.Handle("/", handler.Playground("App", "/graphql"))
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
@@ -89,13 +52,13 @@ func dbConn() resolver.Client {
 	if err != nil {
 		panic(err)
 	}
-	petConn, err := grpc.Dial("pet:2220", grpc.WithInsecure())
+	customerConn, err := grpc.Dial("customer:2220", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 	userClient := pb.NewUserServiceClient(userConn)
-	petClient := pb.NewPetServiceClient(petConn)
-	return resolver.Client{PetClient: petClient, UserClient: userClient}
+	customerClient := pb.NewCustomerServiceClient(customerConn)
+	return resolver.Client{CustomerClient: customerClient, UserClient: userClient}
 }
 
 // Define a function for generating JWT tokens
@@ -128,23 +91,4 @@ func verifyToken(tokenString string) (*model.User, error) {
 		return &user, nil
 	}
 	return nil, errors.New("invalid token")
-}
-
-// Define a middleware function for verifying JWT tokens
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		user, err := verifyToken(tokenString)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		ctx := context.WithValue(r.Context(), "user", user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }

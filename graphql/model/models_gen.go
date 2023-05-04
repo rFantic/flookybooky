@@ -8,13 +8,23 @@ import (
 	"strconv"
 )
 
-type Pet struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Species string `json:"species"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Customer struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Status      *string `json:"status,omitempty"`
+	Address     string  `json:"address"`
+	LicenseID   string  `json:"license_id"`
+	PhoneNumber string  `json:"phone_number"`
+	Timestamp   string  `json:"timestamp"`
 }
 
-type PetInput struct {
+type CustomerInput struct {
 	Name    string `json:"name"`
 	Species string `json:"species"`
 }

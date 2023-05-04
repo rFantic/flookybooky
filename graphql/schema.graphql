@@ -11,10 +11,14 @@ type User {
     role: String!
 }
 
-type Pet {
+type Customer {
     id: String!
     name: String!
-    species: String!
+    status: String
+    address: String!
+    license_id: String!
+    phone_number: String!
+    timestamp: String!
 }
 
 input UserInput {
@@ -23,17 +27,17 @@ input UserInput {
     role: String!
 }
 
-input PetInput {
+input CustomerInput {
     name: String!
     species: String!
 }
 
 type Mutation {
     createUser(input: UserInput!): User!
-    createPet(input: PetInput!): Pet!
+    createCustomer(input: CustomerInput!): Customer!
 }
 
 type Query {
     users: [User!]!
-    pets: [Pet]!
+    customers: [Customer]!
 }
