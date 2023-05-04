@@ -15,6 +15,7 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").Immutable().Unique().NotEmpty(),
 		field.String("password").Immutable().NotEmpty().Sensitive(),
+		field.String("role").NotEmpty(),
 	}
 }
 

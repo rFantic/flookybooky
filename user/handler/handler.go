@@ -23,6 +23,7 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 	err := h.client.User.Create().
 		SetUsername(req.Username).
 		SetPassword(req.Password).
+		SetRole(req.Role).
 		Exec(ctx)
 	if err != nil {
 		return nil, err
@@ -31,6 +32,7 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 		User: &pb.User{
 			Username: req.Username,
 			Password: req.Password,
+			Role:     req.Role,
 		},
 	}
 	return &res, nil

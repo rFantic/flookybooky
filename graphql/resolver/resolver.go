@@ -1,7 +1,9 @@
 package resolver
 
 import (
+	"context"
 	"flookybooky/graphql/gql_generated"
+	"flookybooky/graphql/model"
 	pb "flookybooky/graphql/proto"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -18,6 +20,16 @@ type Client struct {
 type Resolver struct{ client Client }
 
 func NewSchema(client Client) graphql.ExecutableSchema {
+	var d = gql_generated.DirectiveRoot{
+		HasRole: func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (interface{}, error) {
+			ctxUserID := ctx.Value(key)
+			if ctxUserID != nil {
+				return next(ctx)
+			}
+			return nil, ctx.Err()
+		},
+	}
+
 	return gql_generated.NewExecutableSchema(gql_generated.Config{
 		Resolvers: &Resolver{client},
 	})

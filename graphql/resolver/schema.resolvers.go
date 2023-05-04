@@ -20,6 +20,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		&pb.PostUserRequest{
 			Username: input.Username,
 			Password: input.Password,
+			Role:     input.Role,
 		},
 	)
 	if err != nil {

@@ -19,7 +19,9 @@ type User struct {
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// Password holds the value of the "password" field.
-	Password     string `json:"-"`
+	Password string `json:"-"`
+	// Role holds the value of the "role" field.
+	Role         string `json:"role,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -30,7 +32,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldPassword:
+		case user.FieldUsername, user.FieldPassword, user.FieldRole:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -64,6 +66,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field password", values[i])
 			} else if value.Valid {
 				u.Password = value.String
+			}
+		case user.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				u.Role = value.String
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -105,6 +113,9 @@ func (u *User) String() string {
 	builder.WriteString(u.Username)
 	builder.WriteString(", ")
 	builder.WriteString("password=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(u.Role)
 	builder.WriteByte(')')
 	return builder.String()
 }

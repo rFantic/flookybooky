@@ -5,6 +5,7 @@ go 1.20
 require (
 	entgo.io/ent v0.12.2
 	github.com/99designs/gqlgen v0.17.30
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/jinzhu/copier v0.3.5
 	github.com/lib/pq v1.10.9
 	github.com/spf13/viper v1.15.0

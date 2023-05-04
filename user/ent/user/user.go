@@ -15,6 +15,8 @@ const (
 	FieldUsername = "username"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 )
@@ -24,6 +26,7 @@ var Columns = []string{
 	FieldID,
 	FieldUsername,
 	FieldPassword,
+	FieldRole,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -41,6 +44,8 @@ var (
 	UsernameValidator func(string) error
 	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	PasswordValidator func(string) error
+	// RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	RoleValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -59,4 +64,9 @@ func ByUsername(opts ...sql.OrderTermOption) OrderOption {
 // ByPassword orders the results by the password field.
 func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+}
+
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
 }

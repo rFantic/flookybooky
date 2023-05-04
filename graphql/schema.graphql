@@ -1,6 +1,14 @@
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+    ADMIN
+    USER
+}
+
 type User {
     id: String!
     username: String!
+    role: String!
 }
 
 type Pet {
@@ -12,6 +20,7 @@ type Pet {
 input UserInput {
     username: String!
     password: String!
+    role: String!
 }
 
 input PetInput {
