@@ -1,0 +1,30 @@
+type User {
+    id: String!
+    username: String!
+}
+
+type Pet {
+    id: String!
+    name: String!
+    species: String!
+}
+
+input UserInput {
+    username: String!
+    password: String!
+}
+
+input PetInput {
+    name: String!
+    species: String!
+}
+
+type Mutation {
+    createUser(input: UserInput!): User!
+    createPet(input: PetInput!): Pet!
+}
+
+type Query {
+    users: [User!]!
+    pets: [Pet]!
+}

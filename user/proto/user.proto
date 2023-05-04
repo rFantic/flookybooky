@@ -1,0 +1,44 @@
+syntax = "proto3";
+package pb;
+option go_package = "./;pb";
+
+message User {
+    string id = 1;
+    string username = 2;
+    string password = 3;
+}
+
+message PostUserRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message PostUserResponse {
+    User user = 1;
+}
+
+message GetUserRequest {
+    string id = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message GetUsersRequest {
+    uint64 skip = 1;
+    uint64 take = 2;
+}
+
+message GetUsersResponse {
+    repeated User users = 1;
+}
+
+service UserService {
+    rpc PostUser (PostUserRequest) returns (PostUserResponse) {
+    }
+    rpc GetUser (GetUserRequest) returns (GetUserResponse) {
+    }
+    rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {
+    }
+}
