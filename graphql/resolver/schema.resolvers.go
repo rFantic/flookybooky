@@ -31,19 +31,31 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 	return &user, nil
 }
 
-// CreateCustomer is the resolver for the createCustomer field.
-func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: CreateCustomer - createCustomer"))
+// CreatePet is the resolver for the createPet field.
+func (r *mutationResolver) CreatePet(ctx context.Context, input model.PetInput) (*model.Pet, error) {
+	panic(fmt.Errorf("not implemented: CreatePet - createPet"))
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	res, err := r.client.UserClient.GetUsers(ctx, &pb.GetUsersRequest{})
+	if err != nil {
+		return nil, err
+	}
+	var users []*model.User
+	copier.Copy(&users, &res.Users)
+	return users, nil
 }
 
-// Customers is the resolver for the customers field.
-func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: Customers - customers"))
+// Pets is the resolver for the pets field.
+func (r *queryResolver) Pets(ctx context.Context) ([]*model.Pet, error) {
+	res, err := r.client.PetClient.GetPets(ctx, &pb.GetPetsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	var pets []*model.Pet
+	copier.Copy(&pets, &res.Pets)
+	return pets, nil
 }
 
 // Mutation returns gql_generated.MutationResolver implementation.

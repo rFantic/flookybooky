@@ -7,23 +7,25 @@ services:
     ports:
       - 9999:8080
 
-  customerdb:
-    profiles: ["customer", "all"]
+  petdb:
+    profiles: ["pet", "all"]
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: customer
+      POSTGRES_DB: pet
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-
+    ports:
+      - 54320:5432
   
-  customer:
-    profiles: ["customer", "all"]
+  pet:
+    profiles: ["pet", "all"]
     build:
       context: .
-      dockerfile: ./customer/customer.dockerfile
+      dockerfile: ./pet/pet.dockerfile
     restart: on-failure
-
+    ports:
+      - 2220:2220
 
   userdb:
     profiles: ["user", "all"]
@@ -33,30 +35,18 @@ services:
       POSTGRES_DB: user
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-    
+    ports:
+      - 54321:5432
+  
   user:
     profiles: ["user", "all"]
     build:
       context: .
       dockerfile: ./user/user.dockerfile
-    restart: on-failure 
+    restart: on-failure
+    ports:
+      - 2221:2220
   
-  flightdb:
-    profiles: ["flight", "all"]
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: flight
-      POSTGRES_FLIGHT: root
-      POSTGRES_PASSWORD: passw  
-  
-  flight:
-    profiles: ["flight", "all"]
-    build:
-      context: .
-      dockerfile: ./flight/flight.dockerfile
-    restart: on-failured
-
   graphql:
     profiles: ["all"]
     build:
