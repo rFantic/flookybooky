@@ -1,54 +1,61 @@
 services:
 
   adminer:
-    profiles: ["all"]
     image: adminer
     restart: always
     ports:
       - 9999:8080
 
-  petdb:
-    profiles: ["pet", "all"]
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: pet
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: passwd
-    ports:
-      - 54320:5432
-  
-  pet:
-    profiles: ["pet", "all"]
-    build:
-      context: .
-      dockerfile: ./pet/pet.dockerfile
-    restart: on-failure
-    ports:
-      - 2220:2220
-
   userdb:
-    profiles: ["user", "all"]
+    profiles: ["user", "graphql"]
     image: postgres
     restart: always
     environment:
       POSTGRES_DB: user
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-    ports:
-      - 54321:5432
   
   user:
-    profiles: ["user", "all"]
+    profiles: ["user", "graphql"]
     build:
       context: .
       dockerfile: ./user/user.dockerfile
     restart: on-failure
-    ports:
-      - 2221:2220
-  
+ 
+  flightdb:
+    profiles: ["flight", "graphql"]
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: flight
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: passwd
+    
+  flight:
+    profiles: ["flight", "graphql"]
+    build:
+      context: .
+      dockerfile: ./flight/flight.dockerfile
+    restart: on-failure
+
+  customerdb:
+    profiles: ["customer", "graphql"]
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: customer
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: passwd
+    
+  customer:
+    profiles: ["customer", "graphql"]
+    build:
+      context: .
+      dockerfile: ./customer/customer.dockerfile
+    restart: on-failure
+ 
   graphql:
-    profiles: ["all"]
+    profiles: ["graphql"]
     build:
       context: .
       dockerfile: ./graphql/graphql.dockerfile

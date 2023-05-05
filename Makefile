@@ -8,14 +8,11 @@ genGql:
 	cd graphql; go get github.com/99designs/gqlgen \
 	&& go run github.com/99designs/gqlgen
 
-upUser:
-	docker compose --profile user up --build -d --remove-orphans 
-
-upPet:
-	docker compose --profile pet up --build -d --remove-orphans
+upProfile:
+	docker compose --profile $(Profile) up --build -d --remove-orphans 
 
 up:
-	docker compose --profile all up --build -d --remove-orphans
+	docker compose --profile graphql up --build -d --remove-orphans
 
 down:
-	docker compose --profile all down
+	docker compose --profile graphql down
