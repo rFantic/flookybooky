@@ -2,12 +2,14 @@
 package main
 
 import (
+	"flookybooky/middleware"
 	pb "flookybooky/services/graphql/proto"
 	"flookybooky/services/graphql/resolver"
 	"log"
-	"net/http"
 
-	"github.com/99designs/gqlgen/handler"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -21,10 +23,28 @@ func init() {
 
 func main() {
 	client := dbConn()
-	http.Handle("/graphql", handler.GraphQL(resolver.NewSchema(client)))
-	http.Handle("/", handler.Playground("App", "/graphql"))
+	h := handler.NewDefaultServer(resolver.NewSchema(client))
+	p := playground.Handler("App", "/graphql")
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.HandleMethodNotAllowed = true
+	r.Use(middleware.RequestCtxMiddleware())
+	// Create a new GraphQL
+	r.POST("/graphql", func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	})
+
+	r.OPTIONS("/graphql", func(c *gin.Context) {
+		c.Status(200)
+	})
+
+	// Enable playground for query/testing
+	r.GET("/", func(c *gin.Context) {
+		p.ServeHTTP(c.Writer, c.Request)
+	})
+
+	log.Fatal(r.Run(":8081"))
 }
 
 func dbConn() resolver.Client {
@@ -32,11 +52,6 @@ func dbConn() resolver.Client {
 	if err != nil {
 		panic(err)
 	}
-	petConn, err := grpc.Dial("pet:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
 	userClient := pb.NewUserServiceClient(userConn)
-	petClient := pb.NewPetServiceClient(petConn)
-	return resolver.Client{PetClient: petClient, UserClient: userClient}
+	return resolver.Client{UserClient: userClient}
 }

@@ -8,27 +8,14 @@ import (
 	"strconv"
 )
 
-type Pet struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Species string `json:"species"`
-}
-
-type PetInput struct {
-	Name    string `json:"name"`
-	Species string `json:"species"`
-}
-
 type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
-	Role     string `json:"role"`
 }
 
 type UserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Role     string `json:"role"`
 }
 
 type Role string

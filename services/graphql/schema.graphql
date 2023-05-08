@@ -8,32 +8,17 @@ enum Role {
 type User {
     id: String!
     username: String!
-    role: String!
 }
 
-type Pet {
-    id: String!
-    name: String!
-    species: String!
-}
 
 input UserInput {
     username: String!
     password: String!
-    role: String!
 }
-
-input PetInput {
-    name: String!
-    species: String!
-}
-
 type Mutation {
-    createUser(input: UserInput!): User!
-    createPet(input: PetInput!): Pet!
+    createUser(input: UserInput!): User! @hasRole(role: ADMIN)
 }
 
 type Query {
-    users: [User!]!
-    pets: [Pet]!
+    users: [User!]! @hasRole(role: ADMIN)
 }

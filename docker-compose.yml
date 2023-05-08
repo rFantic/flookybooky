@@ -62,3 +62,4 @@ services:
     restart: on-failure
     ports:
       - 8081:8081
+      - 4000:4000

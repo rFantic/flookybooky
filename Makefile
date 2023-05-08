@@ -5,7 +5,7 @@ genProtoc:
 	**/proto/*.proto
 
 genGql:
-	cd graphql; go get github.com/99designs/gqlgen \
+	cd services/graphql; go get github.com/99designs/gqlgen@v0.17.31 \
 	&& go run github.com/99designs/gqlgen
 
 upProfile:
