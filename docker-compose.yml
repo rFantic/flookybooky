@@ -14,14 +14,14 @@ services:
       POSTGRES_DB: user
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-  
+
   user:
     profiles: ["user", "graphql"]
     build:
       context: .
       dockerfile: ./services/user/user.dockerfile
     restart: on-failure
- 
+
   flightdb:
     profiles: ["flight", "graphql"]
     image: postgres
@@ -30,7 +30,7 @@ services:
       POSTGRES_DB: flight
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-    
+
   flight:
     profiles: ["flight", "graphql"]
     build:
@@ -46,14 +46,14 @@ services:
       POSTGRES_DB: customer
       POSTGRES_USER: root
       POSTGRES_PASSWORD: passwd
-    
+
   customer:
     profiles: ["customer", "graphql"]
     build:
       context: .
       dockerfile: ./services/customer/customer.dockerfile
     restart: on-failure
- 
+
   graphql:
     profiles: ["graphql"]
     build:

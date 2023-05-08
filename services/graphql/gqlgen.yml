@@ -4,7 +4,7 @@ schema: schema.graphql
 
 resolver:
   layout: follow-schema
-  dir: resolver 
+  dir: resolver
 
 model:
   filename: model/models_gen.go
