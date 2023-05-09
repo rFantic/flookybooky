@@ -1,5 +1,5 @@
 package util
 
-type ContextKey struct{}
+var Secretkey []byte = []byte("werq2304u1rjweiofsd")
 
-var ReqKey ContextKey = struct{}{}
+type ContextKey struct{}

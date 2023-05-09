@@ -36,11 +36,17 @@ message GetUsersResponse {
     repeated User users = 1;
 }
 
+message LoginRequest {
+    User user = 1;
+}
+
+message LoginResponse{
+    string jwtToken = 1;
+}
+
 service UserService {
-    rpc PostUser (PostUserRequest) returns (PostUserResponse) {
-    }
-    rpc GetUser (GetUserRequest) returns (GetUserResponse) {
-    }
-    rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {
-    }
+    rpc PostUser (PostUserRequest) returns (PostUserResponse) {}
+    rpc GetUser (GetUserRequest) returns (GetUserResponse) {}
+    rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
+    rpc Login (LoginRequest) returns (LoginResponse) {}
 }

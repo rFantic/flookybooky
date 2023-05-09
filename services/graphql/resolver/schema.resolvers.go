@@ -6,10 +6,12 @@ package resolver
 
 import (
 	"context"
+	"flookybooky/internal/util"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
 	pb "flookybooky/services/graphql/proto"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 )
 
@@ -19,6 +21,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		&pb.PostUserRequest{
 			Username: input.Username,
 			Password: input.Password,
+			Role:     input.Role,
 		},
 	)
 	if err != nil {
@@ -27,6 +30,31 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 	var user model.User
 	copier.Copy(&user, res.GetUser())
 	return &user, nil
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error) {
+	res, err := r.client.UserClient.Login(ctx,
+		&pb.LoginRequest{
+			User: &pb.User{
+				Username: input.Username,
+				Password: input.Password,
+			},
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
+	c.SetCookie(
+		"Authentication", res.JwtToken,
+		3600*24, "", "", false, false,
+	)
+	return &model.LoginInfo{
+		TokenString: res.JwtToken,
+	}, nil
 }
 
 // Users is the resolver for the users field.

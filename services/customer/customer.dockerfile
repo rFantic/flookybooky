@@ -5,5 +5,5 @@ RUN go mod download
 COPY services/customer services/customer
 COPY internal internal
 COPY services/customer/.env .env
-RUN go build -o /go/bin/app services/customer/cmd/main.go
-CMD ["app"]
+# RUN go build -o /go/bin/app services/customer/cmd/main.go
+# CMD ["app"]

@@ -22,14 +22,19 @@ func init() {
 }
 
 func main() {
-	client := dbConn()
+	client := servicesConn()
 	h := handler.NewDefaultServer(resolver.NewSchema(client))
 	p := playground.Handler("App", "/graphql")
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.HandleMethodNotAllowed = true
-	r.Use(middleware.RequestCtxMiddleware())
+	r.Use(
+		middleware.CorsMiddleware(),
+		// middleware.RequestCtxMiddleware(),
+		middleware.CookieMiddleware(),
+	)
+
 	// Create a new GraphQL
 	r.POST("/graphql", func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
@@ -47,7 +52,7 @@ func main() {
 	log.Fatal(r.Run(":8081"))
 }
 
-func dbConn() resolver.Client {
+func servicesConn() resolver.Client {
 	userConn, err := grpc.Dial("user:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)

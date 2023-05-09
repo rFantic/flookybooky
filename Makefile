@@ -9,10 +9,10 @@ genGql:
 	&& go run github.com/99designs/gqlgen
 
 upProfile:
-	docker compose --profile $(Profile) up --build -d --remove-orphans
+	docker compose --profile $(Profile) up --build --remove-orphans
 
 up:
-	docker compose --profile graphql up --build -d --remove-orphans
+	docker compose --profile graphql up --build --remove-orphans
 
 down:
 	docker compose --profile graphql down

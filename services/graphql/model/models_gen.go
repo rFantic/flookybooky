@@ -8,21 +8,32 @@ import (
 	"strconv"
 )
 
+type LoginInfo struct {
+	TokenString string `json:"tokenString"`
+}
+
+type LoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
+	Role     string `json:"role"`
 }
 
 type UserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 type Role string
 
 const (
-	RoleAdmin Role = "ADMIN"
-	RoleUser  Role = "USER"
+	RoleAdmin Role = "admin"
+	RoleUser  Role = "user"
 )
 
 var AllRole = []Role{

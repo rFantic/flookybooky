@@ -1,24 +1,36 @@
 directive @hasRole(role: Role!) on FIELD_DEFINITION
 
 enum Role {
-    ADMIN
-    USER
+    admin
+    user
 }
 
 type User {
     id: String!
     username: String!
+    role: String!
 }
 
+type LoginInfo{
+    tokenString: String!
+} 
 
 input UserInput {
     username: String!
     password: String!
+    role: String!
 }
+
+input LoginInput {
+    username: String!
+    password: String!
+}
+
 type Mutation {
-    createUser(input: UserInput!): User! @hasRole(role: ADMIN)
+    createUser(input: UserInput!): User!
+    login(input: LoginInput!): LoginInfo!
 }
 
 type Query {
-    users: [User!]! @hasRole(role: ADMIN)
+    users: [User!]! @hasRole(role: admin)
 }
