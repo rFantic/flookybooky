@@ -52,7 +52,6 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 		PhoneNumber func(childComplexity int) int
 		Status      func(childComplexity int) int
-		Timestamp   func(childComplexity int) int
 	}
 
 	LoginInfo struct {
@@ -71,17 +70,18 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Customer func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Role     func(childComplexity int) int
-		Username func(childComplexity int) int
+		Customer   func(childComplexity int) int
+		CustomerID func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Role       func(childComplexity int) int
+		Username   func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.UserInput) (*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error)
-	CreateCustomer(ctx context.Context, input model.CustomerInput) (*bool, error)
+	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -144,13 +144,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Customer.Status(childComplexity), true
-
-	case "Customer.timestamp":
-		if e.complexity.Customer.Timestamp == nil {
-			break
-		}
-
-		return e.complexity.Customer.Timestamp(childComplexity), true
 
 	case "LoginInfo.tokenString":
 		if e.complexity.LoginInfo.TokenString == nil {
@@ -215,6 +208,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Customer(childComplexity), true
+
+	case "User.customer_id":
+		if e.complexity.User.CustomerID == nil {
+			break
+		}
+
+		return e.complexity.User.CustomerID(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -316,9 +316,10 @@ enum Role {
 }
 
 type User {
-    id: String!
+    id: ID!
     username: String!
     role: String!
+    customer_id: String!
     customer: Customer
 }
 
@@ -330,7 +331,7 @@ input UserInput {
     username: String!
     password: String!
     role: String!
-    customer_id: String
+    customer_id: ID
 }
 
 input LoginInput {
@@ -339,13 +340,12 @@ input LoginInput {
 }
 
 type Customer {
-    id: String!
+    id: ID!
     name: String!
     status: String!
     address: String!
     license_id: String!
     phone_number: String!
-    timestamp: String!
 }
 
 input CustomerInput {
@@ -354,13 +354,16 @@ input CustomerInput {
     address: String!
     license_id: String!
     phone_number: String!
-    timestamp: String!
 }
 
 type Mutation {
     createUser(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
+<<<<<<< HEAD
     createCustomer(input: CustomerInput!): Boolean
+=======
+    createCustomer(input: CustomerInput!): Customer!
+>>>>>>> 3861f27 (Precommit fix.)
 }
 
 type Query {
@@ -516,7 +519,7 @@ func (ec *executionContext) _Customer_id(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Customer_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -526,7 +529,7 @@ func (ec *executionContext) fieldContext_Customer_id(ctx context.Context, field 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -752,50 +755,6 @@ func (ec *executionContext) fieldContext_Customer_phone_number(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Customer_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.Customer) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Customer_timestamp(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Timestamp, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Customer_timestamp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Customer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _LoginInfo_tokenString(ctx context.Context, field graphql.CollectedField, obj *model.LoginInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LoginInfo_tokenString(ctx, field)
 	if err != nil {
@@ -885,6 +844,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_username(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
+			case "customer_id":
+				return ec.fieldContext_User_customer_id(ctx, field)
 			case "customer":
 				return ec.fieldContext_User_customer(ctx, field)
 			}
@@ -985,11 +946,14 @@ func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*model.Customer)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -999,7 +963,21 @@ func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Customer_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Customer_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Customer_status(ctx, field)
+			case "address":
+				return ec.fieldContext_Customer_address(ctx, field)
+			case "license_id":
+				return ec.fieldContext_Customer_license_id(ctx, field)
+			case "phone_number":
+				return ec.fieldContext_Customer_phone_number(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
 		},
 	}
 	defer func() {
@@ -1085,6 +1063,8 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_username(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
+			case "customer_id":
+				return ec.fieldContext_User_customer_id(ctx, field)
 			case "customer":
 				return ec.fieldContext_User_customer(ctx, field)
 			}
@@ -1145,8 +1125,6 @@ func (ec *executionContext) fieldContext_Query_customers(ctx context.Context, fi
 				return ec.fieldContext_Customer_license_id(ctx, field)
 			case "phone_number":
 				return ec.fieldContext_Customer_phone_number(ctx, field)
-			case "timestamp":
-				return ec.fieldContext_Customer_timestamp(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
 		},
@@ -1311,7 +1289,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1321,7 +1299,7 @@ func (ec *executionContext) fieldContext_User_id(ctx context.Context, field grap
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1415,6 +1393,50 @@ func (ec *executionContext) fieldContext_User_role(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _User_customer_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_customer_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CustomerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_customer_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_customer(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_customer(ctx, field)
 	if err != nil {
@@ -1463,8 +1485,6 @@ func (ec *executionContext) fieldContext_User_customer(ctx context.Context, fiel
 				return ec.fieldContext_Customer_license_id(ctx, field)
 			case "phone_number":
 				return ec.fieldContext_Customer_phone_number(ctx, field)
-			case "timestamp":
-				return ec.fieldContext_Customer_timestamp(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
 		},
@@ -3252,7 +3272,7 @@ func (ec *executionContext) unmarshalInputCustomerInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "status", "address", "license_id", "phone_number", "timestamp"}
+	fieldsInOrder := [...]string{"name", "status", "address", "license_id", "phone_number"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3304,15 +3324,6 @@ func (ec *executionContext) unmarshalInputCustomerInput(ctx context.Context, obj
 				return it, err
 			}
 			it.PhoneNumber = data
-		case "timestamp":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timestamp"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Timestamp = data
 		}
 	}
 
@@ -3402,7 +3413,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customer_id"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3469,13 +3480,6 @@ func (ec *executionContext) _Customer(ctx context.Context, sel ast.SelectionSet,
 		case "phone_number":
 
 			out.Values[i] = ec._Customer_phone_number(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "timestamp":
-
-			out.Values[i] = ec._Customer_timestamp(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3562,6 +3566,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_createCustomer(ctx, field)
 			})
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3688,6 +3695,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "role":
 
 			out.Values[i] = ec._User_role(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "customer_id":
+
+			out.Values[i] = ec._User_customer_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -4040,6 +4054,10 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCustomer2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx context.Context, sel ast.SelectionSet, v model.Customer) graphql.Marshaler {
+	return ec._Customer(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNCustomer2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Customer) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -4097,6 +4115,21 @@ func (ec *executionContext) marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphql
 func (ec *executionContext) unmarshalNCustomerInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (model.CustomerInput, error) {
 	res, err := ec.unmarshalInputCustomerInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNLoginInfo2flookybookyᚋservicesᚋgraphqlᚋmodelᚐLoginInfo(ctx context.Context, sel ast.SelectionSet, v model.LoginInfo) graphql.Marshaler {
@@ -4490,6 +4523,22 @@ func (ec *executionContext) marshalOCustomer2ᚖflookybookyᚋservicesᚋgraphql
 		return graphql.Null
 	}
 	return ec._Customer(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalID(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

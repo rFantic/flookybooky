@@ -8,4 +8,6 @@ import (
 func Example_numeric() {
 	res := string.IsNumeric("0123456789")
 	fmt.Println(res)
+	// Output:
+	// <nil>
 }

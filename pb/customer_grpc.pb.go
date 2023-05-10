@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CustomerServiceClient interface {
-	PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
 	GetCustomer(ctx context.Context, in *GetCustomerRequest, opts ...grpc.CallOption) (*GetCustomerResponse, error)
 	GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetCustomersResponse, error)
 }
@@ -36,8 +36,8 @@ func NewCustomerServiceClient(cc grpc.ClientConnInterface) CustomerServiceClient
 	return &customerServiceClient{cc}
 }
 
-func (c *customerServiceClient) PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *customerServiceClient) PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error) {
+	out := new(Customer)
 	err := c.cc.Invoke(ctx, "/pb.CustomerService/PostCustomer", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Em
 // All implementations must embed UnimplementedCustomerServiceServer
 // for forward compatibility
 type CustomerServiceServer interface {
-	PostCustomer(context.Context, *Customer) (*emptypb.Empty, error)
+	PostCustomer(context.Context, *Customer) (*Customer, error)
 	GetCustomer(context.Context, *GetCustomerRequest) (*GetCustomerResponse, error)
 	GetCustomers(context.Context, *emptypb.Empty) (*GetCustomersResponse, error)
 	mustEmbedUnimplementedCustomerServiceServer()
@@ -77,7 +77,7 @@ type CustomerServiceServer interface {
 type UnimplementedCustomerServiceServer struct {
 }
 
-func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *Customer) (*emptypb.Empty, error) {
+func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *Customer) (*Customer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostCustomer not implemented")
 }
 func (UnimplementedCustomerServiceServer) GetCustomer(context.Context, *GetCustomerRequest) (*GetCustomerResponse, error) {

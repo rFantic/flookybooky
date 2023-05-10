@@ -10,6 +10,7 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -59,21 +60,21 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 }
 
 // CreateCustomer is the resolver for the createCustomer field.
-func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*bool, error) {
-	_, err := r.client.CustomerClient.PostCustomer(ctx,
+func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
+	c, err := r.client.CustomerClient.PostCustomer(ctx,
 		&pb.Customer{
-			Status:      input.Status,
 			Name:        input.Name,
 			Address:     input.Address,
 			LicenseId:   input.LicenseID,
 			PhoneNumber: input.PhoneNumber,
-			Timestamp:   input.Timestamp,
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	var res model.Customer
+	copier.Copy(&res, c)
+	return &res, nil
 }
 
 // Users is the resolver for the users field.
@@ -95,6 +96,9 @@ func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error
 	}
 	var customers []*model.Customer
 	copier.Copy(&customers, &res.Customers)
+	for i, c := range customers {
+		c.ID = strconv.Itoa(int(res.Customers[i].Id))
+	}
 	return customers, nil
 }
 

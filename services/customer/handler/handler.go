@@ -20,18 +20,25 @@ func NewCustomerHandler(client ent.Client) (*CustomerHandler, error) {
 	}, nil
 }
 
-func (h *CustomerHandler) PostCustomer(ctx context.Context, customer *pb.Customer) (*emptypb.Empty, error) {
-	err := h.client.Customer.Create().
+func (h *CustomerHandler) PostCustomer(ctx context.Context, customer *pb.Customer) (*pb.Customer, error) {
+	c, err := h.client.Customer.Create().
 		SetName(customer.Name).
 		SetAddress(customer.Address).
 		SetLicenseID(customer.LicenseId).
 		SetName(customer.Name).
 		SetPhoneNumber(customer.PhoneNumber).
-		Exec(ctx)
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &emptypb.Empty{}, nil
+	res := &pb.Customer{}
+	err = copier.Copy(&res, c)
+	res.Id = uint32(c.ID)
+	res.LicenseId = c.LicenseID
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (h *CustomerHandler) GetCustomers(ctx context.Context, req *emptypb.Empty) (*pb.GetCustomersResponse, error) {
@@ -39,6 +46,7 @@ func (h *CustomerHandler) GetCustomers(ctx context.Context, req *emptypb.Empty) 
 	if err != nil {
 		return nil, err
 	}
+
 	res := &pb.GetCustomersResponse{}
 	err = copier.Copy(&res.Customers, &customers)
 	if err != nil {

@@ -7,4 +7,8 @@ COPY ./ ./
 COPY services/customer/.env .env
 RUN go build -o /go/bin/app services/customer/cmd/main.go
 # CMD ["app"]
+<<<<<<< HEAD
 CMD [ "/go/bin/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]
+=======
+CMD [ "/go/bin/dlv", "--listen=:4000", "--continue", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]
+>>>>>>> 3861f27 (Precommit fix.)

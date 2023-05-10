@@ -6,9 +6,10 @@ enum Role {
 }
 
 type User {
-    id: String!
+    id: ID!
     username: String!
     role: String!
+    customer_id: String!
     customer: Customer
 }
 
@@ -20,7 +21,7 @@ input UserInput {
     username: String!
     password: String!
     role: String!
-    customer_id: String
+    customer_id: ID
 }
 
 input LoginInput {
@@ -29,13 +30,12 @@ input LoginInput {
 }
 
 type Customer {
-    id: String!
+    id: ID!
     name: String!
     status: String!
     address: String!
     license_id: String!
     phone_number: String!
-    timestamp: String!
 }
 
 input CustomerInput {
@@ -44,13 +44,16 @@ input CustomerInput {
     address: String!
     license_id: String!
     phone_number: String!
-    timestamp: String!
 }
 
 type Mutation {
     createUser(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
+<<<<<<< HEAD
     createCustomer(input: CustomerInput!): Boolean
+=======
+    createCustomer(input: CustomerInput!): Customer!
+>>>>>>> 3861f27 (Precommit fix.)
 }
 
 type Query {

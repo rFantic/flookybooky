@@ -15,7 +15,6 @@ type Customer struct {
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`
-	Timestamp   string `json:"timestamp"`
 }
 
 type CustomerInput struct {
@@ -24,7 +23,6 @@ type CustomerInput struct {
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`
-	Timestamp   string `json:"timestamp"`
 }
 
 type LoginInfo struct {
@@ -37,10 +35,11 @@ type LoginInput struct {
 }
 
 type User struct {
-	ID       string    `json:"id"`
-	Username string    `json:"username"`
-	Role     string    `json:"role"`
-	Customer *Customer `json:"customer,omitempty"`
+	ID         string    `json:"id"`
+	Username   string    `json:"username"`
+	Role       string    `json:"role"`
+	CustomerID string    `json:"customer_id"`
+	Customer   *Customer `json:"customer,omitempty"`
 }
 
 type UserInput struct {

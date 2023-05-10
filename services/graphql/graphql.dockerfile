@@ -6,5 +6,5 @@ RUN go mod download
 COPY ./ ./
 COPY services/graphql/.env .env
 RUN go build -o /go/bin/app services/graphql/cmd/main.go
-CMD ["app"]
-# CMD [ "/go/bin/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]
+# CMD ["app"]
+CMD [ "/go/bin/dlv", "--listen=:4000", "--continue", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]

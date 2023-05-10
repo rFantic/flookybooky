@@ -32,20 +32,18 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 		return nil, err
 	}
 
-	err = h.client.User.Create().
+	u, err := h.client.User.Create().
 		SetUsername(req.Username).
 		SetPassword(string(hash)).
 		SetRole(user.Role(req.Role)).
-		Exec(ctx)
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
+	var postUser pb.User
+	copier.Copy(&postUser, u)
 	var res pb.PostUserResponse = pb.PostUserResponse{
-		User: &pb.User{
-			Username: req.Username,
-			Password: req.Password,
-			Role:     req.Role,
-		},
+		User: &postUser,
 	}
 	return &res, nil
 }
