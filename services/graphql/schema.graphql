@@ -49,11 +49,7 @@ input CustomerInput {
 type Mutation {
     createUser(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
-<<<<<<< HEAD
-    createCustomer(input: CustomerInput!): Boolean
-=======
     createCustomer(input: CustomerInput!): Customer!
->>>>>>> 3861f27 (Precommit fix.)
 }
 
 type Query {
