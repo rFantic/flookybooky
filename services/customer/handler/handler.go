@@ -49,6 +49,9 @@ func (h *CustomerHandler) GetCustomers(ctx context.Context, req *emptypb.Empty) 
 
 	res := &pb.GetCustomersResponse{}
 	err = copier.Copy(&res.Customers, &customers)
+	for i, c := range customers {
+		res.Customers[i].Id = uint32(c.ID)
+	}
 	if err != nil {
 		return nil, err
 	}
