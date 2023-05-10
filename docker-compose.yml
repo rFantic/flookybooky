@@ -22,7 +22,7 @@ services:
       dockerfile: ./services/user/user.dockerfile
     restart: on-failure
     ports:
-      - 4000:4000 
+      - 4000:4000
 
   flightdb:
     profiles: ["flight", "graphql"]

@@ -324,7 +324,7 @@ type User {
 
 type LoginInfo{
     tokenString: String!
-} 
+}
 
 input UserInput {
     username: String!
@@ -360,7 +360,7 @@ input CustomerInput {
 type Mutation {
     createUser(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
-    createCustomer(input: CustomerInput!): Boolean 
+    createCustomer(input: CustomerInput!): Boolean
 }
 
 type Query {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func ExampleNumeric() {
+func Example_numeric() {
 	res := string.IsNumeric("0123456789")
 	fmt.Println(res)
 }
