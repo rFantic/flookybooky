@@ -28,8 +28,8 @@ message GetUserResponse {
 }
 
 message GetUsersRequest {
-    uint64 skip = 1;
-    uint64 take = 2;
+    uint64 offset = 1;
+    uint64 limit = 2;
 }
 
 message GetUsersResponse {

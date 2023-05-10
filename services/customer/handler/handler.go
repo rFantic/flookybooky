@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
+	"flookybooky/pb"
 	"flookybooky/services/customer/ent"
-	pb "flookybooky/services/customer/proto"
 
 	"github.com/jinzhu/copier"
 	"google.golang.org/protobuf/types/known/emptypb"

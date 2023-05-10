@@ -12,6 +12,7 @@ message Customer {
     string phone_number = 6;
     string timestamp = 7;
 }
+
 message GetCustomerRequest {
     string id = 1;
 }

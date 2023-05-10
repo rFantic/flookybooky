@@ -8,6 +8,25 @@ import (
 	"strconv"
 )
 
+type Customer struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	Address     string `json:"address"`
+	LicenseID   string `json:"license_id"`
+	PhoneNumber string `json:"phone_number"`
+	Timestamp   string `json:"timestamp"`
+}
+
+type CustomerInput struct {
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	Address     string `json:"address"`
+	LicenseID   string `json:"license_id"`
+	PhoneNumber string `json:"phone_number"`
+	Timestamp   string `json:"timestamp"`
+}
+
 type LoginInfo struct {
 	TokenString string `json:"tokenString"`
 }
@@ -18,15 +37,17 @@ type LoginInput struct {
 }
 
 type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	ID       string    `json:"id"`
+	Username string    `json:"username"`
+	Role     string    `json:"role"`
+	Customer *Customer `json:"customer,omitempty"`
 }
 
 type UserInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username   string  `json:"username"`
+	Password   string  `json:"password"`
+	Role       string  `json:"role"`
+	CustomerID *string `json:"customer_id,omitempty"`
 }
 
 type Role string

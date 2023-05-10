@@ -3,7 +3,7 @@ package main
 
 import (
 	"flookybooky/middleware"
-	pb "flookybooky/services/graphql/proto"
+	"flookybooky/pb"
 	"flookybooky/services/graphql/resolver"
 	"log"
 
@@ -58,5 +58,13 @@ func servicesConn() resolver.Client {
 		panic(err)
 	}
 	userClient := pb.NewUserServiceClient(userConn)
-	return resolver.Client{UserClient: userClient}
+	customerConn, err := grpc.Dial("customer:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	customerClient := pb.NewCustomerServiceClient(customerConn)
+	return resolver.Client{
+		UserClient:     userClient,
+		CustomerClient: customerClient,
+	}
 }

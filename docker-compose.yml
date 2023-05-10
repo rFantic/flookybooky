@@ -55,6 +55,8 @@ services:
       context: .
       dockerfile: ./services/customer/customer.dockerfile
     restart: on-failure
+    ports:
+      - 4002:4000
 
   graphql:
     profiles: ["graphql"]

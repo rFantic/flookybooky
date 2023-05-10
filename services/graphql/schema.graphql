@@ -9,6 +9,7 @@ type User {
     id: String!
     username: String!
     role: String!
+    customer: Customer
 }
 
 type LoginInfo{
@@ -19,6 +20,7 @@ input UserInput {
     username: String!
     password: String!
     role: String!
+    customer_id: String
 }
 
 input LoginInput {
@@ -26,11 +28,32 @@ input LoginInput {
     password: String!
 }
 
+type Customer {
+    id: String!
+    name: String!
+    status: String!
+    address: String!
+    license_id: String!
+    phone_number: String!
+    timestamp: String!
+}
+
+input CustomerInput {
+    name: String!
+    status: String!
+    address: String!
+    license_id: String!
+    phone_number: String!
+    timestamp: String!
+}
+
 type Mutation {
     createUser(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
+    createCustomer(input: CustomerInput!): Boolean 
 }
 
 type Query {
     users: [User!]! @hasRole(role: admin)
+    customers: [Customer!]!
 }

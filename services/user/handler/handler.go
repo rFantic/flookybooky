@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"flookybooky/internal/util"
+	"flookybooky/pb"
 	"flookybooky/services/user/ent"
 	"flookybooky/services/user/ent/user"
-	pb "flookybooky/services/user/proto"
 	"fmt"
 	"time"
 
@@ -68,11 +68,14 @@ func (h *UserHandler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.
 }
 
 func (h *UserHandler) GetUsers(ctx context.Context, req *pb.GetUsersRequest) (*pb.GetUsersResponse, error) {
-	users, err := h.client.User.Query().All(ctx)
+	query := h.client.User.Query()
+	query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	users, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	res := &pb.GetUsersResponse{}
+
 	err = copier.Copy(&res.Users, &users)
 	if err != nil {
 		return nil, err

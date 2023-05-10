@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"flookybooky/pb"
 	"flookybooky/services/user/ent"
 	"flookybooky/services/user/handler"
-	pb "flookybooky/services/user/proto"
 	"net"
 
 	"entgo.io/ent/dialect"
@@ -23,6 +23,9 @@ func init() {
 
 func main() {
 	logger, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
 	defer logger.Sync()
 	log := logger.Sugar()
 	POSTGRES_URI := string(viper.GetString("POSTGRES_URI"))
@@ -34,7 +37,6 @@ func main() {
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
-
 	listen, err := net.Listen("tcp", ":2220")
 	if err != nil {
 		panic(err)

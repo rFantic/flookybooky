@@ -3,9 +3,9 @@ package resolver
 import (
 	"context"
 	"flookybooky/internal/util"
+	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
-	pb "flookybooky/services/graphql/proto"
 	"fmt"
 	"time"
 
@@ -18,7 +18,8 @@ import (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 type Client struct {
-	UserClient pb.UserServiceClient
+	UserClient     pb.UserServiceClient
+	CustomerClient pb.CustomerServiceClient
 }
 
 type Resolver struct{ client Client }

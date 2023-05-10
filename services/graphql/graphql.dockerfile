@@ -3,9 +3,7 @@ WORKDIR /go/src/graphql
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 COPY go.mod go.sum ./
 RUN go mod download
-COPY services/graphql services/graphql
-COPY internal internal
-COPY middleware middleware
+COPY ./ ./
 COPY services/graphql/.env .env
 RUN go build -o /go/bin/app services/graphql/cmd/main.go
 CMD ["app"]

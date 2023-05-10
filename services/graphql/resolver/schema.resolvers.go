@@ -7,12 +7,13 @@ package resolver
 import (
 	"context"
 	"flookybooky/internal/util"
+	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
-	pb "flookybooky/services/graphql/proto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -57,6 +58,24 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	}, nil
 }
 
+// CreateCustomer is the resolver for the createCustomer field.
+func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*bool, error) {
+	_, err := r.client.CustomerClient.PostCustomer(ctx,
+		&pb.Customer{
+			Status:      input.Status,
+			Name:        input.Name,
+			Address:     input.Address,
+			LicenseId:   input.LicenseID,
+			PhoneNumber: input.PhoneNumber,
+			Timestamp:   input.Timestamp,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	res, err := r.client.UserClient.GetUsers(ctx, &pb.GetUsersRequest{})
@@ -66,6 +85,17 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	var users []*model.User
 	copier.Copy(&users, &res.Users)
 	return users, nil
+}
+
+// Customers is the resolver for the customers field.
+func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
+	res, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	var customers []*model.Customer
+	copier.Copy(&customers, &res.Customers)
+	return customers, nil
 }
 
 // Mutation returns gql_generated.MutationResolver implementation.

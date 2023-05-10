@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "flookybooky/services/customer/proto"
+	"flookybooky/pb"
 )
 
 func init() {

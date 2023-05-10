@@ -20,6 +20,20 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetCustomerID sets the "customer_id" field.
+func (uc *UserCreate) SetCustomerID(s string) *UserCreate {
+	uc.mutation.SetCustomerID(s)
+	return uc
+}
+
+// SetNillableCustomerID sets the "customer_id" field if the given value is not nil.
+func (uc *UserCreate) SetNillableCustomerID(s *string) *UserCreate {
+	if s != nil {
+		uc.SetCustomerID(*s)
+	}
+	return uc
+}
+
 // SetUsername sets the "username" field.
 func (uc *UserCreate) SetUsername(s string) *UserCreate {
 	uc.mutation.SetUsername(s)
@@ -95,6 +109,11 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if v, ok := uc.mutation.CustomerID(); ok {
+		if err := user.CustomerIDValidator(v); err != nil {
+			return &ValidationError{Name: "customer_id", err: fmt.Errorf(`ent: validator failed for field "User.customer_id": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
 	}
@@ -153,6 +172,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if id, ok := uc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
+	}
+	if value, ok := uc.mutation.CustomerID(); ok {
+		_spec.SetField(user.FieldCustomerID, field.TypeString, value)
+		_node.CustomerID = value
 	}
 	if value, ok := uc.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
