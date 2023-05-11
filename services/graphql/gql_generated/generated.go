@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -65,7 +66,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Customers func(childComplexity int) int
+		Customers func(childComplexity int, id *string, name *string) int
 		Users     func(childComplexity int) int
 	}
 
@@ -85,7 +86,10 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
-	Customers(ctx context.Context) ([]*model.Customer, error)
+	Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error)
+}
+type UserResolver interface {
+	Customer(ctx context.Context, obj *model.User) (*model.Customer, error)
 }
 
 type executableSchema struct {
@@ -193,7 +197,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Customers(childComplexity), true
+		args, err := ec.field_Query_customers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Customers(childComplexity, args["id"].(*string), args["name"].(*string)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -320,7 +329,7 @@ type User {
     username: String!
     role: String!
     customer_id: String!
-    customer: Customer
+    customer: Customer!
 }
 
 type LoginInfo{
@@ -364,7 +373,7 @@ type Mutation {
 
 type Query {
     users: [User!]! @hasRole(role: admin)
-    customers: [Customer!]!
+    customers (id: String, name: String): [Customer!]!
 }
 `, BuiltIn: false},
 }
@@ -446,6 +455,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_customers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
 	return args, nil
 }
 
@@ -1084,7 +1117,7 @@ func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Customers(rctx)
+		return ec.resolvers.Query().Customers(rctx, fc.Args["id"].(*string), fc.Args["name"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1124,6 +1157,17 @@ func (ec *executionContext) fieldContext_Query_customers(ctx context.Context, fi
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_customers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -1447,26 +1491,29 @@ func (ec *executionContext) _User_customer(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Customer, nil
+		return ec.resolvers.User().Customer(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Customer)
 	fc.Result = res
-	return ec.marshalOCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
+	return ec.marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_customer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -3679,33 +3726,49 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "username":
 
 			out.Values[i] = ec._User_username(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "role":
 
 			out.Values[i] = ec._User_role(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "customer_id":
 
 			out.Values[i] = ec._User_customer_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "customer":
+			field := field
 
-			out.Values[i] = ec._User_customer(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_customer(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4512,13 +4575,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx context.Context, sel ast.SelectionSet, v *model.Customer) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Customer(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

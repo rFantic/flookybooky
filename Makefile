@@ -15,4 +15,4 @@ up:
 	docker compose --profile graphql up -d --build --remove-orphans
 
 down:
-	docker compose --profile graphql down
+	docker compose --profile graphql down --remove-orphans

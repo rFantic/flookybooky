@@ -7,12 +7,14 @@ message User {
     string username = 2;
     string password = 3;
     string role = 4;
+    string customer_id = 5;
 }
 
 message PostUserRequest {
     string username = 1;
     string password = 2;
     string role = 3;
+    string customer_id = 4;
 }
 
 message PostUserResponse {

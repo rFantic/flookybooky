@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Client is the client that holds all ent builders.
@@ -234,7 +235,7 @@ func (c *CustomerClient) UpdateOne(cu *Customer) *CustomerUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *CustomerClient) UpdateOneID(id int) *CustomerUpdateOne {
+func (c *CustomerClient) UpdateOneID(id uuid.UUID) *CustomerUpdateOne {
 	mutation := newCustomerMutation(c.config, OpUpdateOne, withCustomerID(id))
 	return &CustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -251,7 +252,7 @@ func (c *CustomerClient) DeleteOne(cu *Customer) *CustomerDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CustomerClient) DeleteOneID(id int) *CustomerDeleteOne {
+func (c *CustomerClient) DeleteOneID(id uuid.UUID) *CustomerDeleteOne {
 	builder := c.Delete().Where(customer.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -268,12 +269,12 @@ func (c *CustomerClient) Query() *CustomerQuery {
 }
 
 // Get returns a Customer entity by its id.
-func (c *CustomerClient) Get(ctx context.Context, id int) (*Customer, error) {
+func (c *CustomerClient) Get(ctx context.Context, id uuid.UUID) (*Customer, error) {
 	return c.Query().Where(customer.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *CustomerClient) GetX(ctx context.Context, id int) *Customer {
+func (c *CustomerClient) GetX(ctx context.Context, id uuid.UUID) *Customer {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

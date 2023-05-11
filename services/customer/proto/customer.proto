@@ -4,7 +4,7 @@ package pb;
 option go_package = "./;pb";
 
 message Customer {
-    uint32 id = 1;
+    string id = 1;
     string name = 2;
     string address = 3;
     string license_id = 4;
@@ -25,6 +25,6 @@ message GetCustomersResponse {
 
 service CustomerService {
     rpc PostCustomer (Customer) returns (Customer) {}
-    rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse) {}
+    rpc GetCustomer (GetCustomerRequest) returns (Customer) {}
     rpc GetCustomers (google.protobuf.Empty) returns (GetCustomersResponse) {}
 }

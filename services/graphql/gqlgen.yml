@@ -1,7 +1,5 @@
 schema: schema.graphql
 
-# autobind:
-
 resolver:
   layout: follow-schema
   dir: resolver
@@ -13,3 +11,9 @@ model:
 exec:
   filename: gql_generated/generated.go
   package: gql_generated
+
+models:
+  User:
+    fields:
+      customer:
+        resolver: true

@@ -10,7 +10,7 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
-	"strconv"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -21,9 +21,10 @@ import (
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
 	res, err := r.client.UserClient.PostUser(ctx,
 		&pb.PostUserRequest{
-			Username: input.Username,
-			Password: input.Password,
-			Role:     input.Role,
+			Username:   input.Username,
+			Password:   input.Password,
+			Role:       input.Role,
+			CustomerId: *input.CustomerID,
 		},
 	)
 	if err != nil {
@@ -31,6 +32,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 	}
 	var user model.User
 	copier.Copy(&user, res.GetUser())
+	user.CustomerID = res.User.CustomerId
 	return &user, nil
 }
 
@@ -74,6 +76,7 @@ func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.Custo
 	}
 	var res model.Customer
 	copier.Copy(&res, c)
+	res.LicenseID = c.LicenseId
 	return &res, nil
 }
 
@@ -85,11 +88,15 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	}
 	var users []*model.User
 	copier.Copy(&users, &res.Users)
+	for i, c := range users {
+		c.ID = res.Users[i].Id
+		c.CustomerID = res.Users[i].CustomerId
+	}
 	return users, nil
 }
 
 // Customers is the resolver for the customers field.
-func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
+func (r *queryResolver) Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error) {
 	res, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})
 	if err != nil {
 		return nil, err
@@ -97,9 +104,26 @@ func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error
 	var customers []*model.Customer
 	copier.Copy(&customers, &res.Customers)
 	for i, c := range customers {
-		c.ID = strconv.Itoa(int(res.Customers[i].Id))
+		c.ID = res.Customers[i].Id
 	}
 	return customers, nil
+}
+
+// Customer is the resolver for the customer field.
+func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {
+	req := &pb.GetCustomerRequest{
+		Id: obj.CustomerID,
+	}
+	customerRes, err := r.client.CustomerClient.GetCustomer(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var out model.Customer
+	copier.Copy(&out, customerRes)
+	out.ID = customerRes.Id
+	out.LicenseID = customerRes.LicenseId
+	return &out, nil
 }
 
 // Mutation returns gql_generated.MutationResolver implementation.
@@ -108,5 +132,19 @@ func (r *Resolver) Mutation() gql_generated.MutationResolver { return &mutationR
 // Query returns gql_generated.QueryResolver implementation.
 func (r *Resolver) Query() gql_generated.QueryResolver { return &queryResolver{r} }
 
+// User returns gql_generated.UserResolver implementation.
+func (r *Resolver) User() gql_generated.UserResolver { return &userResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) Customer(ctx context.Context) (*model.Customer, error) {
+	panic(fmt.Errorf("not implemented: Customer - customer"))
+}

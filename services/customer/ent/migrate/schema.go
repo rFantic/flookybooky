@@ -10,7 +10,7 @@ import (
 var (
 	// CustomersColumns holds the columns for the "customers" table.
 	CustomersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString},
 		{Name: "address", Type: field.TypeString},
 		{Name: "license_id", Type: field.TypeString},

@@ -17,12 +17,14 @@ services:
 
   user:
     profiles: ["user", "graphql"]
+    depends_on:
+      - userdb
     build:
       context: .
       dockerfile: ./services/user/user.dockerfile
     restart: on-failure
     ports:
-      - 4000:4000
+      - 4001:4000
 
   flightdb:
     profiles: ["flight", "graphql"]
@@ -35,6 +37,8 @@ services:
 
   flight:
     profiles: ["flight", "graphql"]
+    depends_on:
+      - flightdb
     build:
       context: .
       dockerfile: ./services/flight/flight.dockerfile
@@ -51,6 +55,8 @@ services:
 
   customer:
     profiles: ["customer", "graphql"]
+    depends_on:
+      - customerdb
     build:
       context: .
       dockerfile: ./services/customer/customer.dockerfile
@@ -66,4 +72,4 @@ services:
     restart: on-failure
     ports:
       - 8081:8081
-      - 4001:4000
+      - 4000:4000

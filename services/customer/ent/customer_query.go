@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // CustomerQuery is the builder for querying Customer entities.
@@ -81,8 +82,8 @@ func (cq *CustomerQuery) FirstX(ctx context.Context) *Customer {
 
 // FirstID returns the first Customer ID from the query.
 // Returns a *NotFoundError when no Customer ID was found.
-func (cq *CustomerQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CustomerQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = cq.Limit(1).IDs(setContextOp(ctx, cq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +95,7 @@ func (cq *CustomerQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *CustomerQuery) FirstIDX(ctx context.Context) int {
+func (cq *CustomerQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := cq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +133,8 @@ func (cq *CustomerQuery) OnlyX(ctx context.Context) *Customer {
 // OnlyID is like Only, but returns the only Customer ID in the query.
 // Returns a *NotSingularError when more than one Customer ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *CustomerQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *CustomerQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = cq.Limit(2).IDs(setContextOp(ctx, cq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (cq *CustomerQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *CustomerQuery) OnlyIDX(ctx context.Context) int {
+func (cq *CustomerQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := cq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +178,7 @@ func (cq *CustomerQuery) AllX(ctx context.Context) []*Customer {
 }
 
 // IDs executes the query and returns a list of Customer IDs.
-func (cq *CustomerQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (cq *CustomerQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if cq.ctx.Unique == nil && cq.path != nil {
 		cq.Unique(true)
 	}
@@ -189,7 +190,7 @@ func (cq *CustomerQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *CustomerQuery) IDsX(ctx context.Context) []int {
+func (cq *CustomerQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := cq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -364,7 +365,7 @@ func (cq *CustomerQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (cq *CustomerQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(customer.Table, customer.Columns, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(customer.Table, customer.Columns, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeUUID))
 	_spec.From = cq.sql
 	if unique := cq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

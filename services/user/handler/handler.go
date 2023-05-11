@@ -36,12 +36,15 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 		SetUsername(req.Username).
 		SetPassword(string(hash)).
 		SetRole(user.Role(req.Role)).
+		SetCustomerID(req.CustomerId).
 		Save(ctx)
+
 	if err != nil {
 		return nil, err
 	}
 	var postUser pb.User
 	copier.Copy(&postUser, u)
+	postUser.CustomerId = u.CustomerID
 	var res pb.PostUserResponse = pb.PostUserResponse{
 		User: &postUser,
 	}
@@ -53,11 +56,13 @@ func (h *UserHandler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.
 		return nil, err
 	}
 	entUser, err := h.client.User.Query().Where(user.ID(id)).Only(ctx)
-	var user pb.User
-	copier.Copy(&user, entUser)
 	if err != nil {
 		return nil, err
 	}
+
+	var user pb.User
+	copier.Copy(&user, entUser)
+	user.CustomerId = entUser.CustomerID
 	res := &pb.GetUserResponse{User: &user}
 	if err != nil {
 		return nil, err
@@ -75,6 +80,10 @@ func (h *UserHandler) GetUsers(ctx context.Context, req *pb.GetUsersRequest) (*p
 	res := &pb.GetUsersResponse{}
 
 	err = copier.Copy(&res.Users, &users)
+	for i, c := range res.Users {
+		c.CustomerId = users[i].CustomerID
+	}
+
 	if err != nil {
 		return nil, err
 	}

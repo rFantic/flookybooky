@@ -10,7 +10,7 @@ type User {
     username: String!
     role: String!
     customer_id: String!
-    customer: Customer
+    customer: Customer!
 }
 
 type LoginInfo{
@@ -54,5 +54,5 @@ type Mutation {
 
 type Query {
     users: [User!]! @hasRole(role: admin)
-    customers: [Customer!]!
+    customers (id: String, name: String): [Customer!]!
 }

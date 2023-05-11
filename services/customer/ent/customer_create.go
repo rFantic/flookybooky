@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // CustomerCreate is the builder for creating a Customer entity.
@@ -58,6 +59,20 @@ func (cc *CustomerCreate) SetNillableTimestamp(t *time.Time) *CustomerCreate {
 	return cc
 }
 
+// SetID sets the "id" field.
+func (cc *CustomerCreate) SetID(u uuid.UUID) *CustomerCreate {
+	cc.mutation.SetID(u)
+	return cc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (cc *CustomerCreate) SetNillableID(u *uuid.UUID) *CustomerCreate {
+	if u != nil {
+		cc.SetID(*u)
+	}
+	return cc
+}
+
 // Mutation returns the CustomerMutation object of the builder.
 func (cc *CustomerCreate) Mutation() *CustomerMutation {
 	return cc.mutation
@@ -96,6 +111,10 @@ func (cc *CustomerCreate) defaults() {
 	if _, ok := cc.mutation.Timestamp(); !ok {
 		v := customer.DefaultTimestamp
 		cc.mutation.SetTimestamp(v)
+	}
+	if _, ok := cc.mutation.ID(); !ok {
+		v := customer.DefaultID()
+		cc.mutation.SetID(v)
 	}
 }
 
@@ -140,8 +159,13 @@ func (cc *CustomerCreate) sqlSave(ctx context.Context) (*Customer, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	cc.mutation.id = &_node.ID
 	cc.mutation.done = true
 	return _node, nil
@@ -150,8 +174,12 @@ func (cc *CustomerCreate) sqlSave(ctx context.Context) (*Customer, error) {
 func (cc *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Customer{config: cc.config}
-		_spec = sqlgraph.NewCreateSpec(customer.Table, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(customer.Table, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeUUID))
 	)
+	if id, ok := cc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := cc.mutation.Name(); ok {
 		_spec.SetField(customer.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -216,10 +244,6 @@ func (ccb *CustomerCreateBulk) Save(ctx context.Context) ([]*Customer, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

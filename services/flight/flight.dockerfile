@@ -5,4 +5,4 @@ RUN go mod download
 COPY ./ ./
 COPY services/flight/.env .env
 RUN go build -o /go/bin/app services/flight/cmd/main.go
-# CMD ["app"]
+CMD ["app"]
