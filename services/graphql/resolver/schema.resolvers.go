@@ -39,7 +39,9 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 	}
 	var user model.User
 	copier.Copy(&user, res.GetUser())
-	user.Customer.ID = res.User.CustomerId
+	if res.User.CustomerId != "" {
+		user.Customer.ID = res.User.CustomerId
+	}
 	return &user, nil
 }
 

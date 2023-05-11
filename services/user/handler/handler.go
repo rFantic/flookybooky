@@ -32,13 +32,14 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 		return nil, err
 	}
 
-	u, err := h.client.User.Create().
+	query := h.client.User.Create().
 		SetUsername(req.Username).
 		SetPassword(string(hash)).
-		SetRole(user.Role(req.Role)).
-		SetCustomerID(req.CustomerId).
-		Save(ctx)
-
+		SetRole(user.Role(req.Role))
+	if req.CustomerId != "" {
+		query.SetCustomerID(req.CustomerId)
+	}
+	u, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
