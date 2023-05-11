@@ -51,6 +51,7 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*p
 	}
 	return &res, nil
 }
+
 func (h *UserHandler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
