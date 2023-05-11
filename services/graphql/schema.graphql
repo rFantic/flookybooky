@@ -9,7 +9,10 @@ type User {
     id: ID!
     username: String!
     role: String!
+<<<<<<< HEAD
     customer_id: String!
+=======
+>>>>>>> 4615d17 (Stitching schema in graphql.)
     customer: Customer!
 }
 
@@ -21,7 +24,7 @@ input UserInput {
     username: String!
     password: String!
     role: String!
-    customer_id: ID
+    customer: CustomerInput
 }
 
 input LoginInput {

@@ -71,11 +71,10 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Customer   func(childComplexity int) int
-		CustomerID func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Role       func(childComplexity int) int
-		Username   func(childComplexity int) int
+		Customer func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Role     func(childComplexity int) int
+		Username func(childComplexity int) int
 	}
 }
 
@@ -218,13 +217,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Customer(childComplexity), true
 
-	case "User.customer_id":
-		if e.complexity.User.CustomerID == nil {
-			break
-		}
-
-		return e.complexity.User.CustomerID(childComplexity), true
-
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
@@ -328,7 +320,10 @@ type User {
     id: ID!
     username: String!
     role: String!
+<<<<<<< HEAD
     customer_id: String!
+=======
+>>>>>>> 4615d17 (Stitching schema in graphql.)
     customer: Customer!
 }
 
@@ -340,7 +335,7 @@ input UserInput {
     username: String!
     password: String!
     role: String!
-    customer_id: ID
+    customer: CustomerInput
 }
 
 input LoginInput {
@@ -873,8 +868,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_username(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "customer_id":
-				return ec.fieldContext_User_customer_id(ctx, field)
 			case "customer":
 				return ec.fieldContext_User_customer(ctx, field)
 			}
@@ -1092,8 +1085,6 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_username(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "customer_id":
-				return ec.fieldContext_User_customer_id(ctx, field)
 			case "customer":
 				return ec.fieldContext_User_customer(ctx, field)
 			}
@@ -1421,50 +1412,6 @@ func (ec *executionContext) _User_role(ctx context.Context, field graphql.Collec
 }
 
 func (ec *executionContext) fieldContext_User_role(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_customer_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_customer_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CustomerID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_customer_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -3418,7 +3365,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"username", "password", "role", "customer_id"}
+	fieldsInOrder := [...]string{"username", "password", "role", "customer"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3452,15 +3399,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.Role = data
-		case "customer_id":
+		case "customer":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customer_id"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customer"))
+			data, err := ec.unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CustomerID = data
+			it.Customer = data
 		}
 	}
 
@@ -3741,6 +3688,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
+<<<<<<< HEAD
 			}
 		case "customer_id":
 
@@ -3748,6 +3696,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
+=======
+>>>>>>> 4615d17 (Stitching schema in graphql.)
 			}
 		case "customer":
 			field := field
@@ -4577,20 +4527,16 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+<<<<<<< HEAD
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+=======
+func (ec *executionContext) unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (*model.CustomerInput, error) {
+>>>>>>> 4615d17 (Stitching schema in graphql.)
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalID(v)
+	res, err := ec.unmarshalInputCustomerInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalID(*v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

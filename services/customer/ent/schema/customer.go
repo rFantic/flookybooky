@@ -1,7 +1,8 @@
 package schema
 
 import (
-	"flookybooky/internal/string"
+	"errors"
+	"flookybooky/internal/validate"
 	"time"
 
 	"entgo.io/ent"
@@ -21,9 +22,15 @@ func (Customer) Fields() []ent.Field {
 		field.String("name"),
 		field.String("address"),
 		field.String("license_id").
-			Validate(string.IsNumeric),
+			Validate(validate.IsNumeric).
+			Validate(func(s string) error {
+				if len(s) >= 10 {
+					return errors.New("license id cannot be longer than 10")
+				}
+				return nil
+			}),
 		field.String("phone_number").
-			Validate(string.IsNumeric),
+			Validate(validate.IsNumeric),
 		field.Time("timestamp").Immutable().Default(time.Now()),
 	}
 }
