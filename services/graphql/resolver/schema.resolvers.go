@@ -10,10 +10,6 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
-<<<<<<< HEAD
-	"fmt"
-=======
->>>>>>> 4615d17 (Stitching schema in graphql.)
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -22,16 +18,6 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
-<<<<<<< HEAD
-	res, err := r.client.UserClient.PostUser(ctx,
-		&pb.PostUserRequest{
-			Username:   input.Username,
-			Password:   input.Password,
-			Role:       input.Role,
-			CustomerId: *input.CustomerID,
-		},
-	)
-=======
 	userReq := &pb.PostUserRequest{
 		Username: input.Username,
 		Password: input.Password,
@@ -48,13 +34,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		userReq.CustomerId = customerRes.Id
 	}
 	res, err := r.client.UserClient.PostUser(ctx, userReq)
->>>>>>> 4615d17 (Stitching schema in graphql.)
 	if err != nil {
 		return nil, err
 	}
 	var user model.User
 	copier.Copy(&user, res.GetUser())
-	user.CustomerID = res.User.CustomerId
+	user.Customer.ID = res.User.CustomerId
 	return &user, nil
 }
 
@@ -112,11 +97,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	copier.Copy(&users, &res.Users)
 	for i, c := range users {
 		c.ID = res.Users[i].Id
-<<<<<<< HEAD
-		c.CustomerID = res.Users[i].CustomerId
-=======
 		c.Customer.ID = res.Users[i].CustomerId
->>>>>>> 4615d17 (Stitching schema in graphql.)
 	}
 	return users, nil
 }
@@ -138,11 +119,7 @@ func (r *queryResolver) Customers(ctx context.Context, id *string, name *string)
 // Customer is the resolver for the customer field.
 func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {
 	req := &pb.GetCustomerRequest{
-<<<<<<< HEAD
-		Id: obj.CustomerID,
-=======
 		Id: obj.Customer.ID,
->>>>>>> 4615d17 (Stitching schema in graphql.)
 	}
 	customerRes, err := r.client.CustomerClient.GetCustomer(ctx, req)
 	if err != nil {
@@ -168,16 +145,3 @@ func (r *Resolver) User() gql_generated.UserResolver { return &userResolver{r} }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-<<<<<<< HEAD
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *queryResolver) Customer(ctx context.Context) (*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: Customer - customer"))
-}
-=======
->>>>>>> 4615d17 (Stitching schema in graphql.)

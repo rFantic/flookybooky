@@ -35,18 +35,10 @@ type LoginInput struct {
 }
 
 type User struct {
-<<<<<<< HEAD
-	ID         string    `json:"id"`
-	Username   string    `json:"username"`
-	Role       string    `json:"role"`
-	CustomerID string    `json:"customer_id"`
-	Customer   *Customer `json:"customer"`
-=======
 	ID       string    `json:"id"`
 	Username string    `json:"username"`
 	Role     string    `json:"role"`
 	Customer *Customer `json:"customer"`
->>>>>>> 4615d17 (Stitching schema in graphql.)
 }
 
 type UserInput struct {

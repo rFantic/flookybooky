@@ -9,10 +9,6 @@ type User {
     id: ID!
     username: String!
     role: String!
-<<<<<<< HEAD
-    customer_id: String!
-=======
->>>>>>> 4615d17 (Stitching schema in graphql.)
     customer: Customer!
 }
 

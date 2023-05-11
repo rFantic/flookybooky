@@ -320,10 +320,6 @@ type User {
     id: ID!
     username: String!
     role: String!
-<<<<<<< HEAD
-    customer_id: String!
-=======
->>>>>>> 4615d17 (Stitching schema in graphql.)
     customer: Customer!
 }
 
@@ -3688,16 +3684,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
-<<<<<<< HEAD
-			}
-		case "customer_id":
-
-			out.Values[i] = ec._User_customer_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-=======
->>>>>>> 4615d17 (Stitching schema in graphql.)
 			}
 		case "customer":
 			field := field
@@ -4527,11 +4513,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-<<<<<<< HEAD
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-=======
 func (ec *executionContext) unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (*model.CustomerInput, error) {
->>>>>>> 4615d17 (Stitching schema in graphql.)
 	if v == nil {
 		return nil, nil
 	}
