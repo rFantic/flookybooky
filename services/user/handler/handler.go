@@ -103,9 +103,10 @@ func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	if err != nil {
 		return nil, fmt.Errorf("wrong password")
 	}
+	expireTime := time.Now().Add(time.Hour * 24).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": expireTime,
 	})
 	tokenString, err := token.SignedString(util.Secretkey)
 	if err != nil {
@@ -113,6 +114,7 @@ func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}
 
 	return &pb.LoginResponse{
-		JwtToken: tokenString,
+		JwtToken:   tokenString,
+		ExpireTime: expireTime,
 	}, err
 }

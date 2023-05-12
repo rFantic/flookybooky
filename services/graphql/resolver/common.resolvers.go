@@ -65,7 +65,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
 	c.SetCookie(
 		"Authentication", res.JwtToken,
-		3600*24, "", "", false, false,
+		int(res.ExpireTime), "", "", false, false,
 	)
 	return &model.LoginInfo{
 		TokenString: res.JwtToken,

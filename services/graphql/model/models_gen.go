@@ -11,7 +11,6 @@ import (
 type Customer struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
-	Status      string `json:"status"`
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`
@@ -19,7 +18,6 @@ type Customer struct {
 
 type CustomerInput struct {
 	Name        string `json:"name"`
-	Status      string `json:"status"`
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`

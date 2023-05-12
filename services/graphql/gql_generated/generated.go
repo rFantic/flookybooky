@@ -52,7 +52,6 @@ type ComplexityRoot struct {
 		LicenseID   func(childComplexity int) int
 		Name        func(childComplexity int) int
 		PhoneNumber func(childComplexity int) int
-		Status      func(childComplexity int) int
 	}
 
 	LoginInfo struct {
@@ -140,13 +139,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Customer.PhoneNumber(childComplexity), true
-
-	case "Customer.status":
-		if e.complexity.Customer.Status == nil {
-			break
-		}
-
-		return e.complexity.Customer.Status(childComplexity), true
 
 	case "LoginInfo.tokenString":
 		if e.complexity.LoginInfo.TokenString == nil {
@@ -323,7 +315,6 @@ type Query {
 	{Name: "../schema/customer.graphql", Input: `type Customer {
     id: ID!
     name: String!
-    status: String!
     address: String!
     license_id: String!
     phone_number: String!
@@ -331,11 +322,11 @@ type Query {
 
 input CustomerInput {
     name: String!
-    status: String!
     address: String!
     license_id: String!
     phone_number: String!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
 
 enum Role {
@@ -364,7 +355,8 @@ input UserInput {
 input LoginInput {
     username: String!
     password: String!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -585,50 +577,6 @@ func (ec *executionContext) _Customer_name(ctx context.Context, field graphql.Co
 }
 
 func (ec *executionContext) fieldContext_Customer_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Customer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Customer_status(ctx context.Context, field graphql.CollectedField, obj *model.Customer) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Customer_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Customer_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Customer",
 		Field:      field,
@@ -984,8 +932,6 @@ func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Con
 				return ec.fieldContext_Customer_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Customer_name(ctx, field)
-			case "status":
-				return ec.fieldContext_Customer_status(ctx, field)
 			case "address":
 				return ec.fieldContext_Customer_address(ctx, field)
 			case "license_id":
@@ -1131,8 +1077,6 @@ func (ec *executionContext) fieldContext_Query_customers(ctx context.Context, fi
 				return ec.fieldContext_Customer_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Customer_name(ctx, field)
-			case "status":
-				return ec.fieldContext_Customer_status(ctx, field)
 			case "address":
 				return ec.fieldContext_Customer_address(ctx, field)
 			case "license_id":
@@ -1458,8 +1402,6 @@ func (ec *executionContext) fieldContext_User_customer(ctx context.Context, fiel
 				return ec.fieldContext_Customer_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Customer_name(ctx, field)
-			case "status":
-				return ec.fieldContext_Customer_status(ctx, field)
 			case "address":
 				return ec.fieldContext_Customer_address(ctx, field)
 			case "license_id":
@@ -3253,7 +3195,7 @@ func (ec *executionContext) unmarshalInputCustomerInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "status", "address", "license_id", "phone_number"}
+	fieldsInOrder := [...]string{"name", "address", "license_id", "phone_number"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3269,15 +3211,6 @@ func (ec *executionContext) unmarshalInputCustomerInput(ctx context.Context, obj
 				return it, err
 			}
 			it.Name = data
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
 		case "address":
 			var err error
 
@@ -3433,13 +3366,6 @@ func (ec *executionContext) _Customer(ctx context.Context, sel ast.SelectionSet,
 		case "name":
 
 			out.Values[i] = ec._Customer_name(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "status":
-
-			out.Values[i] = ec._Customer_status(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

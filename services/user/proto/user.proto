@@ -44,6 +44,7 @@ message LoginRequest {
 
 message LoginResponse{
     string jwtToken = 1;
+    int64 expireTime = 2;
 }
 
 service UserService {
@@ -51,5 +52,4 @@ service UserService {
     rpc GetUser (GetUserRequest) returns (GetUserResponse) {}
     rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
-    rpc
 }

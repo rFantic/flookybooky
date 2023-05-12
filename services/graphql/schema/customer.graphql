@@ -1,7 +1,6 @@
 type Customer {
     id: ID!
     name: String!
-    status: String!
     address: String!
     license_id: String!
     phone_number: String!
@@ -9,7 +8,6 @@ type Customer {
 
 input CustomerInput {
     name: String!
-    status: String!
     address: String!
     license_id: String!
     phone_number: String!
