@@ -12,5 +12,5 @@ make up
 ```
 make upProfile Profile="user"
 ```
-### Planned feature
+## Planned feature
 - Implement transaction
