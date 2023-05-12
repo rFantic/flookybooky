@@ -1,0 +1,16 @@
+query get_customers {
+  customers {
+    id
+    name
+    address
+    license_id
+  }
+}
+
+mutation create_customers {
+  createCustomer(
+    input: {name: "near nguyen", status: "active", address: "fake address", license_id: "00000000000000000", phone_number: "0123456789"}
+  ) {
+    name
+  }
+}

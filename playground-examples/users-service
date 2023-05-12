@@ -1,0 +1,31 @@
+query get_users {
+  users {
+    username
+    customer {
+      name
+      license_id
+    }
+  }
+}
+
+mutation create_users_without_customer {
+  createUser(input: {username: "Miloo", password: "passwd", role: "admin"}) {
+    username
+    role
+  }
+}
+
+mutation create_users {
+  createUser(
+    input: {username: "Lilooo", password: "passwd", role: "admin", customer: {name: "near nguyen", status: "active", address: "fake address", license_id: "034098002348", phone_number: "0123456789"}}
+  ) {
+    username
+    role
+  }
+}
+
+mutation login {
+  login(input: {username: "Lilooo", password: "passwd"}) {
+    tokenString
+  }
+}
