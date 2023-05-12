@@ -51,4 +51,5 @@ service UserService {
     rpc GetUser (GetUserRequest) returns (GetUserResponse) {}
     rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
+    rpc 
 }

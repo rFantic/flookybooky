@@ -1,0 +1,10 @@
+type Mutation {
+    createUser(input: UserInput!): User!
+    login(input: LoginInput!): LoginInfo!
+    createCustomer(input: CustomerInput!): Customer!
+}
+
+type Query {
+    users: [User!]! @hasRole(role: admin)
+    customers (id: String, name: String): [Customer!]!
+}

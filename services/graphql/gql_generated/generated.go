@@ -309,7 +309,34 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
+	{Name: "../schema/common.graphql", Input: `type Mutation {
+    createUser(input: UserInput!): User!
+    login(input: LoginInput!): LoginInfo!
+    createCustomer(input: CustomerInput!): Customer!
+}
+
+type Query {
+    users: [User!]! @hasRole(role: admin)
+    customers (id: String, name: String): [Customer!]!
+}
+`, BuiltIn: false},
+	{Name: "../schema/customer.graphql", Input: `type Customer {
+    id: ID!
+    name: String!
+    status: String!
+    address: String!
+    license_id: String!
+    phone_number: String!
+}
+
+input CustomerInput {
+    name: String!
+    status: String!
+    address: String!
+    license_id: String!
+    phone_number: String!
+}`, BuiltIn: false},
+	{Name: "../schema/user.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
 
 enum Role {
     admin
@@ -337,36 +364,7 @@ input UserInput {
 input LoginInput {
     username: String!
     password: String!
-}
-
-type Customer {
-    id: ID!
-    name: String!
-    status: String!
-    address: String!
-    license_id: String!
-    phone_number: String!
-}
-
-input CustomerInput {
-    name: String!
-    status: String!
-    address: String!
-    license_id: String!
-    phone_number: String!
-}
-
-type Mutation {
-    createUser(input: UserInput!): User!
-    login(input: LoginInput!): LoginInfo!
-    createCustomer(input: CustomerInput!): Customer!
-}
-
-type Query {
-    users: [User!]! @hasRole(role: admin)
-    customers (id: String, name: String): [Customer!]!
-}
-`, BuiltIn: false},
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
