@@ -12,5 +12,7 @@ make up
 ```
 make upProfile Profile="user"
 ```
+
 ## Planned feature
-- Implement transaction
+- Implement transaction.
+- Add more fields validation.

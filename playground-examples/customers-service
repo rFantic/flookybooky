@@ -17,4 +17,7 @@ mutation create_customers {
 
 # update_customers
 # delete_customers
-# 
+# set_status
+
+! email validation for user and customer
+! search
