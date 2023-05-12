@@ -1,4 +1,4 @@
-## How to run:
+## How to run
 ### Run all services and graphql playground
 - System: linux
 - Command:
