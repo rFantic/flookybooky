@@ -14,3 +14,7 @@ mutation create_customers {
     name
   }
 }
+
+# update_customers
+# delete_customers
+# 

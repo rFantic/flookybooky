@@ -29,3 +29,9 @@ mutation login {
     tokenString
   }
 }
+
+# logout
+# delete_user
+# update_user
+# change_password
+# set_role
