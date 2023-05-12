@@ -320,7 +320,7 @@ type User {
     id: ID!
     username: String!
     role: String!
-    customer: Customer!
+    customer: Customer
 }
 
 type LoginInfo{
@@ -1441,14 +1441,11 @@ func (ec *executionContext) _User_customer(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Customer)
 	fc.Result = res
-	return ec.marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
+	return ec.marshalOCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_customer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3695,9 +3692,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_customer(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -4511,6 +4505,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx context.Context, sel ast.SelectionSet, v *model.Customer) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Customer(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (*model.CustomerInput, error) {

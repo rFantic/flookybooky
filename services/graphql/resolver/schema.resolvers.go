@@ -38,9 +38,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		return nil, err
 	}
 	var user model.User
-	copier.Copy(&user, res.GetUser())
+	copier.Copy(&user, res.User)
 	if res.User.CustomerId != "" {
-		user.Customer.ID = res.User.CustomerId
+		user.Customer = &model.Customer{
+			ID: res.User.CustomerId,
+		}
 	}
 	return &user, nil
 }
@@ -99,7 +101,9 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	copier.Copy(&users, &res.Users)
 	for i, c := range users {
 		c.ID = res.Users[i].Id
-		c.Customer.ID = res.Users[i].CustomerId
+		c.Customer = &model.Customer{
+			ID: res.Users[i].CustomerId,
+		}
 	}
 	return users, nil
 }

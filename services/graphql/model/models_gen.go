@@ -38,7 +38,7 @@ type User struct {
 	ID       string    `json:"id"`
 	Username string    `json:"username"`
 	Role     string    `json:"role"`
-	Customer *Customer `json:"customer"`
+	Customer *Customer `json:"customer,omitempty"`
 }
 
 type UserInput struct {

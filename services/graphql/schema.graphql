@@ -9,7 +9,7 @@ type User {
     id: ID!
     username: String!
     role: String!
-    customer: Customer!
+    customer: Customer
 }
 
 type LoginInfo{
