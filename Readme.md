@@ -6,7 +6,7 @@
 make up
 ```
 
-### Run single services
+### Run single service
 - Supported profile: flight, user, customer, graphql, booking
 - Example for user service:
 ```
