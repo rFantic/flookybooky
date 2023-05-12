@@ -9,27 +9,28 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
-	"log"
 
 	"github.com/jinzhu/copier"
 )
 
 // Customer is the resolver for the customer field.
 func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {
-	log.Println("Customer ID: ", obj.Customer.ID)
-	req := &pb.GetCustomerRequest{
-		Id: obj.Customer.ID,
-	}
-	customerRes, err := r.client.CustomerClient.GetCustomer(ctx, req)
-	if err != nil {
-		return nil, err
-	}
+	var out *model.Customer
+	if obj.Customer != nil {
+		out = &model.Customer{}
+		req := &pb.GetCustomerRequest{
+			Id: obj.Customer.ID,
+		}
+		customerRes, err := r.client.CustomerClient.GetCustomer(ctx, req)
+		if err != nil {
+			return nil, err
+		}
 
-	var out model.Customer
-	copier.Copy(&out, customerRes)
-	out.ID = customerRes.Id
-	out.LicenseID = customerRes.LicenseId
-	return &out, nil
+		copier.Copy(&out, customerRes)
+		out.ID = customerRes.Id
+		out.LicenseID = customerRes.LicenseId
+	}
+	return out, nil
 }
 
 // User returns gql_generated.UserResolver implementation.
