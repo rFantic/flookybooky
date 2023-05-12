@@ -1,7 +1,33 @@
+query getAirports {
+  airport {
+    id
+    name
+    address
+  }
+}
+
+mutation createAirport {
+  createAirport(
+    input: {
+      name: "Noi Bai International Airport (HAN)",
+      address: "Phú Minh, Sóc Sơn, Hanoi",
+    }
+  ) {
+    id
+    name
+    address
+  }
+}
+
+# create_airport
+# update_airport
+# delete_airport
+
 # create_flight
 # update_flight
 # delete_flight
 # cancel_flight
+
 # create_seats
 
 ! cancel_flight -> cancel_booking -> cancel_ticket

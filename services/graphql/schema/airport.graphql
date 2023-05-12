@@ -1,0 +1,18 @@
+type Airport {
+    id: String!
+    name: String!
+    address: String!
+}
+
+input AirportInput{
+    name: String!
+    address: String!
+}
+
+extend type Query {
+    airport: [Airport!]!
+}
+
+extend type Mutation {
+    createAirport(input: AirportInput!): Airport!
+}

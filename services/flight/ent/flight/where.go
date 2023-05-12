@@ -8,50 +8,51 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Flight {
+func ID(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Flight {
+func IDEQ(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Flight {
+func IDNEQ(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Flight {
+func IDIn(ids ...uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Flight {
+func IDNotIn(ids ...uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Flight {
+func IDGT(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Flight {
+func IDGTE(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Flight {
+func IDLT(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Flight {
+func IDLTE(id uuid.UUID) predicate.Flight {
 	return predicate.Flight(sql.FieldLTE(FieldID, id))
 }
 
@@ -60,24 +61,14 @@ func Name(v string) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldName, v))
 }
 
-// FromID applies equality check predicate on the "from_id" field. It's identical to FromIDEQ.
-func FromID(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldFromID, v))
+// DepartureTime applies equality check predicate on the "departure_time" field. It's identical to DepartureTimeEQ.
+func DepartureTime(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldDepartureTime, v))
 }
 
-// ToID applies equality check predicate on the "to_id" field. It's identical to ToIDEQ.
-func ToID(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldToID, v))
-}
-
-// Start applies equality check predicate on the "start" field. It's identical to StartEQ.
-func Start(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldStart, v))
-}
-
-// End applies equality check predicate on the "end" field. It's identical to EndEQ.
-func End(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldEnd, v))
+// ArrivalTime applies equality check predicate on the "arrival_time" field. It's identical to ArrivalTimeEQ.
+func ArrivalTime(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldArrivalTime, v))
 }
 
 // AvailableSlots applies equality check predicate on the "available_slots" field. It's identical to AvailableSlotsEQ.
@@ -155,214 +146,84 @@ func NameContainsFold(v string) predicate.Flight {
 	return predicate.Flight(sql.FieldContainsFold(FieldName, v))
 }
 
-// FromIDEQ applies the EQ predicate on the "from_id" field.
-func FromIDEQ(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldFromID, v))
+// DepartureTimeEQ applies the EQ predicate on the "departure_time" field.
+func DepartureTimeEQ(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldDepartureTime, v))
 }
 
-// FromIDNEQ applies the NEQ predicate on the "from_id" field.
-func FromIDNEQ(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldNEQ(FieldFromID, v))
+// DepartureTimeNEQ applies the NEQ predicate on the "departure_time" field.
+func DepartureTimeNEQ(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldDepartureTime, v))
 }
 
-// FromIDIn applies the In predicate on the "from_id" field.
-func FromIDIn(vs ...string) predicate.Flight {
-	return predicate.Flight(sql.FieldIn(FieldFromID, vs...))
+// DepartureTimeIn applies the In predicate on the "departure_time" field.
+func DepartureTimeIn(vs ...time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldDepartureTime, vs...))
 }
 
-// FromIDNotIn applies the NotIn predicate on the "from_id" field.
-func FromIDNotIn(vs ...string) predicate.Flight {
-	return predicate.Flight(sql.FieldNotIn(FieldFromID, vs...))
+// DepartureTimeNotIn applies the NotIn predicate on the "departure_time" field.
+func DepartureTimeNotIn(vs ...time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldDepartureTime, vs...))
 }
 
-// FromIDGT applies the GT predicate on the "from_id" field.
-func FromIDGT(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldGT(FieldFromID, v))
+// DepartureTimeGT applies the GT predicate on the "departure_time" field.
+func DepartureTimeGT(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldGT(FieldDepartureTime, v))
 }
 
-// FromIDGTE applies the GTE predicate on the "from_id" field.
-func FromIDGTE(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldGTE(FieldFromID, v))
+// DepartureTimeGTE applies the GTE predicate on the "departure_time" field.
+func DepartureTimeGTE(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldGTE(FieldDepartureTime, v))
 }
 
-// FromIDLT applies the LT predicate on the "from_id" field.
-func FromIDLT(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldLT(FieldFromID, v))
+// DepartureTimeLT applies the LT predicate on the "departure_time" field.
+func DepartureTimeLT(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldLT(FieldDepartureTime, v))
 }
 
-// FromIDLTE applies the LTE predicate on the "from_id" field.
-func FromIDLTE(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldLTE(FieldFromID, v))
+// DepartureTimeLTE applies the LTE predicate on the "departure_time" field.
+func DepartureTimeLTE(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldLTE(FieldDepartureTime, v))
 }
 
-// FromIDContains applies the Contains predicate on the "from_id" field.
-func FromIDContains(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldContains(FieldFromID, v))
+// ArrivalTimeEQ applies the EQ predicate on the "arrival_time" field.
+func ArrivalTimeEQ(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldArrivalTime, v))
 }
 
-// FromIDHasPrefix applies the HasPrefix predicate on the "from_id" field.
-func FromIDHasPrefix(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldHasPrefix(FieldFromID, v))
+// ArrivalTimeNEQ applies the NEQ predicate on the "arrival_time" field.
+func ArrivalTimeNEQ(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldArrivalTime, v))
 }
 
-// FromIDHasSuffix applies the HasSuffix predicate on the "from_id" field.
-func FromIDHasSuffix(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldHasSuffix(FieldFromID, v))
+// ArrivalTimeIn applies the In predicate on the "arrival_time" field.
+func ArrivalTimeIn(vs ...time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldArrivalTime, vs...))
 }
 
-// FromIDEqualFold applies the EqualFold predicate on the "from_id" field.
-func FromIDEqualFold(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEqualFold(FieldFromID, v))
+// ArrivalTimeNotIn applies the NotIn predicate on the "arrival_time" field.
+func ArrivalTimeNotIn(vs ...time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldArrivalTime, vs...))
 }
 
-// FromIDContainsFold applies the ContainsFold predicate on the "from_id" field.
-func FromIDContainsFold(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldContainsFold(FieldFromID, v))
+// ArrivalTimeGT applies the GT predicate on the "arrival_time" field.
+func ArrivalTimeGT(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldGT(FieldArrivalTime, v))
 }
 
-// ToIDEQ applies the EQ predicate on the "to_id" field.
-func ToIDEQ(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldToID, v))
+// ArrivalTimeGTE applies the GTE predicate on the "arrival_time" field.
+func ArrivalTimeGTE(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldGTE(FieldArrivalTime, v))
 }
 
-// ToIDNEQ applies the NEQ predicate on the "to_id" field.
-func ToIDNEQ(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldNEQ(FieldToID, v))
+// ArrivalTimeLT applies the LT predicate on the "arrival_time" field.
+func ArrivalTimeLT(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldLT(FieldArrivalTime, v))
 }
 
-// ToIDIn applies the In predicate on the "to_id" field.
-func ToIDIn(vs ...string) predicate.Flight {
-	return predicate.Flight(sql.FieldIn(FieldToID, vs...))
-}
-
-// ToIDNotIn applies the NotIn predicate on the "to_id" field.
-func ToIDNotIn(vs ...string) predicate.Flight {
-	return predicate.Flight(sql.FieldNotIn(FieldToID, vs...))
-}
-
-// ToIDGT applies the GT predicate on the "to_id" field.
-func ToIDGT(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldGT(FieldToID, v))
-}
-
-// ToIDGTE applies the GTE predicate on the "to_id" field.
-func ToIDGTE(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldGTE(FieldToID, v))
-}
-
-// ToIDLT applies the LT predicate on the "to_id" field.
-func ToIDLT(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldLT(FieldToID, v))
-}
-
-// ToIDLTE applies the LTE predicate on the "to_id" field.
-func ToIDLTE(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldLTE(FieldToID, v))
-}
-
-// ToIDContains applies the Contains predicate on the "to_id" field.
-func ToIDContains(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldContains(FieldToID, v))
-}
-
-// ToIDHasPrefix applies the HasPrefix predicate on the "to_id" field.
-func ToIDHasPrefix(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldHasPrefix(FieldToID, v))
-}
-
-// ToIDHasSuffix applies the HasSuffix predicate on the "to_id" field.
-func ToIDHasSuffix(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldHasSuffix(FieldToID, v))
-}
-
-// ToIDEqualFold applies the EqualFold predicate on the "to_id" field.
-func ToIDEqualFold(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldEqualFold(FieldToID, v))
-}
-
-// ToIDContainsFold applies the ContainsFold predicate on the "to_id" field.
-func ToIDContainsFold(v string) predicate.Flight {
-	return predicate.Flight(sql.FieldContainsFold(FieldToID, v))
-}
-
-// StartEQ applies the EQ predicate on the "start" field.
-func StartEQ(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldStart, v))
-}
-
-// StartNEQ applies the NEQ predicate on the "start" field.
-func StartNEQ(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldNEQ(FieldStart, v))
-}
-
-// StartIn applies the In predicate on the "start" field.
-func StartIn(vs ...time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldIn(FieldStart, vs...))
-}
-
-// StartNotIn applies the NotIn predicate on the "start" field.
-func StartNotIn(vs ...time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldNotIn(FieldStart, vs...))
-}
-
-// StartGT applies the GT predicate on the "start" field.
-func StartGT(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldGT(FieldStart, v))
-}
-
-// StartGTE applies the GTE predicate on the "start" field.
-func StartGTE(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldGTE(FieldStart, v))
-}
-
-// StartLT applies the LT predicate on the "start" field.
-func StartLT(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldLT(FieldStart, v))
-}
-
-// StartLTE applies the LTE predicate on the "start" field.
-func StartLTE(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldLTE(FieldStart, v))
-}
-
-// EndEQ applies the EQ predicate on the "end" field.
-func EndEQ(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldEQ(FieldEnd, v))
-}
-
-// EndNEQ applies the NEQ predicate on the "end" field.
-func EndNEQ(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldNEQ(FieldEnd, v))
-}
-
-// EndIn applies the In predicate on the "end" field.
-func EndIn(vs ...time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldIn(FieldEnd, vs...))
-}
-
-// EndNotIn applies the NotIn predicate on the "end" field.
-func EndNotIn(vs ...time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldNotIn(FieldEnd, vs...))
-}
-
-// EndGT applies the GT predicate on the "end" field.
-func EndGT(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldGT(FieldEnd, v))
-}
-
-// EndGTE applies the GTE predicate on the "end" field.
-func EndGTE(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldGTE(FieldEnd, v))
-}
-
-// EndLT applies the LT predicate on the "end" field.
-func EndLT(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldLT(FieldEnd, v))
-}
-
-// EndLTE applies the LTE predicate on the "end" field.
-func EndLTE(v time.Time) predicate.Flight {
-	return predicate.Flight(sql.FieldLTE(FieldEnd, v))
+// ArrivalTimeLTE applies the LTE predicate on the "arrival_time" field.
+func ArrivalTimeLTE(v time.Time) predicate.Flight {
+	return predicate.Flight(sql.FieldLTE(FieldArrivalTime, v))
 }
 
 // AvailableSlotsEQ applies the EQ predicate on the "available_slots" field.
@@ -460,6 +321,52 @@ func HasSeats() predicate.Flight {
 func HasSeatsWith(preds ...predicate.Seat) predicate.Flight {
 	return predicate.Flight(func(s *sql.Selector) {
 		step := newSeatsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrigin applies the HasEdge predicate on the "origin" edge.
+func HasOrigin() predicate.Flight {
+	return predicate.Flight(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OriginTable, OriginColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOriginWith applies the HasEdge predicate on the "origin" edge with a given conditions (other predicates).
+func HasOriginWith(preds ...predicate.Airport) predicate.Flight {
+	return predicate.Flight(func(s *sql.Selector) {
+		step := newOriginStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDestination applies the HasEdge predicate on the "destination" edge.
+func HasDestination() predicate.Flight {
+	return predicate.Flight(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DestinationTable, DestinationColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDestinationWith applies the HasEdge predicate on the "destination" edge with a given conditions (other predicates).
+func HasDestinationWith(preds ...predicate.Airport) predicate.Flight {
+	return predicate.Flight(func(s *sql.Selector) {
+		step := newDestinationStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

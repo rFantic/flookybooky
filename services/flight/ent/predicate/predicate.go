@@ -6,11 +6,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Airport is the predicate function for airport builders.
+type Airport func(*sql.Selector)
+
 // Flight is the predicate function for flight builders.
 type Flight func(*sql.Selector)
-
-// Place is the predicate function for place builders.
-type Place func(*sql.Selector)
 
 // Seat is the predicate function for seat builders.
 type Seat func(*sql.Selector)

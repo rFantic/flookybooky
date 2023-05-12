@@ -40,7 +40,7 @@ func (fd *FlightDelete) ExecX(ctx context.Context) int {
 }
 
 func (fd *FlightDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(flight.Table, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewDeleteSpec(flight.Table, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID))
 	if ps := fd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

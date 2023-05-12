@@ -5,8 +5,8 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/place"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
 	"reflect"
@@ -75,9 +75,9 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			flight.Table: flight.ValidColumn,
-			place.Table:  place.ValidColumn,
-			seat.Table:   seat.ValidColumn,
+			airport.Table: airport.ValidColumn,
+			flight.Table:  flight.ValidColumn,
+			seat.Table:    seat.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

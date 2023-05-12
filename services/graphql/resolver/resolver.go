@@ -20,6 +20,7 @@ import (
 type Client struct {
 	UserClient     pb.UserServiceClient
 	CustomerClient pb.CustomerServiceClient
+	FlightClient   pb.FlightServiceClient
 }
 
 type Resolver struct{ client Client }

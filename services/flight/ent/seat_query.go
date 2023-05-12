@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // SeatQuery is the builder for querying Seat entities.
@@ -21,6 +23,7 @@ type SeatQuery struct {
 	order      []seat.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Seat
+	withFlight *FlightQuery
 	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -58,6 +61,28 @@ func (sq *SeatQuery) Order(o ...seat.OrderOption) *SeatQuery {
 	return sq
 }
 
+// QueryFlight chains the current query on the "flight" edge.
+func (sq *SeatQuery) QueryFlight() *FlightQuery {
+	query := (&FlightClient{config: sq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(seat.Table, seat.FieldID, selector),
+			sqlgraph.To(flight.Table, flight.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, seat.FlightTable, seat.FlightColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Seat entity from the query.
 // Returns a *NotFoundError when no Seat was found.
 func (sq *SeatQuery) First(ctx context.Context) (*Seat, error) {
@@ -82,8 +107,8 @@ func (sq *SeatQuery) FirstX(ctx context.Context) *Seat {
 
 // FirstID returns the first Seat ID from the query.
 // Returns a *NotFoundError when no Seat ID was found.
-func (sq *SeatQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *SeatQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(1).IDs(setContextOp(ctx, sq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -95,7 +120,7 @@ func (sq *SeatQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sq *SeatQuery) FirstIDX(ctx context.Context) int {
+func (sq *SeatQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -133,8 +158,8 @@ func (sq *SeatQuery) OnlyX(ctx context.Context) *Seat {
 // OnlyID is like Only, but returns the only Seat ID in the query.
 // Returns a *NotSingularError when more than one Seat ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (sq *SeatQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *SeatQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(2).IDs(setContextOp(ctx, sq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -150,7 +175,7 @@ func (sq *SeatQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sq *SeatQuery) OnlyIDX(ctx context.Context) int {
+func (sq *SeatQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -178,7 +203,7 @@ func (sq *SeatQuery) AllX(ctx context.Context) []*Seat {
 }
 
 // IDs executes the query and returns a list of Seat IDs.
-func (sq *SeatQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (sq *SeatQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if sq.ctx.Unique == nil && sq.path != nil {
 		sq.Unique(true)
 	}
@@ -190,7 +215,7 @@ func (sq *SeatQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sq *SeatQuery) IDsX(ctx context.Context) []int {
+func (sq *SeatQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := sq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -250,10 +275,22 @@ func (sq *SeatQuery) Clone() *SeatQuery {
 		order:      append([]seat.OrderOption{}, sq.order...),
 		inters:     append([]Interceptor{}, sq.inters...),
 		predicates: append([]predicate.Seat{}, sq.predicates...),
+		withFlight: sq.withFlight.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
 	}
+}
+
+// WithFlight tells the query-builder to eager-load the nodes that are connected to
+// the "flight" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SeatQuery) WithFlight(opts ...func(*FlightQuery)) *SeatQuery {
+	query := (&FlightClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withFlight = query
+	return sq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -262,12 +299,12 @@ func (sq *SeatQuery) Clone() *SeatQuery {
 // Example:
 //
 //	var v []struct {
-//		FlightID string `json:"flight_id,omitempty"`
+//		SeatNumber string `json:"seat_number,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Seat.Query().
-//		GroupBy(seat.FieldFlightID).
+//		GroupBy(seat.FieldSeatNumber).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (sq *SeatQuery) GroupBy(field string, fields ...string) *SeatGroupBy {
@@ -285,11 +322,11 @@ func (sq *SeatQuery) GroupBy(field string, fields ...string) *SeatGroupBy {
 // Example:
 //
 //	var v []struct {
-//		FlightID string `json:"flight_id,omitempty"`
+//		SeatNumber string `json:"seat_number,omitempty"`
 //	}
 //
 //	client.Seat.Query().
-//		Select(seat.FieldFlightID).
+//		Select(seat.FieldSeatNumber).
 //		Scan(ctx, &v)
 func (sq *SeatQuery) Select(fields ...string) *SeatSelect {
 	sq.ctx.Fields = append(sq.ctx.Fields, fields...)
@@ -332,10 +369,16 @@ func (sq *SeatQuery) prepareQuery(ctx context.Context) error {
 
 func (sq *SeatQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Seat, error) {
 	var (
-		nodes   = []*Seat{}
-		withFKs = sq.withFKs
-		_spec   = sq.querySpec()
+		nodes       = []*Seat{}
+		withFKs     = sq.withFKs
+		_spec       = sq.querySpec()
+		loadedTypes = [1]bool{
+			sq.withFlight != nil,
+		}
 	)
+	if sq.withFlight != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, seat.ForeignKeys...)
 	}
@@ -345,6 +388,7 @@ func (sq *SeatQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Seat, e
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Seat{config: sq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -356,7 +400,46 @@ func (sq *SeatQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Seat, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := sq.withFlight; query != nil {
+		if err := sq.loadFlight(ctx, query, nodes, nil,
+			func(n *Seat, e *Flight) { n.Edges.Flight = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (sq *SeatQuery) loadFlight(ctx context.Context, query *FlightQuery, nodes []*Seat, init func(*Seat), assign func(*Seat, *Flight)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Seat)
+	for i := range nodes {
+		if nodes[i].flight_seats == nil {
+			continue
+		}
+		fk := *nodes[i].flight_seats
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(flight.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "flight_seats" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (sq *SeatQuery) sqlCount(ctx context.Context) (int, error) {
@@ -369,7 +452,7 @@ func (sq *SeatQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (sq *SeatQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID))
 	_spec.From = sq.sql
 	if unique := sq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

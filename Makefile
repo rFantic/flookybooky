@@ -2,7 +2,7 @@ genProtoc:
 	protoc --go_out=pb --go-grpc_out=pb \
 	--go_opt=paths=import \
 	--go-grpc_opt=paths=import \
-	**/**/proto/*.proto
+	**/**/proto/*.proto internal/proto/*.proto
 
 genGql:
 	cd services/graphql; go get github.com/99designs/gqlgen@v0.17.31 \
@@ -16,3 +16,5 @@ up:
 
 down:
 	docker compose --profile graphql down --remove-orphans
+
+reUp: down up

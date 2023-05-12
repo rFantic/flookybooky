@@ -8,40 +8,54 @@ import (
 )
 
 var (
+	// AirportsColumns holds the columns for the "airports" table.
+	AirportsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString},
+	}
+	// AirportsTable holds the schema information for the "airports" table.
+	AirportsTable = &schema.Table{
+		Name:       "airports",
+		Columns:    AirportsColumns,
+		PrimaryKey: []*schema.Column{AirportsColumns[0]},
+	}
 	// FlightsColumns holds the columns for the "flights" table.
 	FlightsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString},
-		{Name: "from_id", Type: field.TypeString},
-		{Name: "to_id", Type: field.TypeString},
-		{Name: "start", Type: field.TypeTime},
-		{Name: "end", Type: field.TypeTime},
+		{Name: "departure_time", Type: field.TypeTime},
+		{Name: "arrival_time", Type: field.TypeTime},
 		{Name: "available_slots", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "airport_origin", Type: field.TypeUUID, Nullable: true},
+		{Name: "airport_destination", Type: field.TypeUUID, Nullable: true},
 	}
 	// FlightsTable holds the schema information for the "flights" table.
 	FlightsTable = &schema.Table{
 		Name:       "flights",
 		Columns:    FlightsColumns,
 		PrimaryKey: []*schema.Column{FlightsColumns[0]},
-	}
-	// PlacesColumns holds the columns for the "places" table.
-	PlacesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-	}
-	// PlacesTable holds the schema information for the "places" table.
-	PlacesTable = &schema.Table{
-		Name:       "places",
-		Columns:    PlacesColumns,
-		PrimaryKey: []*schema.Column{PlacesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "flights_airports_origin",
+				Columns:    []*schema.Column{FlightsColumns[6]},
+				RefColumns: []*schema.Column{AirportsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "flights_airports_destination",
+				Columns:    []*schema.Column{FlightsColumns[7]},
+				RefColumns: []*schema.Column{AirportsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// SeatsColumns holds the columns for the "seats" table.
 	SeatsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "flight_id", Type: field.TypeString},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "seat_number", Type: field.TypeString},
-		{Name: "flight_seats", Type: field.TypeInt, Nullable: true},
+		{Name: "flight_seats", Type: field.TypeUUID, Nullable: true},
 	}
 	// SeatsTable holds the schema information for the "seats" table.
 	SeatsTable = &schema.Table{
@@ -51,7 +65,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "seats_flights_seats",
-				Columns:    []*schema.Column{SeatsColumns[3]},
+				Columns:    []*schema.Column{SeatsColumns[2]},
 				RefColumns: []*schema.Column{FlightsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -59,12 +73,14 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AirportsTable,
 		FlightsTable,
-		PlacesTable,
 		SeatsTable,
 	}
 )
 
 func init() {
+	FlightsTable.ForeignKeys[0].RefTable = AirportsTable
+	FlightsTable.ForeignKeys[1].RefTable = AirportsTable
 	SeatsTable.ForeignKeys[0].RefTable = FlightsTable
 }

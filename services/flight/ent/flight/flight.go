@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -16,20 +17,20 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldFromID holds the string denoting the from_id field in the database.
-	FieldFromID = "from_id"
-	// FieldToID holds the string denoting the to_id field in the database.
-	FieldToID = "to_id"
-	// FieldStart holds the string denoting the start field in the database.
-	FieldStart = "start"
-	// FieldEnd holds the string denoting the end field in the database.
-	FieldEnd = "end"
+	// FieldDepartureTime holds the string denoting the departure_time field in the database.
+	FieldDepartureTime = "departure_time"
+	// FieldArrivalTime holds the string denoting the arrival_time field in the database.
+	FieldArrivalTime = "arrival_time"
 	// FieldAvailableSlots holds the string denoting the available_slots field in the database.
 	FieldAvailableSlots = "available_slots"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeSeats holds the string denoting the seats edge name in mutations.
 	EdgeSeats = "seats"
+	// EdgeOrigin holds the string denoting the origin edge name in mutations.
+	EdgeOrigin = "origin"
+	// EdgeDestination holds the string denoting the destination edge name in mutations.
+	EdgeDestination = "destination"
 	// Table holds the table name of the flight in the database.
 	Table = "flights"
 	// SeatsTable is the table that holds the seats relation/edge.
@@ -39,18 +40,37 @@ const (
 	SeatsInverseTable = "seats"
 	// SeatsColumn is the table column denoting the seats relation/edge.
 	SeatsColumn = "flight_seats"
+	// OriginTable is the table that holds the origin relation/edge.
+	OriginTable = "flights"
+	// OriginInverseTable is the table name for the Airport entity.
+	// It exists in this package in order to avoid circular dependency with the "airport" package.
+	OriginInverseTable = "airports"
+	// OriginColumn is the table column denoting the origin relation/edge.
+	OriginColumn = "airport_origin"
+	// DestinationTable is the table that holds the destination relation/edge.
+	DestinationTable = "flights"
+	// DestinationInverseTable is the table name for the Airport entity.
+	// It exists in this package in order to avoid circular dependency with the "airport" package.
+	DestinationInverseTable = "airports"
+	// DestinationColumn is the table column denoting the destination relation/edge.
+	DestinationColumn = "airport_destination"
 )
 
 // Columns holds all SQL columns for flight fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldFromID,
-	FieldToID,
-	FieldStart,
-	FieldEnd,
+	FieldDepartureTime,
+	FieldArrivalTime,
 	FieldAvailableSlots,
 	FieldCreatedAt,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "flights"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"airport_origin",
+	"airport_destination",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -60,12 +80,19 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
 
 // OrderOption defines the ordering options for the Flight queries.
@@ -81,24 +108,14 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByFromID orders the results by the from_id field.
-func ByFromID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFromID, opts...).ToFunc()
+// ByDepartureTime orders the results by the departure_time field.
+func ByDepartureTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartureTime, opts...).ToFunc()
 }
 
-// ByToID orders the results by the to_id field.
-func ByToID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldToID, opts...).ToFunc()
-}
-
-// ByStart orders the results by the start field.
-func ByStart(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStart, opts...).ToFunc()
-}
-
-// ByEnd orders the results by the end field.
-func ByEnd(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEnd, opts...).ToFunc()
+// ByArrivalTime orders the results by the arrival_time field.
+func ByArrivalTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArrivalTime, opts...).ToFunc()
 }
 
 // ByAvailableSlots orders the results by the available_slots field.
@@ -124,10 +141,38 @@ func BySeats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSeatsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByOriginField orders the results by origin field.
+func ByOriginField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOriginStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByDestinationField orders the results by destination field.
+func ByDestinationField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDestinationStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newSeatsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SeatsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SeatsTable, SeatsColumn),
+	)
+}
+func newOriginStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OriginInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, OriginTable, OriginColumn),
+	)
+}
+func newDestinationStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DestinationInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DestinationTable, DestinationColumn),
 	)
 }

@@ -2,12 +2,17 @@ package main
 
 import (
 	"context"
+	"flookybooky/pb"
 	"flookybooky/services/flight/ent"
+	"flookybooky/services/flight/handler"
+	"net"
 
 	"entgo.io/ent/dialect"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func init() {
@@ -32,18 +37,18 @@ func main() {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
-	// listen, err := net.Listen("tcp", ":2220")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	listen, err := net.Listen("tcp", ":2220")
+	if err != nil {
+		panic(err)
+	}
 
-	// s := grpc.NewServer()
-	// h, err := handler.NewFlightHandler(*client)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	s := grpc.NewServer()
+	h, err := handler.NewFlightHandler(*client)
+	if err != nil {
+		panic(err)
+	}
 
-	// reflection.Register(s)
-	// pb.RegisterFlightServiceServer(s, h)
-	// s.Serve(listen)
+	reflection.Register(s)
+	pb.RegisterFlightServiceServer(s, h)
+	s.Serve(listen)
 }

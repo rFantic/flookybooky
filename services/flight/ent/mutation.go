@@ -5,8 +5,8 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/place"
 	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
@@ -15,6 +15,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 const (
@@ -26,29 +27,593 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeFlight = "Flight"
-	TypePlace  = "Place"
-	TypeSeat   = "Seat"
+	TypeAirport = "Airport"
+	TypeFlight  = "Flight"
+	TypeSeat    = "Seat"
 )
+
+// AirportMutation represents an operation that mutates the Airport nodes in the graph.
+type AirportMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	name               *string
+	address            *string
+	clearedFields      map[string]struct{}
+	origin             map[uuid.UUID]struct{}
+	removedorigin      map[uuid.UUID]struct{}
+	clearedorigin      bool
+	destination        map[uuid.UUID]struct{}
+	removeddestination map[uuid.UUID]struct{}
+	cleareddestination bool
+	done               bool
+	oldValue           func(context.Context) (*Airport, error)
+	predicates         []predicate.Airport
+}
+
+var _ ent.Mutation = (*AirportMutation)(nil)
+
+// airportOption allows management of the mutation configuration using functional options.
+type airportOption func(*AirportMutation)
+
+// newAirportMutation creates new mutation for the Airport entity.
+func newAirportMutation(c config, op Op, opts ...airportOption) *AirportMutation {
+	m := &AirportMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAirport,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAirportID sets the ID field of the mutation.
+func withAirportID(id uuid.UUID) airportOption {
+	return func(m *AirportMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Airport
+		)
+		m.oldValue = func(ctx context.Context) (*Airport, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Airport.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAirport sets the old Airport of the mutation.
+func withAirport(node *Airport) airportOption {
+	return func(m *AirportMutation) {
+		m.oldValue = func(context.Context) (*Airport, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AirportMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AirportMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Airport entities.
+func (m *AirportMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AirportMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AirportMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Airport.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *AirportMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *AirportMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Airport entity.
+// If the Airport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AirportMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *AirportMutation) ResetName() {
+	m.name = nil
+}
+
+// SetAddress sets the "address" field.
+func (m *AirportMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *AirportMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Airport entity.
+// If the Airport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AirportMutation) OldAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *AirportMutation) ResetAddress() {
+	m.address = nil
+}
+
+// AddOriginIDs adds the "origin" edge to the Flight entity by ids.
+func (m *AirportMutation) AddOriginIDs(ids ...uuid.UUID) {
+	if m.origin == nil {
+		m.origin = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.origin[ids[i]] = struct{}{}
+	}
+}
+
+// ClearOrigin clears the "origin" edge to the Flight entity.
+func (m *AirportMutation) ClearOrigin() {
+	m.clearedorigin = true
+}
+
+// OriginCleared reports if the "origin" edge to the Flight entity was cleared.
+func (m *AirportMutation) OriginCleared() bool {
+	return m.clearedorigin
+}
+
+// RemoveOriginIDs removes the "origin" edge to the Flight entity by IDs.
+func (m *AirportMutation) RemoveOriginIDs(ids ...uuid.UUID) {
+	if m.removedorigin == nil {
+		m.removedorigin = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.origin, ids[i])
+		m.removedorigin[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedOrigin returns the removed IDs of the "origin" edge to the Flight entity.
+func (m *AirportMutation) RemovedOriginIDs() (ids []uuid.UUID) {
+	for id := range m.removedorigin {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// OriginIDs returns the "origin" edge IDs in the mutation.
+func (m *AirportMutation) OriginIDs() (ids []uuid.UUID) {
+	for id := range m.origin {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetOrigin resets all changes to the "origin" edge.
+func (m *AirportMutation) ResetOrigin() {
+	m.origin = nil
+	m.clearedorigin = false
+	m.removedorigin = nil
+}
+
+// AddDestinationIDs adds the "destination" edge to the Flight entity by ids.
+func (m *AirportMutation) AddDestinationIDs(ids ...uuid.UUID) {
+	if m.destination == nil {
+		m.destination = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.destination[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDestination clears the "destination" edge to the Flight entity.
+func (m *AirportMutation) ClearDestination() {
+	m.cleareddestination = true
+}
+
+// DestinationCleared reports if the "destination" edge to the Flight entity was cleared.
+func (m *AirportMutation) DestinationCleared() bool {
+	return m.cleareddestination
+}
+
+// RemoveDestinationIDs removes the "destination" edge to the Flight entity by IDs.
+func (m *AirportMutation) RemoveDestinationIDs(ids ...uuid.UUID) {
+	if m.removeddestination == nil {
+		m.removeddestination = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.destination, ids[i])
+		m.removeddestination[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDestination returns the removed IDs of the "destination" edge to the Flight entity.
+func (m *AirportMutation) RemovedDestinationIDs() (ids []uuid.UUID) {
+	for id := range m.removeddestination {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DestinationIDs returns the "destination" edge IDs in the mutation.
+func (m *AirportMutation) DestinationIDs() (ids []uuid.UUID) {
+	for id := range m.destination {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDestination resets all changes to the "destination" edge.
+func (m *AirportMutation) ResetDestination() {
+	m.destination = nil
+	m.cleareddestination = false
+	m.removeddestination = nil
+}
+
+// Where appends a list predicates to the AirportMutation builder.
+func (m *AirportMutation) Where(ps ...predicate.Airport) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AirportMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AirportMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Airport, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AirportMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AirportMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Airport).
+func (m *AirportMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AirportMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, airport.FieldName)
+	}
+	if m.address != nil {
+		fields = append(fields, airport.FieldAddress)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AirportMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case airport.FieldName:
+		return m.Name()
+	case airport.FieldAddress:
+		return m.Address()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AirportMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case airport.FieldName:
+		return m.OldName(ctx)
+	case airport.FieldAddress:
+		return m.OldAddress(ctx)
+	}
+	return nil, fmt.Errorf("unknown Airport field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AirportMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case airport.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case airport.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Airport field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AirportMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AirportMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AirportMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Airport numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AirportMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AirportMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AirportMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Airport nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AirportMutation) ResetField(name string) error {
+	switch name {
+	case airport.FieldName:
+		m.ResetName()
+		return nil
+	case airport.FieldAddress:
+		m.ResetAddress()
+		return nil
+	}
+	return fmt.Errorf("unknown Airport field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AirportMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.origin != nil {
+		edges = append(edges, airport.EdgeOrigin)
+	}
+	if m.destination != nil {
+		edges = append(edges, airport.EdgeDestination)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AirportMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case airport.EdgeOrigin:
+		ids := make([]ent.Value, 0, len(m.origin))
+		for id := range m.origin {
+			ids = append(ids, id)
+		}
+		return ids
+	case airport.EdgeDestination:
+		ids := make([]ent.Value, 0, len(m.destination))
+		for id := range m.destination {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AirportMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedorigin != nil {
+		edges = append(edges, airport.EdgeOrigin)
+	}
+	if m.removeddestination != nil {
+		edges = append(edges, airport.EdgeDestination)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AirportMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case airport.EdgeOrigin:
+		ids := make([]ent.Value, 0, len(m.removedorigin))
+		for id := range m.removedorigin {
+			ids = append(ids, id)
+		}
+		return ids
+	case airport.EdgeDestination:
+		ids := make([]ent.Value, 0, len(m.removeddestination))
+		for id := range m.removeddestination {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AirportMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedorigin {
+		edges = append(edges, airport.EdgeOrigin)
+	}
+	if m.cleareddestination {
+		edges = append(edges, airport.EdgeDestination)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AirportMutation) EdgeCleared(name string) bool {
+	switch name {
+	case airport.EdgeOrigin:
+		return m.clearedorigin
+	case airport.EdgeDestination:
+		return m.cleareddestination
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AirportMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Airport unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AirportMutation) ResetEdge(name string) error {
+	switch name {
+	case airport.EdgeOrigin:
+		m.ResetOrigin()
+		return nil
+	case airport.EdgeDestination:
+		m.ResetDestination()
+		return nil
+	}
+	return fmt.Errorf("unknown Airport edge %s", name)
+}
 
 // FlightMutation represents an operation that mutates the Flight nodes in the graph.
 type FlightMutation struct {
 	config
 	op                 Op
 	typ                string
-	id                 *int
+	id                 *uuid.UUID
 	name               *string
-	from_id            *string
-	to_id              *string
-	start              *time.Time
-	end                *time.Time
+	departure_time     *time.Time
+	arrival_time       *time.Time
 	available_slots    *int
 	addavailable_slots *int
 	created_at         *time.Time
 	clearedFields      map[string]struct{}
-	seats              map[int]struct{}
-	removedseats       map[int]struct{}
+	seats              map[uuid.UUID]struct{}
+	removedseats       map[uuid.UUID]struct{}
 	clearedseats       bool
+	origin             *uuid.UUID
+	clearedorigin      bool
+	destination        *uuid.UUID
+	cleareddestination bool
 	done               bool
 	oldValue           func(context.Context) (*Flight, error)
 	predicates         []predicate.Flight
@@ -74,7 +639,7 @@ func newFlightMutation(c config, op Op, opts ...flightOption) *FlightMutation {
 }
 
 // withFlightID sets the ID field of the mutation.
-func withFlightID(id int) flightOption {
+func withFlightID(id uuid.UUID) flightOption {
 	return func(m *FlightMutation) {
 		var (
 			err   error
@@ -124,9 +689,15 @@ func (m FlightMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Flight entities.
+func (m *FlightMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *FlightMutation) ID() (id int, exists bool) {
+func (m *FlightMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -137,12 +708,12 @@ func (m *FlightMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *FlightMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *FlightMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -188,148 +759,76 @@ func (m *FlightMutation) ResetName() {
 	m.name = nil
 }
 
-// SetFromID sets the "from_id" field.
-func (m *FlightMutation) SetFromID(s string) {
-	m.from_id = &s
+// SetDepartureTime sets the "departure_time" field.
+func (m *FlightMutation) SetDepartureTime(t time.Time) {
+	m.departure_time = &t
 }
 
-// FromID returns the value of the "from_id" field in the mutation.
-func (m *FlightMutation) FromID() (r string, exists bool) {
-	v := m.from_id
+// DepartureTime returns the value of the "departure_time" field in the mutation.
+func (m *FlightMutation) DepartureTime() (r time.Time, exists bool) {
+	v := m.departure_time
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldFromID returns the old "from_id" field's value of the Flight entity.
+// OldDepartureTime returns the old "departure_time" field's value of the Flight entity.
 // If the Flight object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FlightMutation) OldFromID(ctx context.Context) (v string, err error) {
+func (m *FlightMutation) OldDepartureTime(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFromID is only allowed on UpdateOne operations")
+		return v, errors.New("OldDepartureTime is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFromID requires an ID field in the mutation")
+		return v, errors.New("OldDepartureTime requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFromID: %w", err)
+		return v, fmt.Errorf("querying old value for OldDepartureTime: %w", err)
 	}
-	return oldValue.FromID, nil
+	return oldValue.DepartureTime, nil
 }
 
-// ResetFromID resets all changes to the "from_id" field.
-func (m *FlightMutation) ResetFromID() {
-	m.from_id = nil
+// ResetDepartureTime resets all changes to the "departure_time" field.
+func (m *FlightMutation) ResetDepartureTime() {
+	m.departure_time = nil
 }
 
-// SetToID sets the "to_id" field.
-func (m *FlightMutation) SetToID(s string) {
-	m.to_id = &s
+// SetArrivalTime sets the "arrival_time" field.
+func (m *FlightMutation) SetArrivalTime(t time.Time) {
+	m.arrival_time = &t
 }
 
-// ToID returns the value of the "to_id" field in the mutation.
-func (m *FlightMutation) ToID() (r string, exists bool) {
-	v := m.to_id
+// ArrivalTime returns the value of the "arrival_time" field in the mutation.
+func (m *FlightMutation) ArrivalTime() (r time.Time, exists bool) {
+	v := m.arrival_time
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldToID returns the old "to_id" field's value of the Flight entity.
+// OldArrivalTime returns the old "arrival_time" field's value of the Flight entity.
 // If the Flight object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FlightMutation) OldToID(ctx context.Context) (v string, err error) {
+func (m *FlightMutation) OldArrivalTime(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldToID is only allowed on UpdateOne operations")
+		return v, errors.New("OldArrivalTime is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldToID requires an ID field in the mutation")
+		return v, errors.New("OldArrivalTime requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldToID: %w", err)
+		return v, fmt.Errorf("querying old value for OldArrivalTime: %w", err)
 	}
-	return oldValue.ToID, nil
+	return oldValue.ArrivalTime, nil
 }
 
-// ResetToID resets all changes to the "to_id" field.
-func (m *FlightMutation) ResetToID() {
-	m.to_id = nil
-}
-
-// SetStart sets the "start" field.
-func (m *FlightMutation) SetStart(t time.Time) {
-	m.start = &t
-}
-
-// Start returns the value of the "start" field in the mutation.
-func (m *FlightMutation) Start() (r time.Time, exists bool) {
-	v := m.start
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStart returns the old "start" field's value of the Flight entity.
-// If the Flight object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FlightMutation) OldStart(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStart is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStart requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStart: %w", err)
-	}
-	return oldValue.Start, nil
-}
-
-// ResetStart resets all changes to the "start" field.
-func (m *FlightMutation) ResetStart() {
-	m.start = nil
-}
-
-// SetEnd sets the "end" field.
-func (m *FlightMutation) SetEnd(t time.Time) {
-	m.end = &t
-}
-
-// End returns the value of the "end" field in the mutation.
-func (m *FlightMutation) End() (r time.Time, exists bool) {
-	v := m.end
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldEnd returns the old "end" field's value of the Flight entity.
-// If the Flight object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FlightMutation) OldEnd(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldEnd is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldEnd requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldEnd: %w", err)
-	}
-	return oldValue.End, nil
-}
-
-// ResetEnd resets all changes to the "end" field.
-func (m *FlightMutation) ResetEnd() {
-	m.end = nil
+// ResetArrivalTime resets all changes to the "arrival_time" field.
+func (m *FlightMutation) ResetArrivalTime() {
+	m.arrival_time = nil
 }
 
 // SetAvailableSlots sets the "available_slots" field.
@@ -425,9 +924,9 @@ func (m *FlightMutation) ResetCreatedAt() {
 }
 
 // AddSeatIDs adds the "seats" edge to the Seat entity by ids.
-func (m *FlightMutation) AddSeatIDs(ids ...int) {
+func (m *FlightMutation) AddSeatIDs(ids ...uuid.UUID) {
 	if m.seats == nil {
-		m.seats = make(map[int]struct{})
+		m.seats = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		m.seats[ids[i]] = struct{}{}
@@ -445,9 +944,9 @@ func (m *FlightMutation) SeatsCleared() bool {
 }
 
 // RemoveSeatIDs removes the "seats" edge to the Seat entity by IDs.
-func (m *FlightMutation) RemoveSeatIDs(ids ...int) {
+func (m *FlightMutation) RemoveSeatIDs(ids ...uuid.UUID) {
 	if m.removedseats == nil {
-		m.removedseats = make(map[int]struct{})
+		m.removedseats = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		delete(m.seats, ids[i])
@@ -456,7 +955,7 @@ func (m *FlightMutation) RemoveSeatIDs(ids ...int) {
 }
 
 // RemovedSeats returns the removed IDs of the "seats" edge to the Seat entity.
-func (m *FlightMutation) RemovedSeatsIDs() (ids []int) {
+func (m *FlightMutation) RemovedSeatsIDs() (ids []uuid.UUID) {
 	for id := range m.removedseats {
 		ids = append(ids, id)
 	}
@@ -464,7 +963,7 @@ func (m *FlightMutation) RemovedSeatsIDs() (ids []int) {
 }
 
 // SeatsIDs returns the "seats" edge IDs in the mutation.
-func (m *FlightMutation) SeatsIDs() (ids []int) {
+func (m *FlightMutation) SeatsIDs() (ids []uuid.UUID) {
 	for id := range m.seats {
 		ids = append(ids, id)
 	}
@@ -476,6 +975,84 @@ func (m *FlightMutation) ResetSeats() {
 	m.seats = nil
 	m.clearedseats = false
 	m.removedseats = nil
+}
+
+// SetOriginID sets the "origin" edge to the Airport entity by id.
+func (m *FlightMutation) SetOriginID(id uuid.UUID) {
+	m.origin = &id
+}
+
+// ClearOrigin clears the "origin" edge to the Airport entity.
+func (m *FlightMutation) ClearOrigin() {
+	m.clearedorigin = true
+}
+
+// OriginCleared reports if the "origin" edge to the Airport entity was cleared.
+func (m *FlightMutation) OriginCleared() bool {
+	return m.clearedorigin
+}
+
+// OriginID returns the "origin" edge ID in the mutation.
+func (m *FlightMutation) OriginID() (id uuid.UUID, exists bool) {
+	if m.origin != nil {
+		return *m.origin, true
+	}
+	return
+}
+
+// OriginIDs returns the "origin" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OriginID instead. It exists only for internal usage by the builders.
+func (m *FlightMutation) OriginIDs() (ids []uuid.UUID) {
+	if id := m.origin; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOrigin resets all changes to the "origin" edge.
+func (m *FlightMutation) ResetOrigin() {
+	m.origin = nil
+	m.clearedorigin = false
+}
+
+// SetDestinationID sets the "destination" edge to the Airport entity by id.
+func (m *FlightMutation) SetDestinationID(id uuid.UUID) {
+	m.destination = &id
+}
+
+// ClearDestination clears the "destination" edge to the Airport entity.
+func (m *FlightMutation) ClearDestination() {
+	m.cleareddestination = true
+}
+
+// DestinationCleared reports if the "destination" edge to the Airport entity was cleared.
+func (m *FlightMutation) DestinationCleared() bool {
+	return m.cleareddestination
+}
+
+// DestinationID returns the "destination" edge ID in the mutation.
+func (m *FlightMutation) DestinationID() (id uuid.UUID, exists bool) {
+	if m.destination != nil {
+		return *m.destination, true
+	}
+	return
+}
+
+// DestinationIDs returns the "destination" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DestinationID instead. It exists only for internal usage by the builders.
+func (m *FlightMutation) DestinationIDs() (ids []uuid.UUID) {
+	if id := m.destination; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDestination resets all changes to the "destination" edge.
+func (m *FlightMutation) ResetDestination() {
+	m.destination = nil
+	m.cleareddestination = false
 }
 
 // Where appends a list predicates to the FlightMutation builder.
@@ -512,21 +1089,15 @@ func (m *FlightMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *FlightMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 5)
 	if m.name != nil {
 		fields = append(fields, flight.FieldName)
 	}
-	if m.from_id != nil {
-		fields = append(fields, flight.FieldFromID)
+	if m.departure_time != nil {
+		fields = append(fields, flight.FieldDepartureTime)
 	}
-	if m.to_id != nil {
-		fields = append(fields, flight.FieldToID)
-	}
-	if m.start != nil {
-		fields = append(fields, flight.FieldStart)
-	}
-	if m.end != nil {
-		fields = append(fields, flight.FieldEnd)
+	if m.arrival_time != nil {
+		fields = append(fields, flight.FieldArrivalTime)
 	}
 	if m.available_slots != nil {
 		fields = append(fields, flight.FieldAvailableSlots)
@@ -544,14 +1115,10 @@ func (m *FlightMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case flight.FieldName:
 		return m.Name()
-	case flight.FieldFromID:
-		return m.FromID()
-	case flight.FieldToID:
-		return m.ToID()
-	case flight.FieldStart:
-		return m.Start()
-	case flight.FieldEnd:
-		return m.End()
+	case flight.FieldDepartureTime:
+		return m.DepartureTime()
+	case flight.FieldArrivalTime:
+		return m.ArrivalTime()
 	case flight.FieldAvailableSlots:
 		return m.AvailableSlots()
 	case flight.FieldCreatedAt:
@@ -567,14 +1134,10 @@ func (m *FlightMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case flight.FieldName:
 		return m.OldName(ctx)
-	case flight.FieldFromID:
-		return m.OldFromID(ctx)
-	case flight.FieldToID:
-		return m.OldToID(ctx)
-	case flight.FieldStart:
-		return m.OldStart(ctx)
-	case flight.FieldEnd:
-		return m.OldEnd(ctx)
+	case flight.FieldDepartureTime:
+		return m.OldDepartureTime(ctx)
+	case flight.FieldArrivalTime:
+		return m.OldArrivalTime(ctx)
 	case flight.FieldAvailableSlots:
 		return m.OldAvailableSlots(ctx)
 	case flight.FieldCreatedAt:
@@ -595,33 +1158,19 @@ func (m *FlightMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case flight.FieldFromID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFromID(v)
-		return nil
-	case flight.FieldToID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetToID(v)
-		return nil
-	case flight.FieldStart:
+	case flight.FieldDepartureTime:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetStart(v)
+		m.SetDepartureTime(v)
 		return nil
-	case flight.FieldEnd:
+	case flight.FieldArrivalTime:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetEnd(v)
+		m.SetArrivalTime(v)
 		return nil
 	case flight.FieldAvailableSlots:
 		v, ok := value.(int)
@@ -704,17 +1253,11 @@ func (m *FlightMutation) ResetField(name string) error {
 	case flight.FieldName:
 		m.ResetName()
 		return nil
-	case flight.FieldFromID:
-		m.ResetFromID()
+	case flight.FieldDepartureTime:
+		m.ResetDepartureTime()
 		return nil
-	case flight.FieldToID:
-		m.ResetToID()
-		return nil
-	case flight.FieldStart:
-		m.ResetStart()
-		return nil
-	case flight.FieldEnd:
-		m.ResetEnd()
+	case flight.FieldArrivalTime:
+		m.ResetArrivalTime()
 		return nil
 	case flight.FieldAvailableSlots:
 		m.ResetAvailableSlots()
@@ -728,9 +1271,15 @@ func (m *FlightMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *FlightMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.seats != nil {
 		edges = append(edges, flight.EdgeSeats)
+	}
+	if m.origin != nil {
+		edges = append(edges, flight.EdgeOrigin)
+	}
+	if m.destination != nil {
+		edges = append(edges, flight.EdgeDestination)
 	}
 	return edges
 }
@@ -745,13 +1294,21 @@ func (m *FlightMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case flight.EdgeOrigin:
+		if id := m.origin; id != nil {
+			return []ent.Value{*id}
+		}
+	case flight.EdgeDestination:
+		if id := m.destination; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *FlightMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.removedseats != nil {
 		edges = append(edges, flight.EdgeSeats)
 	}
@@ -774,9 +1331,15 @@ func (m *FlightMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *FlightMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.clearedseats {
 		edges = append(edges, flight.EdgeSeats)
+	}
+	if m.clearedorigin {
+		edges = append(edges, flight.EdgeOrigin)
+	}
+	if m.cleareddestination {
+		edges = append(edges, flight.EdgeDestination)
 	}
 	return edges
 }
@@ -787,6 +1350,10 @@ func (m *FlightMutation) EdgeCleared(name string) bool {
 	switch name {
 	case flight.EdgeSeats:
 		return m.clearedseats
+	case flight.EdgeOrigin:
+		return m.clearedorigin
+	case flight.EdgeDestination:
+		return m.cleareddestination
 	}
 	return false
 }
@@ -795,6 +1362,12 @@ func (m *FlightMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *FlightMutation) ClearEdge(name string) error {
 	switch name {
+	case flight.EdgeOrigin:
+		m.ClearOrigin()
+		return nil
+	case flight.EdgeDestination:
+		m.ClearDestination()
+		return nil
 	}
 	return fmt.Errorf("unknown Flight unique edge %s", name)
 }
@@ -806,334 +1379,14 @@ func (m *FlightMutation) ResetEdge(name string) error {
 	case flight.EdgeSeats:
 		m.ResetSeats()
 		return nil
+	case flight.EdgeOrigin:
+		m.ResetOrigin()
+		return nil
+	case flight.EdgeDestination:
+		m.ResetDestination()
+		return nil
 	}
 	return fmt.Errorf("unknown Flight edge %s", name)
-}
-
-// PlaceMutation represents an operation that mutates the Place nodes in the graph.
-type PlaceMutation struct {
-	config
-	op            Op
-	typ           string
-	id            *int
-	name          *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Place, error)
-	predicates    []predicate.Place
-}
-
-var _ ent.Mutation = (*PlaceMutation)(nil)
-
-// placeOption allows management of the mutation configuration using functional options.
-type placeOption func(*PlaceMutation)
-
-// newPlaceMutation creates new mutation for the Place entity.
-func newPlaceMutation(c config, op Op, opts ...placeOption) *PlaceMutation {
-	m := &PlaceMutation{
-		config:        c,
-		op:            op,
-		typ:           TypePlace,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withPlaceID sets the ID field of the mutation.
-func withPlaceID(id int) placeOption {
-	return func(m *PlaceMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *Place
-		)
-		m.oldValue = func(ctx context.Context) (*Place, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().Place.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withPlace sets the old Place of the mutation.
-func withPlace(node *Place) placeOption {
-	return func(m *PlaceMutation) {
-		m.oldValue = func(context.Context) (*Place, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m PlaceMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m PlaceMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *PlaceMutation) ID() (id int, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *PlaceMutation) IDs(ctx context.Context) ([]int, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []int{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Place.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// SetName sets the "name" field.
-func (m *PlaceMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *PlaceMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the Place entity.
-// If the Place object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlaceMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *PlaceMutation) ResetName() {
-	m.name = nil
-}
-
-// Where appends a list predicates to the PlaceMutation builder.
-func (m *PlaceMutation) Where(ps ...predicate.Place) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// WhereP appends storage-level predicates to the PlaceMutation builder. Using this method,
-// users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *PlaceMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.Place, len(ps))
-	for i := range ps {
-		p[i] = ps[i]
-	}
-	m.Where(p...)
-}
-
-// Op returns the operation name.
-func (m *PlaceMutation) Op() Op {
-	return m.op
-}
-
-// SetOp allows setting the mutation operation.
-func (m *PlaceMutation) SetOp(op Op) {
-	m.op = op
-}
-
-// Type returns the node type of this mutation (Place).
-func (m *PlaceMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *PlaceMutation) Fields() []string {
-	fields := make([]string, 0, 1)
-	if m.name != nil {
-		fields = append(fields, place.FieldName)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *PlaceMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case place.FieldName:
-		return m.Name()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *PlaceMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case place.FieldName:
-		return m.OldName(ctx)
-	}
-	return nil, fmt.Errorf("unknown Place field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *PlaceMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case place.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
-	}
-	return fmt.Errorf("unknown Place field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *PlaceMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *PlaceMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *PlaceMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown Place numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *PlaceMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *PlaceMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *PlaceMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Place nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *PlaceMutation) ResetField(name string) error {
-	switch name {
-	case place.FieldName:
-		m.ResetName()
-		return nil
-	}
-	return fmt.Errorf("unknown Place field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *PlaceMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *PlaceMutation) AddedIDs(name string) []ent.Value {
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *PlaceMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *PlaceMutation) RemovedIDs(name string) []ent.Value {
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *PlaceMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *PlaceMutation) EdgeCleared(name string) bool {
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *PlaceMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown Place unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *PlaceMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown Place edge %s", name)
 }
 
 // SeatMutation represents an operation that mutates the Seat nodes in the graph.
@@ -1141,10 +1394,11 @@ type SeatMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
-	flight_id     *string
+	id            *uuid.UUID
 	seat_number   *string
 	clearedFields map[string]struct{}
+	flight        *uuid.UUID
+	clearedflight bool
 	done          bool
 	oldValue      func(context.Context) (*Seat, error)
 	predicates    []predicate.Seat
@@ -1170,7 +1424,7 @@ func newSeatMutation(c config, op Op, opts ...seatOption) *SeatMutation {
 }
 
 // withSeatID sets the ID field of the mutation.
-func withSeatID(id int) seatOption {
+func withSeatID(id uuid.UUID) seatOption {
 	return func(m *SeatMutation) {
 		var (
 			err   error
@@ -1220,9 +1474,15 @@ func (m SeatMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Seat entities.
+func (m *SeatMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *SeatMutation) ID() (id int, exists bool) {
+func (m *SeatMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1233,12 +1493,12 @@ func (m *SeatMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *SeatMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *SeatMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1246,42 +1506,6 @@ func (m *SeatMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetFlightID sets the "flight_id" field.
-func (m *SeatMutation) SetFlightID(s string) {
-	m.flight_id = &s
-}
-
-// FlightID returns the value of the "flight_id" field in the mutation.
-func (m *SeatMutation) FlightID() (r string, exists bool) {
-	v := m.flight_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFlightID returns the old "flight_id" field's value of the Seat entity.
-// If the Seat object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SeatMutation) OldFlightID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFlightID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFlightID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFlightID: %w", err)
-	}
-	return oldValue.FlightID, nil
-}
-
-// ResetFlightID resets all changes to the "flight_id" field.
-func (m *SeatMutation) ResetFlightID() {
-	m.flight_id = nil
 }
 
 // SetSeatNumber sets the "seat_number" field.
@@ -1320,6 +1544,45 @@ func (m *SeatMutation) ResetSeatNumber() {
 	m.seat_number = nil
 }
 
+// SetFlightID sets the "flight" edge to the Flight entity by id.
+func (m *SeatMutation) SetFlightID(id uuid.UUID) {
+	m.flight = &id
+}
+
+// ClearFlight clears the "flight" edge to the Flight entity.
+func (m *SeatMutation) ClearFlight() {
+	m.clearedflight = true
+}
+
+// FlightCleared reports if the "flight" edge to the Flight entity was cleared.
+func (m *SeatMutation) FlightCleared() bool {
+	return m.clearedflight
+}
+
+// FlightID returns the "flight" edge ID in the mutation.
+func (m *SeatMutation) FlightID() (id uuid.UUID, exists bool) {
+	if m.flight != nil {
+		return *m.flight, true
+	}
+	return
+}
+
+// FlightIDs returns the "flight" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// FlightID instead. It exists only for internal usage by the builders.
+func (m *SeatMutation) FlightIDs() (ids []uuid.UUID) {
+	if id := m.flight; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetFlight resets all changes to the "flight" edge.
+func (m *SeatMutation) ResetFlight() {
+	m.flight = nil
+	m.clearedflight = false
+}
+
 // Where appends a list predicates to the SeatMutation builder.
 func (m *SeatMutation) Where(ps ...predicate.Seat) {
 	m.predicates = append(m.predicates, ps...)
@@ -1354,10 +1617,7 @@ func (m *SeatMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SeatMutation) Fields() []string {
-	fields := make([]string, 0, 2)
-	if m.flight_id != nil {
-		fields = append(fields, seat.FieldFlightID)
-	}
+	fields := make([]string, 0, 1)
 	if m.seat_number != nil {
 		fields = append(fields, seat.FieldSeatNumber)
 	}
@@ -1369,8 +1629,6 @@ func (m *SeatMutation) Fields() []string {
 // schema.
 func (m *SeatMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case seat.FieldFlightID:
-		return m.FlightID()
 	case seat.FieldSeatNumber:
 		return m.SeatNumber()
 	}
@@ -1382,8 +1640,6 @@ func (m *SeatMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *SeatMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case seat.FieldFlightID:
-		return m.OldFlightID(ctx)
 	case seat.FieldSeatNumber:
 		return m.OldSeatNumber(ctx)
 	}
@@ -1395,13 +1651,6 @@ func (m *SeatMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *SeatMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case seat.FieldFlightID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFlightID(v)
-		return nil
 	case seat.FieldSeatNumber:
 		v, ok := value.(string)
 		if !ok {
@@ -1458,9 +1707,6 @@ func (m *SeatMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *SeatMutation) ResetField(name string) error {
 	switch name {
-	case seat.FieldFlightID:
-		m.ResetFlightID()
-		return nil
 	case seat.FieldSeatNumber:
 		m.ResetSeatNumber()
 		return nil
@@ -1470,19 +1716,28 @@ func (m *SeatMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SeatMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.flight != nil {
+		edges = append(edges, seat.EdgeFlight)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *SeatMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case seat.EdgeFlight:
+		if id := m.flight; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SeatMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -1494,24 +1749,41 @@ func (m *SeatMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SeatMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedflight {
+		edges = append(edges, seat.EdgeFlight)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *SeatMutation) EdgeCleared(name string) bool {
+	switch name {
+	case seat.EdgeFlight:
+		return m.clearedflight
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *SeatMutation) ClearEdge(name string) error {
+	switch name {
+	case seat.EdgeFlight:
+		m.ClearFlight()
+		return nil
+	}
 	return fmt.Errorf("unknown Seat unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *SeatMutation) ResetEdge(name string) error {
+	switch name {
+	case seat.EdgeFlight:
+		m.ResetFlight()
+		return nil
+	}
 	return fmt.Errorf("unknown Seat edge %s", name)
 }

@@ -4,6 +4,8 @@ package seat
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -11,18 +13,24 @@ const (
 	Label = "seat"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldFlightID holds the string denoting the flight_id field in the database.
-	FieldFlightID = "flight_id"
 	// FieldSeatNumber holds the string denoting the seat_number field in the database.
 	FieldSeatNumber = "seat_number"
+	// EdgeFlight holds the string denoting the flight edge name in mutations.
+	EdgeFlight = "flight"
 	// Table holds the table name of the seat in the database.
 	Table = "seats"
+	// FlightTable is the table that holds the flight relation/edge.
+	FlightTable = "seats"
+	// FlightInverseTable is the table name for the Flight entity.
+	// It exists in this package in order to avoid circular dependency with the "flight" package.
+	FlightInverseTable = "flights"
+	// FlightColumn is the table column denoting the flight relation/edge.
+	FlightColumn = "flight_seats"
 )
 
 // Columns holds all SQL columns for seat fields.
 var Columns = []string{
 	FieldID,
-	FieldFlightID,
 	FieldSeatNumber,
 }
 
@@ -47,6 +55,11 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
+
 // OrderOption defines the ordering options for the Seat queries.
 type OrderOption func(*sql.Selector)
 
@@ -55,12 +68,21 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByFlightID orders the results by the flight_id field.
-func ByFlightID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFlightID, opts...).ToFunc()
-}
-
 // BySeatNumber orders the results by the seat_number field.
 func BySeatNumber(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSeatNumber, opts...).ToFunc()
+}
+
+// ByFlightField orders the results by flight field.
+func ByFlightField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFlightStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newFlightStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FlightInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, FlightTable, FlightColumn),
+	)
 }

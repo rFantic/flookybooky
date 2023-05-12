@@ -5,11 +5,13 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // SeatCreate is the builder for creating a Seat entity.
@@ -19,16 +21,43 @@ type SeatCreate struct {
 	hooks    []Hook
 }
 
-// SetFlightID sets the "flight_id" field.
-func (sc *SeatCreate) SetFlightID(s string) *SeatCreate {
-	sc.mutation.SetFlightID(s)
-	return sc
-}
-
 // SetSeatNumber sets the "seat_number" field.
 func (sc *SeatCreate) SetSeatNumber(s string) *SeatCreate {
 	sc.mutation.SetSeatNumber(s)
 	return sc
+}
+
+// SetID sets the "id" field.
+func (sc *SeatCreate) SetID(u uuid.UUID) *SeatCreate {
+	sc.mutation.SetID(u)
+	return sc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (sc *SeatCreate) SetNillableID(u *uuid.UUID) *SeatCreate {
+	if u != nil {
+		sc.SetID(*u)
+	}
+	return sc
+}
+
+// SetFlightID sets the "flight" edge to the Flight entity by ID.
+func (sc *SeatCreate) SetFlightID(id uuid.UUID) *SeatCreate {
+	sc.mutation.SetFlightID(id)
+	return sc
+}
+
+// SetNillableFlightID sets the "flight" edge to the Flight entity by ID if the given value is not nil.
+func (sc *SeatCreate) SetNillableFlightID(id *uuid.UUID) *SeatCreate {
+	if id != nil {
+		sc = sc.SetFlightID(*id)
+	}
+	return sc
+}
+
+// SetFlight sets the "flight" edge to the Flight entity.
+func (sc *SeatCreate) SetFlight(f *Flight) *SeatCreate {
+	return sc.SetFlightID(f.ID)
 }
 
 // Mutation returns the SeatMutation object of the builder.
@@ -38,6 +67,7 @@ func (sc *SeatCreate) Mutation() *SeatMutation {
 
 // Save creates the Seat in the database.
 func (sc *SeatCreate) Save(ctx context.Context) (*Seat, error) {
+	sc.defaults()
 	return withHooks[*Seat, SeatMutation](ctx, sc.sqlSave, sc.mutation, sc.hooks)
 }
 
@@ -63,11 +93,16 @@ func (sc *SeatCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (sc *SeatCreate) defaults() {
+	if _, ok := sc.mutation.ID(); !ok {
+		v := seat.DefaultID()
+		sc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sc *SeatCreate) check() error {
-	if _, ok := sc.mutation.FlightID(); !ok {
-		return &ValidationError{Name: "flight_id", err: errors.New(`ent: missing required field "Seat.flight_id"`)}
-	}
 	if _, ok := sc.mutation.SeatNumber(); !ok {
 		return &ValidationError{Name: "seat_number", err: errors.New(`ent: missing required field "Seat.seat_number"`)}
 	}
@@ -85,8 +120,13 @@ func (sc *SeatCreate) sqlSave(ctx context.Context) (*Seat, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	sc.mutation.id = &_node.ID
 	sc.mutation.done = true
 	return _node, nil
@@ -95,15 +135,32 @@ func (sc *SeatCreate) sqlSave(ctx context.Context) (*Seat, error) {
 func (sc *SeatCreate) createSpec() (*Seat, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Seat{config: sc.config}
-		_spec = sqlgraph.NewCreateSpec(seat.Table, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(seat.Table, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID))
 	)
-	if value, ok := sc.mutation.FlightID(); ok {
-		_spec.SetField(seat.FieldFlightID, field.TypeString, value)
-		_node.FlightID = value
+	if id, ok := sc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := sc.mutation.SeatNumber(); ok {
 		_spec.SetField(seat.FieldSeatNumber, field.TypeString, value)
 		_node.SeatNumber = value
+	}
+	if nodes := sc.mutation.FlightIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   seat.FlightTable,
+			Columns: []string{seat.FlightColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.flight_seats = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -122,6 +179,7 @@ func (scb *SeatCreateBulk) Save(ctx context.Context) ([]*Seat, error) {
 	for i := range scb.builders {
 		func(i int, root context.Context) {
 			builder := scb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SeatMutation)
 				if !ok {
@@ -148,10 +206,6 @@ func (scb *SeatCreateBulk) Save(ctx context.Context) ([]*Seat, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

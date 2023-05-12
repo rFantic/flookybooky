@@ -3,19 +3,39 @@
 package ent
 
 import (
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/schema"
+	"flookybooky/services/flight/ent/seat"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	airportFields := schema.Airport{}.Fields()
+	_ = airportFields
+	// airportDescID is the schema descriptor for id field.
+	airportDescID := airportFields[0].Descriptor()
+	// airport.DefaultID holds the default value on creation for the id field.
+	airport.DefaultID = airportDescID.Default.(func() uuid.UUID)
 	flightFields := schema.Flight{}.Fields()
 	_ = flightFields
 	// flightDescCreatedAt is the schema descriptor for created_at field.
-	flightDescCreatedAt := flightFields[6].Descriptor()
+	flightDescCreatedAt := flightFields[5].Descriptor()
 	// flight.DefaultCreatedAt holds the default value on creation for the created_at field.
 	flight.DefaultCreatedAt = flightDescCreatedAt.Default.(func() time.Time)
+	// flightDescID is the schema descriptor for id field.
+	flightDescID := flightFields[0].Descriptor()
+	// flight.DefaultID holds the default value on creation for the id field.
+	flight.DefaultID = flightDescID.Default.(func() uuid.UUID)
+	seatFields := schema.Seat{}.Fields()
+	_ = seatFields
+	// seatDescID is the schema descriptor for id field.
+	seatDescID := seatFields[0].Descriptor()
+	// seat.DefaultID holds the default value on creation for the id field.
+	seat.DefaultID = seatDescID.Default.(func() uuid.UUID)
 }

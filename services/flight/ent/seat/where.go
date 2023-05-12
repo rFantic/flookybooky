@@ -6,126 +6,58 @@ import (
 	"flookybooky/services/flight/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Seat {
+func ID(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Seat {
+func IDEQ(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Seat {
+func IDNEQ(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Seat {
+func IDIn(ids ...uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Seat {
+func IDNotIn(ids ...uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Seat {
+func IDGT(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Seat {
+func IDGTE(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Seat {
+func IDLT(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Seat {
+func IDLTE(id uuid.UUID) predicate.Seat {
 	return predicate.Seat(sql.FieldLTE(FieldID, id))
-}
-
-// FlightID applies equality check predicate on the "flight_id" field. It's identical to FlightIDEQ.
-func FlightID(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldEQ(FieldFlightID, v))
 }
 
 // SeatNumber applies equality check predicate on the "seat_number" field. It's identical to SeatNumberEQ.
 func SeatNumber(v string) predicate.Seat {
 	return predicate.Seat(sql.FieldEQ(FieldSeatNumber, v))
-}
-
-// FlightIDEQ applies the EQ predicate on the "flight_id" field.
-func FlightIDEQ(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldEQ(FieldFlightID, v))
-}
-
-// FlightIDNEQ applies the NEQ predicate on the "flight_id" field.
-func FlightIDNEQ(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldNEQ(FieldFlightID, v))
-}
-
-// FlightIDIn applies the In predicate on the "flight_id" field.
-func FlightIDIn(vs ...string) predicate.Seat {
-	return predicate.Seat(sql.FieldIn(FieldFlightID, vs...))
-}
-
-// FlightIDNotIn applies the NotIn predicate on the "flight_id" field.
-func FlightIDNotIn(vs ...string) predicate.Seat {
-	return predicate.Seat(sql.FieldNotIn(FieldFlightID, vs...))
-}
-
-// FlightIDGT applies the GT predicate on the "flight_id" field.
-func FlightIDGT(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldGT(FieldFlightID, v))
-}
-
-// FlightIDGTE applies the GTE predicate on the "flight_id" field.
-func FlightIDGTE(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldGTE(FieldFlightID, v))
-}
-
-// FlightIDLT applies the LT predicate on the "flight_id" field.
-func FlightIDLT(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldLT(FieldFlightID, v))
-}
-
-// FlightIDLTE applies the LTE predicate on the "flight_id" field.
-func FlightIDLTE(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldLTE(FieldFlightID, v))
-}
-
-// FlightIDContains applies the Contains predicate on the "flight_id" field.
-func FlightIDContains(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldContains(FieldFlightID, v))
-}
-
-// FlightIDHasPrefix applies the HasPrefix predicate on the "flight_id" field.
-func FlightIDHasPrefix(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldHasPrefix(FieldFlightID, v))
-}
-
-// FlightIDHasSuffix applies the HasSuffix predicate on the "flight_id" field.
-func FlightIDHasSuffix(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldHasSuffix(FieldFlightID, v))
-}
-
-// FlightIDEqualFold applies the EqualFold predicate on the "flight_id" field.
-func FlightIDEqualFold(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldEqualFold(FieldFlightID, v))
-}
-
-// FlightIDContainsFold applies the ContainsFold predicate on the "flight_id" field.
-func FlightIDContainsFold(v string) predicate.Seat {
-	return predicate.Seat(sql.FieldContainsFold(FieldFlightID, v))
 }
 
 // SeatNumberEQ applies the EQ predicate on the "seat_number" field.
@@ -191,6 +123,29 @@ func SeatNumberEqualFold(v string) predicate.Seat {
 // SeatNumberContainsFold applies the ContainsFold predicate on the "seat_number" field.
 func SeatNumberContainsFold(v string) predicate.Seat {
 	return predicate.Seat(sql.FieldContainsFold(FieldSeatNumber, v))
+}
+
+// HasFlight applies the HasEdge predicate on the "flight" edge.
+func HasFlight() predicate.Seat {
+	return predicate.Seat(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, FlightTable, FlightColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasFlightWith applies the HasEdge predicate on the "flight" edge with a given conditions (other predicates).
+func HasFlightWith(preds ...predicate.Flight) predicate.Seat {
+	return predicate.Seat(func(s *sql.Selector) {
+		step := newFlightStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

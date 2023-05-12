@@ -8,6 +8,17 @@ import (
 	"strconv"
 )
 
+type Airport struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Address string `json:"address"`
+}
+
+type AirportInput struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+}
+
 type Customer struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`

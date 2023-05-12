@@ -10,14 +10,15 @@ import (
 
 	"flookybooky/services/flight/ent/migrate"
 
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/place"
 	"flookybooky/services/flight/ent/seat"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,10 +26,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Airport is the client for interacting with the Airport builders.
+	Airport *AirportClient
 	// Flight is the client for interacting with the Flight builders.
 	Flight *FlightClient
-	// Place is the client for interacting with the Place builders.
-	Place *PlaceClient
 	// Seat is the client for interacting with the Seat builders.
 	Seat *SeatClient
 }
@@ -44,8 +45,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Airport = NewAirportClient(c.config)
 	c.Flight = NewFlightClient(c.config)
-	c.Place = NewPlaceClient(c.config)
 	c.Seat = NewSeatClient(c.config)
 }
 
@@ -127,11 +128,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Flight: NewFlightClient(cfg),
-		Place:  NewPlaceClient(cfg),
-		Seat:   NewSeatClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		Airport: NewAirportClient(cfg),
+		Flight:  NewFlightClient(cfg),
+		Seat:    NewSeatClient(cfg),
 	}, nil
 }
 
@@ -149,18 +150,18 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Flight: NewFlightClient(cfg),
-		Place:  NewPlaceClient(cfg),
-		Seat:   NewSeatClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		Airport: NewAirportClient(cfg),
+		Flight:  NewFlightClient(cfg),
+		Seat:    NewSeatClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Flight.
+//		Airport.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -182,30 +183,180 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Airport.Use(hooks...)
 	c.Flight.Use(hooks...)
-	c.Place.Use(hooks...)
 	c.Seat.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Airport.Intercept(interceptors...)
 	c.Flight.Intercept(interceptors...)
-	c.Place.Intercept(interceptors...)
 	c.Seat.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AirportMutation:
+		return c.Airport.mutate(ctx, m)
 	case *FlightMutation:
 		return c.Flight.mutate(ctx, m)
-	case *PlaceMutation:
-		return c.Place.mutate(ctx, m)
 	case *SeatMutation:
 		return c.Seat.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AirportClient is a client for the Airport schema.
+type AirportClient struct {
+	config
+}
+
+// NewAirportClient returns a client for the Airport from the given config.
+func NewAirportClient(c config) *AirportClient {
+	return &AirportClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `airport.Hooks(f(g(h())))`.
+func (c *AirportClient) Use(hooks ...Hook) {
+	c.hooks.Airport = append(c.hooks.Airport, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `airport.Intercept(f(g(h())))`.
+func (c *AirportClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Airport = append(c.inters.Airport, interceptors...)
+}
+
+// Create returns a builder for creating a Airport entity.
+func (c *AirportClient) Create() *AirportCreate {
+	mutation := newAirportMutation(c.config, OpCreate)
+	return &AirportCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Airport entities.
+func (c *AirportClient) CreateBulk(builders ...*AirportCreate) *AirportCreateBulk {
+	return &AirportCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Airport.
+func (c *AirportClient) Update() *AirportUpdate {
+	mutation := newAirportMutation(c.config, OpUpdate)
+	return &AirportUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AirportClient) UpdateOne(a *Airport) *AirportUpdateOne {
+	mutation := newAirportMutation(c.config, OpUpdateOne, withAirport(a))
+	return &AirportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AirportClient) UpdateOneID(id uuid.UUID) *AirportUpdateOne {
+	mutation := newAirportMutation(c.config, OpUpdateOne, withAirportID(id))
+	return &AirportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Airport.
+func (c *AirportClient) Delete() *AirportDelete {
+	mutation := newAirportMutation(c.config, OpDelete)
+	return &AirportDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AirportClient) DeleteOne(a *Airport) *AirportDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AirportClient) DeleteOneID(id uuid.UUID) *AirportDeleteOne {
+	builder := c.Delete().Where(airport.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AirportDeleteOne{builder}
+}
+
+// Query returns a query builder for Airport.
+func (c *AirportClient) Query() *AirportQuery {
+	return &AirportQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAirport},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Airport entity by its id.
+func (c *AirportClient) Get(ctx context.Context, id uuid.UUID) (*Airport, error) {
+	return c.Query().Where(airport.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AirportClient) GetX(ctx context.Context, id uuid.UUID) *Airport {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrigin queries the origin edge of a Airport.
+func (c *AirportClient) QueryOrigin(a *Airport) *FlightQuery {
+	query := (&FlightClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(airport.Table, airport.FieldID, id),
+			sqlgraph.To(flight.Table, flight.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, airport.OriginTable, airport.OriginColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDestination queries the destination edge of a Airport.
+func (c *AirportClient) QueryDestination(a *Airport) *FlightQuery {
+	query := (&FlightClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(airport.Table, airport.FieldID, id),
+			sqlgraph.To(flight.Table, flight.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, airport.DestinationTable, airport.DestinationColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AirportClient) Hooks() []Hook {
+	return c.hooks.Airport
+}
+
+// Interceptors returns the client interceptors.
+func (c *AirportClient) Interceptors() []Interceptor {
+	return c.inters.Airport
+}
+
+func (c *AirportClient) mutate(ctx context.Context, m *AirportMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AirportCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AirportUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AirportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AirportDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Airport mutation op: %q", m.Op())
 	}
 }
 
@@ -255,7 +406,7 @@ func (c *FlightClient) UpdateOne(f *Flight) *FlightUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *FlightClient) UpdateOneID(id int) *FlightUpdateOne {
+func (c *FlightClient) UpdateOneID(id uuid.UUID) *FlightUpdateOne {
 	mutation := newFlightMutation(c.config, OpUpdateOne, withFlightID(id))
 	return &FlightUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -272,7 +423,7 @@ func (c *FlightClient) DeleteOne(f *Flight) *FlightDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *FlightClient) DeleteOneID(id int) *FlightDeleteOne {
+func (c *FlightClient) DeleteOneID(id uuid.UUID) *FlightDeleteOne {
 	builder := c.Delete().Where(flight.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -289,12 +440,12 @@ func (c *FlightClient) Query() *FlightQuery {
 }
 
 // Get returns a Flight entity by its id.
-func (c *FlightClient) Get(ctx context.Context, id int) (*Flight, error) {
+func (c *FlightClient) Get(ctx context.Context, id uuid.UUID) (*Flight, error) {
 	return c.Query().Where(flight.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *FlightClient) GetX(ctx context.Context, id int) *Flight {
+func (c *FlightClient) GetX(ctx context.Context, id uuid.UUID) *Flight {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -311,6 +462,38 @@ func (c *FlightClient) QuerySeats(f *Flight) *SeatQuery {
 			sqlgraph.From(flight.Table, flight.FieldID, id),
 			sqlgraph.To(seat.Table, seat.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, flight.SeatsTable, flight.SeatsColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrigin queries the origin edge of a Flight.
+func (c *FlightClient) QueryOrigin(f *Flight) *AirportQuery {
+	query := (&AirportClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(flight.Table, flight.FieldID, id),
+			sqlgraph.To(airport.Table, airport.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, flight.OriginTable, flight.OriginColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDestination queries the destination edge of a Flight.
+func (c *FlightClient) QueryDestination(f *Flight) *AirportQuery {
+	query := (&AirportClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(flight.Table, flight.FieldID, id),
+			sqlgraph.To(airport.Table, airport.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, flight.DestinationTable, flight.DestinationColumn),
 		)
 		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
 		return fromV, nil
@@ -340,124 +523,6 @@ func (c *FlightClient) mutate(ctx context.Context, m *FlightMutation) (Value, er
 		return (&FlightDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Flight mutation op: %q", m.Op())
-	}
-}
-
-// PlaceClient is a client for the Place schema.
-type PlaceClient struct {
-	config
-}
-
-// NewPlaceClient returns a client for the Place from the given config.
-func NewPlaceClient(c config) *PlaceClient {
-	return &PlaceClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `place.Hooks(f(g(h())))`.
-func (c *PlaceClient) Use(hooks ...Hook) {
-	c.hooks.Place = append(c.hooks.Place, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `place.Intercept(f(g(h())))`.
-func (c *PlaceClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Place = append(c.inters.Place, interceptors...)
-}
-
-// Create returns a builder for creating a Place entity.
-func (c *PlaceClient) Create() *PlaceCreate {
-	mutation := newPlaceMutation(c.config, OpCreate)
-	return &PlaceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Place entities.
-func (c *PlaceClient) CreateBulk(builders ...*PlaceCreate) *PlaceCreateBulk {
-	return &PlaceCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Place.
-func (c *PlaceClient) Update() *PlaceUpdate {
-	mutation := newPlaceMutation(c.config, OpUpdate)
-	return &PlaceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *PlaceClient) UpdateOne(pl *Place) *PlaceUpdateOne {
-	mutation := newPlaceMutation(c.config, OpUpdateOne, withPlace(pl))
-	return &PlaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *PlaceClient) UpdateOneID(id int) *PlaceUpdateOne {
-	mutation := newPlaceMutation(c.config, OpUpdateOne, withPlaceID(id))
-	return &PlaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Place.
-func (c *PlaceClient) Delete() *PlaceDelete {
-	mutation := newPlaceMutation(c.config, OpDelete)
-	return &PlaceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *PlaceClient) DeleteOne(pl *Place) *PlaceDeleteOne {
-	return c.DeleteOneID(pl.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PlaceClient) DeleteOneID(id int) *PlaceDeleteOne {
-	builder := c.Delete().Where(place.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &PlaceDeleteOne{builder}
-}
-
-// Query returns a query builder for Place.
-func (c *PlaceClient) Query() *PlaceQuery {
-	return &PlaceQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypePlace},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Place entity by its id.
-func (c *PlaceClient) Get(ctx context.Context, id int) (*Place, error) {
-	return c.Query().Where(place.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *PlaceClient) GetX(ctx context.Context, id int) *Place {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *PlaceClient) Hooks() []Hook {
-	return c.hooks.Place
-}
-
-// Interceptors returns the client interceptors.
-func (c *PlaceClient) Interceptors() []Interceptor {
-	return c.inters.Place
-}
-
-func (c *PlaceClient) mutate(ctx context.Context, m *PlaceMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&PlaceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&PlaceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&PlaceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&PlaceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Place mutation op: %q", m.Op())
 	}
 }
 
@@ -507,7 +572,7 @@ func (c *SeatClient) UpdateOne(s *Seat) *SeatUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *SeatClient) UpdateOneID(id int) *SeatUpdateOne {
+func (c *SeatClient) UpdateOneID(id uuid.UUID) *SeatUpdateOne {
 	mutation := newSeatMutation(c.config, OpUpdateOne, withSeatID(id))
 	return &SeatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -524,7 +589,7 @@ func (c *SeatClient) DeleteOne(s *Seat) *SeatDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SeatClient) DeleteOneID(id int) *SeatDeleteOne {
+func (c *SeatClient) DeleteOneID(id uuid.UUID) *SeatDeleteOne {
 	builder := c.Delete().Where(seat.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -541,17 +606,33 @@ func (c *SeatClient) Query() *SeatQuery {
 }
 
 // Get returns a Seat entity by its id.
-func (c *SeatClient) Get(ctx context.Context, id int) (*Seat, error) {
+func (c *SeatClient) Get(ctx context.Context, id uuid.UUID) (*Seat, error) {
 	return c.Query().Where(seat.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *SeatClient) GetX(ctx context.Context, id int) *Seat {
+func (c *SeatClient) GetX(ctx context.Context, id uuid.UUID) *Seat {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryFlight queries the flight edge of a Seat.
+func (c *SeatClient) QueryFlight(s *Seat) *FlightQuery {
+	query := (&FlightClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(seat.Table, seat.FieldID, id),
+			sqlgraph.To(flight.Table, flight.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, seat.FlightTable, seat.FlightColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -582,9 +663,9 @@ func (c *SeatClient) mutate(ctx context.Context, m *SeatMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Flight, Place, Seat []ent.Hook
+		Airport, Flight, Seat []ent.Hook
 	}
 	inters struct {
-		Flight, Place, Seat []ent.Interceptor
+		Airport, Flight, Seat []ent.Interceptor
 	}
 )

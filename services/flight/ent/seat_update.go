@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // SeatUpdate is the builder for updating Seat entities.
@@ -27,21 +29,40 @@ func (su *SeatUpdate) Where(ps ...predicate.Seat) *SeatUpdate {
 	return su
 }
 
-// SetFlightID sets the "flight_id" field.
-func (su *SeatUpdate) SetFlightID(s string) *SeatUpdate {
-	su.mutation.SetFlightID(s)
-	return su
-}
-
 // SetSeatNumber sets the "seat_number" field.
 func (su *SeatUpdate) SetSeatNumber(s string) *SeatUpdate {
 	su.mutation.SetSeatNumber(s)
 	return su
 }
 
+// SetFlightID sets the "flight" edge to the Flight entity by ID.
+func (su *SeatUpdate) SetFlightID(id uuid.UUID) *SeatUpdate {
+	su.mutation.SetFlightID(id)
+	return su
+}
+
+// SetNillableFlightID sets the "flight" edge to the Flight entity by ID if the given value is not nil.
+func (su *SeatUpdate) SetNillableFlightID(id *uuid.UUID) *SeatUpdate {
+	if id != nil {
+		su = su.SetFlightID(*id)
+	}
+	return su
+}
+
+// SetFlight sets the "flight" edge to the Flight entity.
+func (su *SeatUpdate) SetFlight(f *Flight) *SeatUpdate {
+	return su.SetFlightID(f.ID)
+}
+
 // Mutation returns the SeatMutation object of the builder.
 func (su *SeatUpdate) Mutation() *SeatMutation {
 	return su.mutation
+}
+
+// ClearFlight clears the "flight" edge to the Flight entity.
+func (su *SeatUpdate) ClearFlight() *SeatUpdate {
+	su.mutation.ClearFlight()
+	return su
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -72,7 +93,7 @@ func (su *SeatUpdate) ExecX(ctx context.Context) {
 }
 
 func (su *SeatUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID))
 	if ps := su.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -80,11 +101,37 @@ func (su *SeatUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := su.mutation.FlightID(); ok {
-		_spec.SetField(seat.FieldFlightID, field.TypeString, value)
-	}
 	if value, ok := su.mutation.SeatNumber(); ok {
 		_spec.SetField(seat.FieldSeatNumber, field.TypeString, value)
+	}
+	if su.mutation.FlightCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   seat.FlightTable,
+			Columns: []string{seat.FlightColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.FlightIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   seat.FlightTable,
+			Columns: []string{seat.FlightColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -106,21 +153,40 @@ type SeatUpdateOne struct {
 	mutation *SeatMutation
 }
 
-// SetFlightID sets the "flight_id" field.
-func (suo *SeatUpdateOne) SetFlightID(s string) *SeatUpdateOne {
-	suo.mutation.SetFlightID(s)
-	return suo
-}
-
 // SetSeatNumber sets the "seat_number" field.
 func (suo *SeatUpdateOne) SetSeatNumber(s string) *SeatUpdateOne {
 	suo.mutation.SetSeatNumber(s)
 	return suo
 }
 
+// SetFlightID sets the "flight" edge to the Flight entity by ID.
+func (suo *SeatUpdateOne) SetFlightID(id uuid.UUID) *SeatUpdateOne {
+	suo.mutation.SetFlightID(id)
+	return suo
+}
+
+// SetNillableFlightID sets the "flight" edge to the Flight entity by ID if the given value is not nil.
+func (suo *SeatUpdateOne) SetNillableFlightID(id *uuid.UUID) *SeatUpdateOne {
+	if id != nil {
+		suo = suo.SetFlightID(*id)
+	}
+	return suo
+}
+
+// SetFlight sets the "flight" edge to the Flight entity.
+func (suo *SeatUpdateOne) SetFlight(f *Flight) *SeatUpdateOne {
+	return suo.SetFlightID(f.ID)
+}
+
 // Mutation returns the SeatMutation object of the builder.
 func (suo *SeatUpdateOne) Mutation() *SeatMutation {
 	return suo.mutation
+}
+
+// ClearFlight clears the "flight" edge to the Flight entity.
+func (suo *SeatUpdateOne) ClearFlight() *SeatUpdateOne {
+	suo.mutation.ClearFlight()
+	return suo
 }
 
 // Where appends a list predicates to the SeatUpdate builder.
@@ -164,7 +230,7 @@ func (suo *SeatUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (suo *SeatUpdateOne) sqlSave(ctx context.Context) (_node *Seat, err error) {
-	_spec := sqlgraph.NewUpdateSpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(seat.Table, seat.Columns, sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID))
 	id, ok := suo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Seat.id" for update`)}
@@ -189,11 +255,37 @@ func (suo *SeatUpdateOne) sqlSave(ctx context.Context) (_node *Seat, err error) 
 			}
 		}
 	}
-	if value, ok := suo.mutation.FlightID(); ok {
-		_spec.SetField(seat.FieldFlightID, field.TypeString, value)
-	}
 	if value, ok := suo.mutation.SeatNumber(); ok {
 		_spec.SetField(seat.FieldSeatNumber, field.TypeString, value)
+	}
+	if suo.mutation.FlightCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   seat.FlightTable,
+			Columns: []string{seat.FlightColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.FlightIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   seat.FlightTable,
+			Columns: []string{seat.FlightColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Seat{config: suo.config}
 	_spec.Assign = _node.assignValues

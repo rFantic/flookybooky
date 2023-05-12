@@ -8,3 +8,4 @@ COPY services/flight/.env .env
 COPY pb pb
 RUN go build -o /go/bin/app services/flight/cmd/main.go
 CMD ["app"]
+# CMD [ "/go/bin/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]

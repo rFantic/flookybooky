@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The AirportFunc type is an adapter to allow the use of ordinary
+// function as Airport mutator.
+type AirportFunc func(context.Context, *ent.AirportMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AirportFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AirportMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AirportMutation", m)
+}
+
 // The FlightFunc type is an adapter to allow the use of ordinary
 // function as Flight mutator.
 type FlightFunc func(context.Context, *ent.FlightMutation) (ent.Value, error)
@@ -18,18 +30,6 @@ func (f FlightFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FlightMutation", m)
-}
-
-// The PlaceFunc type is an adapter to allow the use of ordinary
-// function as Place mutator.
-type PlaceFunc func(context.Context, *ent.PlaceMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f PlaceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PlaceMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PlaceMutation", m)
 }
 
 // The SeatFunc type is an adapter to allow the use of ordinary

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"fmt"
 	"strings"
@@ -10,40 +11,43 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Flight is the model entity for the Flight schema.
 type Flight struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// FromID holds the value of the "from_id" field.
-	FromID string `json:"from_id,omitempty"`
-	// ToID holds the value of the "to_id" field.
-	ToID string `json:"to_id,omitempty"`
-	// Start holds the value of the "start" field.
-	Start time.Time `json:"start,omitempty"`
-	// End holds the value of the "end" field.
-	End time.Time `json:"end,omitempty"`
+	// DepartureTime holds the value of the "departure_time" field.
+	DepartureTime time.Time `json:"departure_time,omitempty"`
+	// ArrivalTime holds the value of the "arrival_time" field.
+	ArrivalTime time.Time `json:"arrival_time,omitempty"`
 	// AvailableSlots holds the value of the "available_slots" field.
 	AvailableSlots int `json:"available_slots,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the FlightQuery when eager-loading is set.
-	Edges        FlightEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges               FlightEdges `json:"edges"`
+	airport_origin      *uuid.UUID
+	airport_destination *uuid.UUID
+	selectValues        sql.SelectValues
 }
 
 // FlightEdges holds the relations/edges for other nodes in the graph.
 type FlightEdges struct {
 	// Seats holds the value of the seats edge.
 	Seats []*Seat `json:"seats,omitempty"`
+	// Origin holds the value of the origin edge.
+	Origin *Airport `json:"origin,omitempty"`
+	// Destination holds the value of the destination edge.
+	Destination *Airport `json:"destination,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // SeatsOrErr returns the Seats value or an error if the edge
@@ -55,17 +59,49 @@ func (e FlightEdges) SeatsOrErr() ([]*Seat, error) {
 	return nil, &NotLoadedError{edge: "seats"}
 }
 
+// OriginOrErr returns the Origin value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e FlightEdges) OriginOrErr() (*Airport, error) {
+	if e.loadedTypes[1] {
+		if e.Origin == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: airport.Label}
+		}
+		return e.Origin, nil
+	}
+	return nil, &NotLoadedError{edge: "origin"}
+}
+
+// DestinationOrErr returns the Destination value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e FlightEdges) DestinationOrErr() (*Airport, error) {
+	if e.loadedTypes[2] {
+		if e.Destination == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: airport.Label}
+		}
+		return e.Destination, nil
+	}
+	return nil, &NotLoadedError{edge: "destination"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Flight) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case flight.FieldID, flight.FieldAvailableSlots:
+		case flight.FieldAvailableSlots:
 			values[i] = new(sql.NullInt64)
-		case flight.FieldName, flight.FieldFromID, flight.FieldToID:
+		case flight.FieldName:
 			values[i] = new(sql.NullString)
-		case flight.FieldStart, flight.FieldEnd, flight.FieldCreatedAt:
+		case flight.FieldDepartureTime, flight.FieldArrivalTime, flight.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
+		case flight.FieldID:
+			values[i] = new(uuid.UUID)
+		case flight.ForeignKeys[0]: // airport_origin
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case flight.ForeignKeys[1]: // airport_destination
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -82,40 +118,28 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case flight.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				f.ID = *value
 			}
-			f.ID = int(value.Int64)
 		case flight.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				f.Name = value.String
 			}
-		case flight.FieldFromID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field from_id", values[i])
-			} else if value.Valid {
-				f.FromID = value.String
-			}
-		case flight.FieldToID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field to_id", values[i])
-			} else if value.Valid {
-				f.ToID = value.String
-			}
-		case flight.FieldStart:
+		case flight.FieldDepartureTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field start", values[i])
+				return fmt.Errorf("unexpected type %T for field departure_time", values[i])
 			} else if value.Valid {
-				f.Start = value.Time
+				f.DepartureTime = value.Time
 			}
-		case flight.FieldEnd:
+		case flight.FieldArrivalTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field end", values[i])
+				return fmt.Errorf("unexpected type %T for field arrival_time", values[i])
 			} else if value.Valid {
-				f.End = value.Time
+				f.ArrivalTime = value.Time
 			}
 		case flight.FieldAvailableSlots:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -128,6 +152,20 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				f.CreatedAt = value.Time
+			}
+		case flight.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field airport_origin", values[i])
+			} else if value.Valid {
+				f.airport_origin = new(uuid.UUID)
+				*f.airport_origin = *value.S.(*uuid.UUID)
+			}
+		case flight.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field airport_destination", values[i])
+			} else if value.Valid {
+				f.airport_destination = new(uuid.UUID)
+				*f.airport_destination = *value.S.(*uuid.UUID)
 			}
 		default:
 			f.selectValues.Set(columns[i], values[i])
@@ -145,6 +183,16 @@ func (f *Flight) Value(name string) (ent.Value, error) {
 // QuerySeats queries the "seats" edge of the Flight entity.
 func (f *Flight) QuerySeats() *SeatQuery {
 	return NewFlightClient(f.config).QuerySeats(f)
+}
+
+// QueryOrigin queries the "origin" edge of the Flight entity.
+func (f *Flight) QueryOrigin() *AirportQuery {
+	return NewFlightClient(f.config).QueryOrigin(f)
+}
+
+// QueryDestination queries the "destination" edge of the Flight entity.
+func (f *Flight) QueryDestination() *AirportQuery {
+	return NewFlightClient(f.config).QueryDestination(f)
 }
 
 // Update returns a builder for updating this Flight.
@@ -173,17 +221,11 @@ func (f *Flight) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(f.Name)
 	builder.WriteString(", ")
-	builder.WriteString("from_id=")
-	builder.WriteString(f.FromID)
+	builder.WriteString("departure_time=")
+	builder.WriteString(f.DepartureTime.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("to_id=")
-	builder.WriteString(f.ToID)
-	builder.WriteString(", ")
-	builder.WriteString("start=")
-	builder.WriteString(f.Start.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("end=")
-	builder.WriteString(f.End.Format(time.ANSIC))
+	builder.WriteString("arrival_time=")
+	builder.WriteString(f.ArrivalTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("available_slots=")
 	builder.WriteString(fmt.Sprintf("%v", f.AvailableSlots))

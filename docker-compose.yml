@@ -43,6 +43,8 @@ services:
       context: .
       dockerfile: ./services/flight/flight.dockerfile
     restart: on-failure
+    ports:
+      - 4003:4000
 
   customerdb:
     profiles: ["customer", "graphql"]

@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"database/sql/driver"
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/ent/seat"
@@ -14,16 +15,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // FlightQuery is the builder for querying Flight entities.
 type FlightQuery struct {
 	config
-	ctx        *QueryContext
-	order      []flight.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Flight
-	withSeats  *SeatQuery
+	ctx             *QueryContext
+	order           []flight.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Flight
+	withSeats       *SeatQuery
+	withOrigin      *AirportQuery
+	withDestination *AirportQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -82,6 +87,50 @@ func (fq *FlightQuery) QuerySeats() *SeatQuery {
 	return query
 }
 
+// QueryOrigin chains the current query on the "origin" edge.
+func (fq *FlightQuery) QueryOrigin() *AirportQuery {
+	query := (&AirportClient{config: fq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := fq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := fq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(flight.Table, flight.FieldID, selector),
+			sqlgraph.To(airport.Table, airport.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, flight.OriginTable, flight.OriginColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(fq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDestination chains the current query on the "destination" edge.
+func (fq *FlightQuery) QueryDestination() *AirportQuery {
+	query := (&AirportClient{config: fq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := fq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := fq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(flight.Table, flight.FieldID, selector),
+			sqlgraph.To(airport.Table, airport.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, flight.DestinationTable, flight.DestinationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(fq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Flight entity from the query.
 // Returns a *NotFoundError when no Flight was found.
 func (fq *FlightQuery) First(ctx context.Context) (*Flight, error) {
@@ -106,8 +155,8 @@ func (fq *FlightQuery) FirstX(ctx context.Context) *Flight {
 
 // FirstID returns the first Flight ID from the query.
 // Returns a *NotFoundError when no Flight ID was found.
-func (fq *FlightQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (fq *FlightQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = fq.Limit(1).IDs(setContextOp(ctx, fq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -119,7 +168,7 @@ func (fq *FlightQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (fq *FlightQuery) FirstIDX(ctx context.Context) int {
+func (fq *FlightQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := fq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -157,8 +206,8 @@ func (fq *FlightQuery) OnlyX(ctx context.Context) *Flight {
 // OnlyID is like Only, but returns the only Flight ID in the query.
 // Returns a *NotSingularError when more than one Flight ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (fq *FlightQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (fq *FlightQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = fq.Limit(2).IDs(setContextOp(ctx, fq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -174,7 +223,7 @@ func (fq *FlightQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (fq *FlightQuery) OnlyIDX(ctx context.Context) int {
+func (fq *FlightQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := fq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -202,7 +251,7 @@ func (fq *FlightQuery) AllX(ctx context.Context) []*Flight {
 }
 
 // IDs executes the query and returns a list of Flight IDs.
-func (fq *FlightQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (fq *FlightQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if fq.ctx.Unique == nil && fq.path != nil {
 		fq.Unique(true)
 	}
@@ -214,7 +263,7 @@ func (fq *FlightQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (fq *FlightQuery) IDsX(ctx context.Context) []int {
+func (fq *FlightQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := fq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -269,12 +318,14 @@ func (fq *FlightQuery) Clone() *FlightQuery {
 		return nil
 	}
 	return &FlightQuery{
-		config:     fq.config,
-		ctx:        fq.ctx.Clone(),
-		order:      append([]flight.OrderOption{}, fq.order...),
-		inters:     append([]Interceptor{}, fq.inters...),
-		predicates: append([]predicate.Flight{}, fq.predicates...),
-		withSeats:  fq.withSeats.Clone(),
+		config:          fq.config,
+		ctx:             fq.ctx.Clone(),
+		order:           append([]flight.OrderOption{}, fq.order...),
+		inters:          append([]Interceptor{}, fq.inters...),
+		predicates:      append([]predicate.Flight{}, fq.predicates...),
+		withSeats:       fq.withSeats.Clone(),
+		withOrigin:      fq.withOrigin.Clone(),
+		withDestination: fq.withDestination.Clone(),
 		// clone intermediate query.
 		sql:  fq.sql.Clone(),
 		path: fq.path,
@@ -289,6 +340,28 @@ func (fq *FlightQuery) WithSeats(opts ...func(*SeatQuery)) *FlightQuery {
 		opt(query)
 	}
 	fq.withSeats = query
+	return fq
+}
+
+// WithOrigin tells the query-builder to eager-load the nodes that are connected to
+// the "origin" edge. The optional arguments are used to configure the query builder of the edge.
+func (fq *FlightQuery) WithOrigin(opts ...func(*AirportQuery)) *FlightQuery {
+	query := (&AirportClient{config: fq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	fq.withOrigin = query
+	return fq
+}
+
+// WithDestination tells the query-builder to eager-load the nodes that are connected to
+// the "destination" edge. The optional arguments are used to configure the query builder of the edge.
+func (fq *FlightQuery) WithDestination(opts ...func(*AirportQuery)) *FlightQuery {
+	query := (&AirportClient{config: fq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	fq.withDestination = query
 	return fq
 }
 
@@ -369,11 +442,20 @@ func (fq *FlightQuery) prepareQuery(ctx context.Context) error {
 func (fq *FlightQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Flight, error) {
 	var (
 		nodes       = []*Flight{}
+		withFKs     = fq.withFKs
 		_spec       = fq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			fq.withSeats != nil,
+			fq.withOrigin != nil,
+			fq.withDestination != nil,
 		}
 	)
+	if fq.withOrigin != nil || fq.withDestination != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, flight.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Flight).scanValues(nil, columns)
 	}
@@ -399,12 +481,24 @@ func (fq *FlightQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Fligh
 			return nil, err
 		}
 	}
+	if query := fq.withOrigin; query != nil {
+		if err := fq.loadOrigin(ctx, query, nodes, nil,
+			func(n *Flight, e *Airport) { n.Edges.Origin = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := fq.withDestination; query != nil {
+		if err := fq.loadDestination(ctx, query, nodes, nil,
+			func(n *Flight, e *Airport) { n.Edges.Destination = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
 func (fq *FlightQuery) loadSeats(ctx context.Context, query *SeatQuery, nodes []*Flight, init func(*Flight), assign func(*Flight, *Seat)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Flight)
+	nodeids := make(map[uuid.UUID]*Flight)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -433,6 +527,70 @@ func (fq *FlightQuery) loadSeats(ctx context.Context, query *SeatQuery, nodes []
 	}
 	return nil
 }
+func (fq *FlightQuery) loadOrigin(ctx context.Context, query *AirportQuery, nodes []*Flight, init func(*Flight), assign func(*Flight, *Airport)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Flight)
+	for i := range nodes {
+		if nodes[i].airport_origin == nil {
+			continue
+		}
+		fk := *nodes[i].airport_origin
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(airport.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "airport_origin" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (fq *FlightQuery) loadDestination(ctx context.Context, query *AirportQuery, nodes []*Flight, init func(*Flight), assign func(*Flight, *Airport)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Flight)
+	for i := range nodes {
+		if nodes[i].airport_destination == nil {
+			continue
+		}
+		fk := *nodes[i].airport_destination
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(airport.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "airport_destination" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (fq *FlightQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := fq.querySpec()
@@ -444,7 +602,7 @@ func (fq *FlightQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (fq *FlightQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(flight.Table, flight.Columns, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(flight.Table, flight.Columns, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID))
 	_spec.From = fq.sql
 	if unique := fq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

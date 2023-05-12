@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/seat"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // FlightCreate is the builder for creating a Flight entity.
@@ -27,27 +29,15 @@ func (fc *FlightCreate) SetName(s string) *FlightCreate {
 	return fc
 }
 
-// SetFromID sets the "from_id" field.
-func (fc *FlightCreate) SetFromID(s string) *FlightCreate {
-	fc.mutation.SetFromID(s)
+// SetDepartureTime sets the "departure_time" field.
+func (fc *FlightCreate) SetDepartureTime(t time.Time) *FlightCreate {
+	fc.mutation.SetDepartureTime(t)
 	return fc
 }
 
-// SetToID sets the "to_id" field.
-func (fc *FlightCreate) SetToID(s string) *FlightCreate {
-	fc.mutation.SetToID(s)
-	return fc
-}
-
-// SetStart sets the "start" field.
-func (fc *FlightCreate) SetStart(t time.Time) *FlightCreate {
-	fc.mutation.SetStart(t)
-	return fc
-}
-
-// SetEnd sets the "end" field.
-func (fc *FlightCreate) SetEnd(t time.Time) *FlightCreate {
-	fc.mutation.SetEnd(t)
+// SetArrivalTime sets the "arrival_time" field.
+func (fc *FlightCreate) SetArrivalTime(t time.Time) *FlightCreate {
+	fc.mutation.SetArrivalTime(t)
 	return fc
 }
 
@@ -71,19 +61,71 @@ func (fc *FlightCreate) SetNillableCreatedAt(t *time.Time) *FlightCreate {
 	return fc
 }
 
+// SetID sets the "id" field.
+func (fc *FlightCreate) SetID(u uuid.UUID) *FlightCreate {
+	fc.mutation.SetID(u)
+	return fc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (fc *FlightCreate) SetNillableID(u *uuid.UUID) *FlightCreate {
+	if u != nil {
+		fc.SetID(*u)
+	}
+	return fc
+}
+
 // AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
-func (fc *FlightCreate) AddSeatIDs(ids ...int) *FlightCreate {
+func (fc *FlightCreate) AddSeatIDs(ids ...uuid.UUID) *FlightCreate {
 	fc.mutation.AddSeatIDs(ids...)
 	return fc
 }
 
 // AddSeats adds the "seats" edges to the Seat entity.
 func (fc *FlightCreate) AddSeats(s ...*Seat) *FlightCreate {
-	ids := make([]int, len(s))
+	ids := make([]uuid.UUID, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
 	return fc.AddSeatIDs(ids...)
+}
+
+// SetOriginID sets the "origin" edge to the Airport entity by ID.
+func (fc *FlightCreate) SetOriginID(id uuid.UUID) *FlightCreate {
+	fc.mutation.SetOriginID(id)
+	return fc
+}
+
+// SetNillableOriginID sets the "origin" edge to the Airport entity by ID if the given value is not nil.
+func (fc *FlightCreate) SetNillableOriginID(id *uuid.UUID) *FlightCreate {
+	if id != nil {
+		fc = fc.SetOriginID(*id)
+	}
+	return fc
+}
+
+// SetOrigin sets the "origin" edge to the Airport entity.
+func (fc *FlightCreate) SetOrigin(a *Airport) *FlightCreate {
+	return fc.SetOriginID(a.ID)
+}
+
+// SetDestinationID sets the "destination" edge to the Airport entity by ID.
+func (fc *FlightCreate) SetDestinationID(id uuid.UUID) *FlightCreate {
+	fc.mutation.SetDestinationID(id)
+	return fc
+}
+
+// SetNillableDestinationID sets the "destination" edge to the Airport entity by ID if the given value is not nil.
+func (fc *FlightCreate) SetNillableDestinationID(id *uuid.UUID) *FlightCreate {
+	if id != nil {
+		fc = fc.SetDestinationID(*id)
+	}
+	return fc
+}
+
+// SetDestination sets the "destination" edge to the Airport entity.
+func (fc *FlightCreate) SetDestination(a *Airport) *FlightCreate {
+	return fc.SetDestinationID(a.ID)
 }
 
 // Mutation returns the FlightMutation object of the builder.
@@ -125,6 +167,10 @@ func (fc *FlightCreate) defaults() {
 		v := flight.DefaultCreatedAt()
 		fc.mutation.SetCreatedAt(v)
 	}
+	if _, ok := fc.mutation.ID(); !ok {
+		v := flight.DefaultID()
+		fc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -132,17 +178,11 @@ func (fc *FlightCreate) check() error {
 	if _, ok := fc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Flight.name"`)}
 	}
-	if _, ok := fc.mutation.FromID(); !ok {
-		return &ValidationError{Name: "from_id", err: errors.New(`ent: missing required field "Flight.from_id"`)}
+	if _, ok := fc.mutation.DepartureTime(); !ok {
+		return &ValidationError{Name: "departure_time", err: errors.New(`ent: missing required field "Flight.departure_time"`)}
 	}
-	if _, ok := fc.mutation.ToID(); !ok {
-		return &ValidationError{Name: "to_id", err: errors.New(`ent: missing required field "Flight.to_id"`)}
-	}
-	if _, ok := fc.mutation.Start(); !ok {
-		return &ValidationError{Name: "start", err: errors.New(`ent: missing required field "Flight.start"`)}
-	}
-	if _, ok := fc.mutation.End(); !ok {
-		return &ValidationError{Name: "end", err: errors.New(`ent: missing required field "Flight.end"`)}
+	if _, ok := fc.mutation.ArrivalTime(); !ok {
+		return &ValidationError{Name: "arrival_time", err: errors.New(`ent: missing required field "Flight.arrival_time"`)}
 	}
 	if _, ok := fc.mutation.AvailableSlots(); !ok {
 		return &ValidationError{Name: "available_slots", err: errors.New(`ent: missing required field "Flight.available_slots"`)}
@@ -164,8 +204,13 @@ func (fc *FlightCreate) sqlSave(ctx context.Context) (*Flight, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	fc.mutation.id = &_node.ID
 	fc.mutation.done = true
 	return _node, nil
@@ -174,27 +219,23 @@ func (fc *FlightCreate) sqlSave(ctx context.Context) (*Flight, error) {
 func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Flight{config: fc.config}
-		_spec = sqlgraph.NewCreateSpec(flight.Table, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(flight.Table, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID))
 	)
+	if id, ok := fc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := fc.mutation.Name(); ok {
 		_spec.SetField(flight.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := fc.mutation.FromID(); ok {
-		_spec.SetField(flight.FieldFromID, field.TypeString, value)
-		_node.FromID = value
+	if value, ok := fc.mutation.DepartureTime(); ok {
+		_spec.SetField(flight.FieldDepartureTime, field.TypeTime, value)
+		_node.DepartureTime = value
 	}
-	if value, ok := fc.mutation.ToID(); ok {
-		_spec.SetField(flight.FieldToID, field.TypeString, value)
-		_node.ToID = value
-	}
-	if value, ok := fc.mutation.Start(); ok {
-		_spec.SetField(flight.FieldStart, field.TypeTime, value)
-		_node.Start = value
-	}
-	if value, ok := fc.mutation.End(); ok {
-		_spec.SetField(flight.FieldEnd, field.TypeTime, value)
-		_node.End = value
+	if value, ok := fc.mutation.ArrivalTime(); ok {
+		_spec.SetField(flight.FieldArrivalTime, field.TypeTime, value)
+		_node.ArrivalTime = value
 	}
 	if value, ok := fc.mutation.AvailableSlots(); ok {
 		_spec.SetField(flight.FieldAvailableSlots, field.TypeInt, value)
@@ -212,12 +253,46 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 			Columns: []string{flight.SeatsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := fc.mutation.OriginIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   flight.OriginTable,
+			Columns: []string{flight.OriginColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(airport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.airport_origin = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := fc.mutation.DestinationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   flight.DestinationTable,
+			Columns: []string{flight.DestinationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(airport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.airport_destination = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -264,10 +339,6 @@ func (fcb *FlightCreateBulk) Save(ctx context.Context) ([]*Flight, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})
