@@ -10,6 +10,7 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -101,8 +102,10 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	copier.Copy(&users, &res.Users)
 	for i, c := range users {
 		c.ID = res.Users[i].Id
-		c.Customer = &model.Customer{
-			ID: res.Users[i].CustomerId,
+		if res.Users[i].CustomerId != "" {
+			c.Customer = &model.Customer{
+				ID: res.Users[i].CustomerId,
+			}
 		}
 	}
 	return users, nil
@@ -124,6 +127,7 @@ func (r *queryResolver) Customers(ctx context.Context, id *string, name *string)
 
 // Customer is the resolver for the customer field.
 func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {
+	log.Println("Customer ID: ", obj.Customer.ID)
 	req := &pb.GetCustomerRequest{
 		Id: obj.Customer.ID,
 	}
