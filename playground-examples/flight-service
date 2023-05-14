@@ -30,5 +30,5 @@ mutation createAirport {
 
 # create_seats
 
-! cancel_flight -> cancel_booking -> cancel_ticket
-! create_flight -> create_seat
+#! cancel_flight -> cancel_booking -> cancel_ticket
+#! create_flight -> create_seat
