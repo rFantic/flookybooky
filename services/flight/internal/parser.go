@@ -8,9 +8,7 @@ import (
 )
 
 func ParseAirportEntToPb(in *ent.Airport) (out *pb.Airport) {
-	if in == nil {
-		return nil
-	}
+	out = &pb.Airport{}
 	copier.Copy(&out, in)
 	out.Id = in.ID.String()
 	return out

@@ -8,9 +8,7 @@ import (
 )
 
 func ParseAirportInputGraphqlToPb(in *model.AirportInput) (out *pb.Airport) {
-	if in == nil {
-		return nil
-	}
+	out = &pb.Airport{}
 	copier.Copy(&out, in)
 	return out
 }
