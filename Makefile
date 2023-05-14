@@ -18,3 +18,11 @@ down:
 	docker compose --profile graphql down --remove-orphans
 
 reUp: down up
+
+upDebug:
+	docker compose -f docker-compose.debug.yml --profile graphql up -d --build --remove-orphans
+
+downDebug:
+	docker compose -f docker-compose.debug.yml --profile graphql down --remove-orphans
+
+reUpDebug: downDebug upDebug
