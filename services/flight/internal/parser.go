@@ -15,7 +15,9 @@ func ParseAirportEntToPb(in *ent.Airport) (out *pb.Airport) {
 }
 
 func ParseAirportsEntToPb(in []*ent.Airport) (out *pb.Airports) {
-	out = &pb.Airports{}
+	out = &pb.Airports{
+		Airports: make([]*pb.Airport, len(in)),
+	}
 	for i, a := range in {
 		out.Airports[i] = ParseAirportEntToPb(a)
 	}

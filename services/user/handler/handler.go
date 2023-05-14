@@ -6,13 +6,14 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/user/ent"
 	"flookybooky/services/user/ent/user"
+	"flookybooky/services/user/internal"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type UserHandler struct {
@@ -26,70 +27,42 @@ func NewUserHandler(client ent.Client) (*UserHandler, error) {
 	}, nil
 }
 
-func (h *UserHandler) PostUser(ctx context.Context, req *pb.PostUserRequest) (*pb.PostUserResponse, error) {
+// func (h *UserHandler).Login(context.Context, *pb.LoginRequest) (*pb.LoginResponse, error)
+
+func (h *UserHandler) PostUser(ctx context.Context, req *pb.User) (*pb.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generate hash: %w", err)
 	}
-
 	query := h.client.User.Create().
 		SetUsername(req.Username).
 		SetPassword(string(hash)).
 		SetRole(user.Role(req.Role))
-	if req.CustomerId != "" {
-		query.SetCustomerID(req.CustomerId)
+	if req.Customer != nil {
+		query.SetCustomerID(req.Customer.Id)
 	}
-	u, err := query.Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var postUser pb.User
-	copier.Copy(&postUser, u)
-	postUser.CustomerId = u.CustomerID
-	var res pb.PostUserResponse = pb.PostUserResponse{
-		User: &postUser,
-	}
-	return &res, nil
+	userRes, err := query.Save(ctx)
+	return internal.ParseUserEntToPb(userRes), err
 }
 
-func (h *UserHandler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
-	id, err := uuid.Parse(req.Id)
+func (h *UserHandler) GetUser(ctx context.Context, req *pb.UUID) (*pb.User, error) {
+	_uuid, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, err
 	}
-	entUser, err := h.client.User.Query().Where(user.ID(id)).Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var user pb.User
-	copier.Copy(&user, entUser)
-	user.CustomerId = entUser.CustomerID
-	res := &pb.GetUserResponse{User: &user}
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	userRes, err := h.client.User.Get(ctx, _uuid)
+	return internal.ParseUserEntToPb(userRes), err
 }
 
-func (h *UserHandler) GetUsers(ctx context.Context, req *pb.GetUsersRequest) (*pb.GetUsersResponse, error) {
+func (h *UserHandler) GetUsers(ctx context.Context, req *emptypb.Empty) (*pb.Users, error) {
 	query := h.client.User.Query()
-	query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
-	users, err := query.All(ctx)
+	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	usersRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	res := &pb.GetUsersResponse{}
+	return internal.ParseUsersEntToPb(usersRes), nil
 
-	err = copier.Copy(&res.Users, &users)
-	for i, c := range res.Users {
-		c.CustomerId = users[i].CustomerID
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 
 func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {

@@ -1,4 +1,7 @@
 syntax = "proto3";
+import "services/customer/proto/customer.proto";
+import "google/protobuf/empty.proto";
+import "internal/proto/common.proto";
 package pb;
 option go_package = "./;pb";
 
@@ -7,34 +10,10 @@ message User {
     string username = 2;
     string password = 3;
     string role = 4;
-    string customer_id = 5;
+    Customer customer = 5;
 }
 
-message PostUserRequest {
-    string username = 1;
-    string password = 2;
-    string role = 3;
-    string customer_id = 4;
-}
-
-message PostUserResponse {
-    User user = 1;
-}
-
-message GetUserRequest {
-    string id = 1;
-}
-
-message GetUserResponse {
-    User user = 1;
-}
-
-message GetUsersRequest {
-    uint64 offset = 1;
-    uint64 limit = 2;
-}
-
-message GetUsersResponse {
+message Users {
     repeated User users = 1;
 }
 
@@ -48,8 +27,8 @@ message LoginResponse{
 }
 
 service UserService {
-    rpc PostUser (PostUserRequest) returns (PostUserResponse) {}
-    rpc GetUser (GetUserRequest) returns (GetUserResponse) {}
-    rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
+    rpc PostUser (User) returns (User) {}
+    rpc GetUser (UUID) returns (User) {}
+    rpc GetUsers (google.protobuf.Empty) returns (Users) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
 }

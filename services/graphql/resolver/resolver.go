@@ -31,7 +31,6 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 			c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
 			tokenString, err := c.Cookie("Authentication")
 			if err != nil {
-				// c.AbortWithStatus(http.StatusUnauthorized)
 				return nil, fmt.Errorf("missing authentication cookie")
 			}
 			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -43,16 +42,15 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				if float64(time.Now().Unix()) > claims["exp"].(float64) {
-					// c.AbortWithStatus(http.StatusUnauthorized)
 					return nil, fmt.Errorf("token expired")
 				}
 				id := claims["sub"].(string)
-				user := &pb.GetUserRequest{Id: id}
-				res, err := client.UserClient.GetUser(ctx, user)
+				_uuid := &pb.UUID{Id: id}
+				res, err := client.UserClient.GetUser(ctx, _uuid)
 				if err != nil {
 					return nil, fmt.Errorf("claims user not found")
 				}
-				ctxRole := model.Role(res.User.Role)
+				ctxRole := model.Role(res.Role)
 				if role != ctxRole {
 					return nil, fmt.Errorf("current role not qualified")
 				}

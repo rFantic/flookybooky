@@ -10,7 +10,6 @@ services:
     profiles: ["user", "graphql"]
     image: postgres
     restart: always
-    command: ["app"]
     environment:
       POSTGRES_DB: user
       POSTGRES_USER: root

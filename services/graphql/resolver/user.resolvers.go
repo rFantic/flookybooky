@@ -9,41 +9,30 @@ import (
 	"flookybooky/internal/util"
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
+	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
-	userReq := &pb.PostUserRequest{
-		Username: input.Username,
-		Password: input.Password,
-		Role:     input.Role,
-	}
+	userReq := internal.ParseUserInputGraphqlToPb(&input)
 	if input.Customer != nil {
-		postCustomer := &pb.Customer{}
-		copier.Copy(&postCustomer, input.Customer)
-		postCustomer.LicenseId = input.Customer.LicenseID
-		customerRes, err := r.client.CustomerClient.PostCustomer(ctx, postCustomer)
+		customerRes, err := r.client.CustomerClient.PostCustomer(ctx,
+			internal.ParseCustomerInputGraphqlToPb(input.Customer))
 		if err != nil {
 			return nil, err
 		}
-		userReq.CustomerId = customerRes.Id
+		userReq.Customer = customerRes
 	}
-	res, err := r.client.UserClient.PostUser(ctx, userReq)
+	userRes, err := r.client.UserClient.PostUser(ctx, userReq)
 	if err != nil {
 		return nil, err
 	}
-	var user model.User
-	copier.Copy(&user, res.User)
-	if res.User.CustomerId != "" {
-		user.Customer = &model.Customer{
-			ID: res.User.CustomerId,
-		}
-	}
-	return &user, nil
+	return internal.ParseUserPbToGraphql(userRes), nil
 }
 
 // Login is the resolver for the login field.
@@ -73,21 +62,8 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	res, err := r.client.UserClient.GetUsers(ctx, &pb.GetUsersRequest{})
-	if err != nil {
-		return nil, err
-	}
-	var users []*model.User
-	copier.Copy(&users, &res.Users)
-	for i, c := range users {
-		c.ID = res.Users[i].Id
-		if res.Users[i].CustomerId != "" {
-			c.Customer = &model.Customer{
-				ID: res.Users[i].CustomerId,
-			}
-		}
-	}
-	return users, nil
+	usersRes, err := r.client.UserClient.GetUsers(ctx, &emptypb.Empty{})
+	return internal.ParseUsersPbToGraphql(usersRes), err
 }
 
 // Customer is the resolver for the customer field.
