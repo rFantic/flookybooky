@@ -6,12 +6,89 @@ package resolver
 
 import (
 	"context"
+	"flookybooky/internal/util"
 	"flookybooky/pb"
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/model"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 )
+
+// CreateUser is the resolver for the createUser field.
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
+	userReq := &pb.PostUserRequest{
+		Username: input.Username,
+		Password: input.Password,
+		Role:     input.Role,
+	}
+	if input.Customer != nil {
+		postCustomer := &pb.Customer{}
+		copier.Copy(&postCustomer, input.Customer)
+		postCustomer.LicenseId = input.Customer.LicenseID
+		customerRes, err := r.client.CustomerClient.PostCustomer(ctx, postCustomer)
+		if err != nil {
+			return nil, err
+		}
+		userReq.CustomerId = customerRes.Id
+	}
+	res, err := r.client.UserClient.PostUser(ctx, userReq)
+	if err != nil {
+		return nil, err
+	}
+	var user model.User
+	copier.Copy(&user, res.User)
+	if res.User.CustomerId != "" {
+		user.Customer = &model.Customer{
+			ID: res.User.CustomerId,
+		}
+	}
+	return &user, nil
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error) {
+	res, err := r.client.UserClient.Login(ctx,
+		&pb.LoginRequest{
+			User: &pb.User{
+				Username: input.Username,
+				Password: input.Password,
+			},
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
+	c.SetCookie(
+		"Authentication", res.JwtToken,
+		int(res.ExpireTime), "", "", false, false,
+	)
+	return &model.LoginInfo{
+		TokenString: res.JwtToken,
+	}, nil
+}
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	res, err := r.client.UserClient.GetUsers(ctx, &pb.GetUsersRequest{})
+	if err != nil {
+		return nil, err
+	}
+	var users []*model.User
+	copier.Copy(&users, &res.Users)
+	for i, c := range users {
+		c.ID = res.Users[i].Id
+		if res.Users[i].CustomerId != "" {
+			c.Customer = &model.Customer{
+				ID: res.Users[i].CustomerId,
+			}
+		}
+	}
+	return users, nil
+}
 
 // Customer is the resolver for the customer field.
 func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {

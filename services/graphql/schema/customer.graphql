@@ -12,3 +12,11 @@ input CustomerInput {
     license_id: String!
     phone_number: String!
 }
+
+extend type Mutation {
+    createCustomer(input: CustomerInput!): Customer!
+}
+
+extend type Query {
+    customers (id: String, name: String): [Customer!]!
+}

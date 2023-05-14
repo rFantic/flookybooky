@@ -86,15 +86,15 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error)
+	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 	CreateUser(ctx context.Context, input model.UserInput) (*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error)
-	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
-	CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error)
 }
 type QueryResolver interface {
-	Users(ctx context.Context) ([]*model.User, error)
-	Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error)
 	Airport(ctx context.Context) ([]*model.Airport, error)
+	Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error)
+	Users(ctx context.Context) ([]*model.User, error)
 }
 type UserResolver interface {
 	Customer(ctx context.Context, obj *model.User) (*model.Customer, error)
@@ -370,17 +370,8 @@ extend type Query {
 extend type Mutation {
     createAirport(input: AirportInput!): Airport!
 }`, BuiltIn: false},
-	{Name: "../schema/common.graphql", Input: `type Mutation {
-    createUser(input: UserInput!): User!
-    login(input: LoginInput!): LoginInfo!
-    createCustomer(input: CustomerInput!): Customer!
-}
-
-type Query {
-    users: [User!]! @hasRole(role: admin)
-    customers (id: String, name: String): [Customer!]!
-}
-`, BuiltIn: false},
+	{Name: "../schema/common.graphql", Input: `type Mutation
+type Query `, BuiltIn: false},
 	{Name: "../schema/customer.graphql", Input: `type Customer {
     id: ID!
     name: String!
@@ -394,6 +385,14 @@ input CustomerInput {
     address: String!
     license_id: String!
     phone_number: String!
+}
+
+extend type Mutation {
+    createCustomer(input: CustomerInput!): Customer!
+}
+
+extend type Query {
+    customers (id: String, name: String): [Customer!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
@@ -410,7 +409,7 @@ type User {
     customer: Customer
 }
 
-type LoginInfo{
+type LoginInfo {
     tokenString: String!
 }
 
@@ -425,7 +424,15 @@ input LoginInput {
     username: String!
     password: String!
 }
-`, BuiltIn: false},
+
+extend type Mutation {
+    createUser(input: UserInput!): User!
+    login(input: LoginInput!): LoginInfo!
+}
+
+extend type Query {
+    users: [User!]! @hasRole(role: admin)
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -981,6 +988,136 @@ func (ec *executionContext) fieldContext_LoginInfo_tokenString(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createAirport(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateAirport(rctx, fc.Args["input"].(model.AirportInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Airport)
+	fc.Result = res
+	return ec.marshalNAirport2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Airport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Airport_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Airport_address(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createAirport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createCustomer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateCustomer(rctx, fc.Args["input"].(model.CustomerInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Customer)
+	fc.Result = res
+	return ec.marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Customer_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Customer_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Customer_address(ctx, field)
+			case "license_id":
+				return ec.fieldContext_Customer_license_id(ctx, field)
+			case "phone_number":
+				return ec.fieldContext_Customer_phone_number(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createCustomer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
 	if err != nil {
@@ -1105,8 +1242,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createCustomer(ctx, field)
+func (ec *executionContext) _Query_airport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_airport(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1119,7 +1256,7 @@ func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCustomer(rctx, fc.Args["input"].(model.CustomerInput))
+		return ec.resolvers.Query().Airport(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1131,14 +1268,66 @@ func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Customer)
+	res := resTmp.([]*model.Airport)
 	fc.Result = res
-	return ec.marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomer(ctx, field.Selections, res)
+	return ec.marshalNAirport2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_airport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Mutation",
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Airport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Airport_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Airport_address(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_customers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Customers(rctx, fc.Args["id"].(*string), fc.Args["name"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Customer)
+	fc.Result = res
+	return ec.marshalNCustomer2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_customers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -1165,70 +1354,7 @@ func (ec *executionContext) fieldContext_Mutation_createCustomer(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createCustomer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createAirport(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAirport(rctx, fc.Args["input"].(model.AirportInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Airport)
-	fc.Result = res
-	return ec.marshalNAirport2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirport(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Airport_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Airport_name(ctx, field)
-			case "address":
-				return ec.fieldContext_Airport_address(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createAirport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_customers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1308,125 +1434,6 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_customer(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_customers(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Customers(rctx, fc.Args["id"].(*string), fc.Args["name"].(*string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Customer)
-	fc.Result = res
-	return ec.marshalNCustomer2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_customers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Customer_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Customer_name(ctx, field)
-			case "address":
-				return ec.fieldContext_Customer_address(ctx, field)
-			case "license_id":
-				return ec.fieldContext_Customer_license_id(ctx, field)
-			case "phone_number":
-				return ec.fieldContext_Customer_phone_number(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_customers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_airport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_airport(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Airport(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Airport)
-	fc.Result = res
-	return ec.marshalNAirport2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_airport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Airport_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Airport_name(ctx, field)
-			case "address":
-				return ec.fieldContext_Airport_address(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
 		},
 	}
 	return fc, nil
@@ -3860,19 +3867,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createUser":
+		case "createAirport":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createUser(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "login":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_login(ctx, field)
+				return ec._Mutation_createAirport(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -3887,10 +3885,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createAirport":
+		case "createUser":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createAirport(ctx, field)
+				return ec._Mutation_createUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_login(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -3926,7 +3933,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "users":
+		case "airport":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -3935,7 +3942,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_users(ctx, field)
+				res = ec._Query_airport(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -3972,7 +3979,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "airport":
+		case "users":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -3981,7 +3988,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_airport(ctx, field)
+				res = ec._Query_users(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
