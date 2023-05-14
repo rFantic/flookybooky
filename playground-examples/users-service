@@ -9,7 +9,8 @@ query get_users {
 }
 
 mutation create_users_without_customer {
-  createUser(input: {username: "Miloo", password: "passwd", role: "admin"}) {
+  createUser(input: {username: "Miloo", password: "passwd", 
+    role: "admin"}) {
     username
     role
   }
@@ -17,7 +18,9 @@ mutation create_users_without_customer {
 
 mutation create_users {
   createUser(
-    input: {username: "Lilooo", password: "passwd", role: "admin", customer: {name: "near nguyen", status: "active", address: "fake address", license_id: "034098002348", phone_number: "0123456789"}}
+    input: {username: "Lilooo", password: "passwd", role: "admin", 
+      customer: {name: "near nguyen", address: "fake address", 
+        license_id: "034098002348", phone_number: "0123456789"}}
   ) {
     username
     role
@@ -25,7 +28,7 @@ mutation create_users {
 }
 
 mutation login {
-  login(input: {username: "Lilooo", password: "passwd"}) {
+  login(input: {username: "Miloo", password: "passwd"}) {
     tokenString
   }
 }
@@ -36,5 +39,3 @@ mutation login {
 # update_user
 # change_password
 # set_role
-
-! search
