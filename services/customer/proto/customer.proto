@@ -1,5 +1,6 @@
 syntax = "proto3";
 import "google/protobuf/empty.proto";
+import "internal/proto/common.proto";
 package pb;
 option go_package = "./;pb";
 
@@ -10,21 +11,12 @@ message Customer {
     string license_id = 4;
     string phone_number = 5;
 }
-
-message GetCustomerRequest {
-    string id = 1;
-}
-
-message GetCustomerResponse {
-    Customer customer = 1;
-}
-
-message GetCustomersResponse {
+message Customers {
     repeated Customer customers = 1;
 }
 
 service CustomerService {
     rpc PostCustomer (Customer) returns (Customer) {}
-    rpc GetCustomer (GetCustomerRequest) returns (Customer) {}
-    rpc GetCustomers (google.protobuf.Empty) returns (GetCustomersResponse) {}
+    rpc GetCustomer (UUID) returns (Customer) {}
+    rpc GetCustomers (google.protobuf.Empty) returns (Customers) {}
 }

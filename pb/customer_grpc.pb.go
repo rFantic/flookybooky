@@ -24,8 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CustomerServiceClient interface {
 	PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
-	GetCustomer(ctx context.Context, in *GetCustomerRequest, opts ...grpc.CallOption) (*Customer, error)
-	GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetCustomersResponse, error)
+	GetCustomer(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Customer, error)
+	GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Customers, error)
 }
 
 type customerServiceClient struct {
@@ -45,7 +45,7 @@ func (c *customerServiceClient) PostCustomer(ctx context.Context, in *Customer, 
 	return out, nil
 }
 
-func (c *customerServiceClient) GetCustomer(ctx context.Context, in *GetCustomerRequest, opts ...grpc.CallOption) (*Customer, error) {
+func (c *customerServiceClient) GetCustomer(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Customer, error) {
 	out := new(Customer)
 	err := c.cc.Invoke(ctx, "/pb.CustomerService/GetCustomer", in, out, opts...)
 	if err != nil {
@@ -54,8 +54,8 @@ func (c *customerServiceClient) GetCustomer(ctx context.Context, in *GetCustomer
 	return out, nil
 }
 
-func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetCustomersResponse, error) {
-	out := new(GetCustomersResponse)
+func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Customers, error) {
+	out := new(Customers)
 	err := c.cc.Invoke(ctx, "/pb.CustomerService/GetCustomers", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -68,8 +68,8 @@ func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Em
 // for forward compatibility
 type CustomerServiceServer interface {
 	PostCustomer(context.Context, *Customer) (*Customer, error)
-	GetCustomer(context.Context, *GetCustomerRequest) (*Customer, error)
-	GetCustomers(context.Context, *emptypb.Empty) (*GetCustomersResponse, error)
+	GetCustomer(context.Context, *UUID) (*Customer, error)
+	GetCustomers(context.Context, *emptypb.Empty) (*Customers, error)
 	mustEmbedUnimplementedCustomerServiceServer()
 }
 
@@ -80,10 +80,10 @@ type UnimplementedCustomerServiceServer struct {
 func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *Customer) (*Customer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostCustomer not implemented")
 }
-func (UnimplementedCustomerServiceServer) GetCustomer(context.Context, *GetCustomerRequest) (*Customer, error) {
+func (UnimplementedCustomerServiceServer) GetCustomer(context.Context, *UUID) (*Customer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCustomer not implemented")
 }
-func (UnimplementedCustomerServiceServer) GetCustomers(context.Context, *emptypb.Empty) (*GetCustomersResponse, error) {
+func (UnimplementedCustomerServiceServer) GetCustomers(context.Context, *emptypb.Empty) (*Customers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCustomers not implemented")
 }
 func (UnimplementedCustomerServiceServer) mustEmbedUnimplementedCustomerServiceServer() {}
@@ -118,7 +118,7 @@ func _CustomerService_PostCustomer_Handler(srv interface{}, ctx context.Context,
 }
 
 func _CustomerService_GetCustomer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCustomerRequest)
+	in := new(UUID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func _CustomerService_GetCustomer_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/pb.CustomerService/GetCustomer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CustomerServiceServer).GetCustomer(ctx, req.(*GetCustomerRequest))
+		return srv.(CustomerServiceServer).GetCustomer(ctx, req.(*UUID))
 	}
 	return interceptor(ctx, in, info, handler)
 }

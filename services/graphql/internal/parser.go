@@ -66,12 +66,14 @@ func ParseCustomerPbToGraphql(in *pb.Customer) (out *model.Customer) {
 	out = &model.Customer{}
 	copier.Copy(&out, in)
 	out.ID = in.Id
+	out.LicenseID = in.LicenseId
 	return out
 }
 
-// func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
-// 	for i, a := range in.Customers {
-// 		out[i] = ParseCustomerPbToGraphql(a)
-// 	}
-// 	return out
-// }
+func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
+	out = make([]*model.Customer, len(in.Customers))
+	for i, a := range in.Customers {
+		out[i] = ParseCustomerPbToGraphql(a)
+	}
+	return out
+}

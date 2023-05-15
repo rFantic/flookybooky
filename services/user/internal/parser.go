@@ -13,7 +13,9 @@ func ParseUserEntToPb(in *ent.User) (out *pb.User) {
 	if in != nil {
 		out.Id = in.ID.String()
 		if in.CustomerID != "" {
-			out.Customer.Id = in.CustomerID
+			out.Customer = &pb.Customer{
+				Id: in.CustomerID,
+			}
 		}
 	}
 	return out

@@ -13,7 +13,6 @@ import (
 	"flookybooky/services/graphql/model"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/copier"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -21,8 +20,8 @@ import (
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
 	userReq := internal.ParseUserInputGraphqlToPb(&input)
 	if input.Customer != nil {
-		customerRes, err := r.client.CustomerClient.PostCustomer(ctx,
-			internal.ParseCustomerInputGraphqlToPb(input.Customer))
+		customerReq := internal.ParseCustomerInputGraphqlToPb(input.Customer)
+		customerRes, err := r.client.CustomerClient.PostCustomer(ctx, customerReq)
 		if err != nil {
 			return nil, err
 		}
@@ -70,18 +69,11 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Customer, error) {
 	var out *model.Customer
 	if obj.Customer != nil {
-		out = &model.Customer{}
-		req := &pb.GetCustomerRequest{
-			Id: obj.Customer.ID,
-		}
-		customerRes, err := r.client.CustomerClient.GetCustomer(ctx, req)
+		customerRes, err := r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{Id: obj.Customer.ID})
 		if err != nil {
 			return nil, err
 		}
-
-		copier.Copy(&out, customerRes)
-		out.ID = customerRes.Id
-		out.LicenseID = customerRes.LicenseId
+		out = internal.ParseCustomerPbToGraphql(customerRes)
 	}
 	return out, nil
 }

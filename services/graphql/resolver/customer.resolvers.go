@@ -6,42 +6,28 @@ package resolver
 
 import (
 	"context"
-	"flookybooky/pb"
+	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 
-	"github.com/jinzhu/copier"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateCustomer is the resolver for the createCustomer field.
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
-	c, err := r.client.CustomerClient.PostCustomer(ctx,
-		&pb.Customer{
-			Name:        input.Name,
-			Address:     input.Address,
-			LicenseId:   input.LicenseID,
-			PhoneNumber: input.PhoneNumber,
-		},
+	customerRes, err := r.client.CustomerClient.PostCustomer(ctx,
+		internal.ParseCustomerInputGraphqlToPb(&input),
 	)
 	if err != nil {
 		return nil, err
 	}
-	var res model.Customer
-	copier.Copy(&res, c)
-	res.LicenseID = c.LicenseId
-	return &res, nil
+	return internal.ParseCustomerPbToGraphql(customerRes), nil
 }
 
 // Customers is the resolver for the customers field.
 func (r *queryResolver) Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error) {
-	res, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})
+	customersRes, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})
 	if err != nil {
 		return nil, err
 	}
-	var customers []*model.Customer
-	copier.Copy(&customers, &res.Customers)
-	for i, c := range customers {
-		c.ID = res.Customers[i].Id
-	}
-	return customers, nil
+	return internal.ParseCustomersPbToGraphql(customersRes), nil
 }
