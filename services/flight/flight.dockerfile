@@ -8,6 +8,6 @@ COPY services/flight services/flight
 COPY services/flight/.env .env
 COPY pb pb
 RUN --mount=type=cache,target=/root/.cache/go-build \
-go build -o /go/bin/app services/flight/cmd/main.go
+go build -gcflags="all=-N -l" -o /go/bin/app services/flight/cmd/main.go
 # CMD ["app"]
 CMD [ "/go/bin/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/go/bin/app" ]
