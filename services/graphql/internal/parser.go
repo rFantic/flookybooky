@@ -59,6 +59,7 @@ func ParseUsersPbToGraphql(in *pb.Users) (out []*model.User) {
 func ParseCustomerInputGraphqlToPb(in *model.CustomerInput) (out *pb.Customer) {
 	out = &pb.Customer{}
 	copier.Copy(&out, in)
+	out.LicenseId = in.LicenseID
 	return out
 }
 

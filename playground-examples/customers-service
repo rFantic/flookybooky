@@ -9,12 +9,11 @@ query get_customers {
 
 mutation create_customers {
   createCustomer(
-    input: {name: "near nguyen", address: "fake address", license_id: "034098021748", phone_number: "0123456789"}
+    input: {name: "near nguyen", address: "fake address", license_id: "034089132456", phone_number: "0123456789"}
   ) {
     name
   }
 }
-
 # update_customers
 # delete_customers
 # set_status
