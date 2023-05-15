@@ -4,13 +4,16 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/flight/ent"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 )
 
 func ParseAirportEntToPb(in *ent.Airport) (out *pb.Airport) {
 	out = &pb.Airport{}
 	copier.Copy(&out, in)
-	out.Id = in.ID.String()
+	if in != nil {
+		out.Id = in.ID.String()
+	}
 	return out
 }
 
@@ -23,3 +26,51 @@ func ParseAirportsEntToPb(in []*ent.Airport) (out *pb.Airports) {
 	}
 	return out
 }
+
+func ParseAirportPbToEnt(in *pb.Airport) (out *ent.Airport, err error) {
+	out = &ent.Airport{}
+	copier.Copy(&out, in)
+	if in != nil {
+		out.ID, err = uuid.Parse(in.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+func ParseFlightEntToPb(in *ent.Flight) (out *pb.Flight) {
+	out = &pb.Flight{}
+	copier.Copy(&out, in)
+	if in != nil {
+		out.Id = in.ID.String()
+	}
+	return out
+}
+
+func ParseFlightsEntToPb(in []*ent.Flight) (out *pb.Flights) {
+	out = &pb.Flights{
+		Flights: make([]*pb.Flight, len(in)),
+	}
+	for i, a := range in {
+		out.Flights[i] = ParseFlightEntToPb(a)
+	}
+	return out
+}
+
+// func ParseSeatEntToPb(in *ent.Seat) (out *pb.Seat) {
+// 	out = &pb.Seat{}
+// 	copier.Copy(&out, in)
+// 	out.Id = in.ID.String()
+// 	return out
+// }
+
+// func ParseSeatsEntToPb(in []*ent.Seat) (out *pb.Seats) {
+// 	out = &pb.Seats{
+// 		Seats: make([]*pb.Seat, len(in)),
+// 	}
+// 	for i, a := range in {
+// 		out.Seats[i] = ParseSeatEntToPb(a)
+// 	}
+// 	return out
+// }

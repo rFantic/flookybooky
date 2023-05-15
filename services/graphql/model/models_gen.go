@@ -34,6 +34,25 @@ type CustomerInput struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
+type Flight struct {
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Origin         *Airport `json:"origin"`
+	Destination    *Airport `json:"destination"`
+	AvailableSlots int      `json:"available_slots"`
+	DepartureTime  string   `json:"departure_time"`
+	ArrivalTime    string   `json:"arrival_time"`
+}
+
+type FlightInput struct {
+	Name           string `json:"name"`
+	OriginID       string `json:"originId"`
+	DestinationID  string `json:"destinationId"`
+	AvailableSlots int    `json:"available_slots"`
+	DepartureTime  string `json:"departure_time"`
+	ArrivalTime    string `json:"arrival_time"`
+}
+
 type LoginInfo struct {
 	TokenString string `json:"tokenString"`
 }

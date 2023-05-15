@@ -78,3 +78,41 @@ func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
 	}
 	return out
 }
+
+func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight) {
+	out = &pb.Flight{}
+	copier.Copy(&out, in)
+	if in != nil {
+		out.Origin = &pb.Airport{
+			Id: in.OriginID,
+		}
+		out.Destination = &pb.Airport{
+			Id: in.DestinationID,
+		}
+	}
+	return out
+}
+
+func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
+	out = &model.Flight{}
+	copier.Copy(&out, in)
+	if in.Origin != nil {
+		out.Origin = &model.Airport{
+			ID: in.Origin.Id,
+		}
+	}
+	if in.Destination != nil {
+		out.Destination = &model.Airport{
+			ID: in.Destination.Id,
+		}
+	}
+	return out
+}
+
+// func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
+// 	out = make([]*model.Customer, len(in.Customers))
+// 	for i, a := range in.Customers {
+// 		out[i] = ParseCustomerPbToGraphql(a)
+// 	}
+// 	return out
+// }

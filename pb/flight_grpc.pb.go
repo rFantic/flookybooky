@@ -26,6 +26,12 @@ type FlightServiceClient interface {
 	PostAirport(ctx context.Context, in *Airport, opts ...grpc.CallOption) (*Airport, error)
 	GetAirport(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Airport, error)
 	GetAirports(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Airports, error)
+	// rpc PostSeat (Seat) returns (Seat) {}
+	// rpc GetSeat (UUID) returns (Seat) {}
+	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
+	PostFlight(ctx context.Context, in *Flight, opts ...grpc.CallOption) (*Flight, error)
+	GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error)
+	GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error)
 }
 
 type flightServiceClient struct {
@@ -63,6 +69,33 @@ func (c *flightServiceClient) GetAirports(ctx context.Context, in *emptypb.Empty
 	return out, nil
 }
 
+func (c *flightServiceClient) PostFlight(ctx context.Context, in *Flight, opts ...grpc.CallOption) (*Flight, error) {
+	out := new(Flight)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/PostFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flightServiceClient) GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error) {
+	out := new(Flight)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/GetFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flightServiceClient) GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error) {
+	out := new(Flights)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/GetFlights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FlightServiceServer is the server API for FlightService service.
 // All implementations must embed UnimplementedFlightServiceServer
 // for forward compatibility
@@ -70,6 +103,12 @@ type FlightServiceServer interface {
 	PostAirport(context.Context, *Airport) (*Airport, error)
 	GetAirport(context.Context, *UUID) (*Airport, error)
 	GetAirports(context.Context, *emptypb.Empty) (*Airports, error)
+	// rpc PostSeat (Seat) returns (Seat) {}
+	// rpc GetSeat (UUID) returns (Seat) {}
+	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
+	PostFlight(context.Context, *Flight) (*Flight, error)
+	GetFlight(context.Context, *UUID) (*Flight, error)
+	GetFlights(context.Context, *emptypb.Empty) (*Flights, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
 
@@ -85,6 +124,15 @@ func (UnimplementedFlightServiceServer) GetAirport(context.Context, *UUID) (*Air
 }
 func (UnimplementedFlightServiceServer) GetAirports(context.Context, *emptypb.Empty) (*Airports, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAirports not implemented")
+}
+func (UnimplementedFlightServiceServer) PostFlight(context.Context, *Flight) (*Flight, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostFlight not implemented")
+}
+func (UnimplementedFlightServiceServer) GetFlight(context.Context, *UUID) (*Flight, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFlight not implemented")
+}
+func (UnimplementedFlightServiceServer) GetFlights(context.Context, *emptypb.Empty) (*Flights, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFlights not implemented")
 }
 func (UnimplementedFlightServiceServer) mustEmbedUnimplementedFlightServiceServer() {}
 
@@ -153,6 +201,60 @@ func _FlightService_GetAirports_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_PostFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Flight)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).PostFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/PostFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).PostFlight(ctx, req.(*Flight))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlightService_GetFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UUID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).GetFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/GetFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).GetFlight(ctx, req.(*UUID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlightService_GetFlights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).GetFlights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/GetFlights",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).GetFlights(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FlightService_ServiceDesc is the grpc.ServiceDesc for FlightService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,6 +273,18 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAirports",
 			Handler:    _FlightService_GetAirports_Handler,
+		},
+		{
+			MethodName: "PostFlight",
+			Handler:    _FlightService_PostFlight_Handler,
+		},
+		{
+			MethodName: "GetFlight",
+			Handler:    _FlightService_GetFlight_Handler,
+		},
+		{
+			MethodName: "GetFlights",
+			Handler:    _FlightService_GetFlights_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

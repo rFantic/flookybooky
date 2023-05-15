@@ -1,0 +1,26 @@
+type Flight {
+    id: String!
+    name: String!
+    origin: Airport!
+    destination: Airport!
+    available_slots: Int!
+    departure_time: String!
+    arrival_time: String!
+}
+
+input FlightInput{
+    name: String!
+    originId: String!
+    destinationId: String!
+    available_slots: Int!
+    departure_time: String!
+    arrival_time: String!
+}
+
+extend type Query {
+    flight: [Flight!]!
+}
+
+extend type Mutation {
+    createFlight(input: FlightInput!): Flight!
+}
