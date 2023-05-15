@@ -45,8 +45,7 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 					return nil, fmt.Errorf("token expired")
 				}
 				id := claims["sub"].(string)
-				_uuid := &pb.UUID{Id: id}
-				res, err := client.UserClient.GetUser(ctx, _uuid)
+				res, err := client.UserClient.GetUser(ctx, &pb.UUID{Id: id})
 				if err != nil {
 					return nil, fmt.Errorf("claims user not found")
 				}

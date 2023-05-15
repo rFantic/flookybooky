@@ -8,11 +8,13 @@ import (
 )
 
 func ParseUserEntToPb(in *ent.User) (out *pb.User) {
-	out = &pb.User{Customer: &pb.Customer{}}
+	out = &pb.User{}
 	copier.Copy(&out, in)
 	if in != nil {
 		out.Id = in.ID.String()
-		out.Customer.Id = in.CustomerID
+		if in.CustomerID != "" {
+			out.Customer.Id = in.CustomerID
+		}
 	}
 	return out
 }

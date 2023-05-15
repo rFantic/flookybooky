@@ -62,7 +62,6 @@ func (h *UserHandler) GetUsers(ctx context.Context, req *emptypb.Empty) (*pb.Use
 		return nil, err
 	}
 	return internal.ParseUsersEntToPb(usersRes), nil
-
 }
 
 func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
