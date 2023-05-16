@@ -20,3 +20,5 @@ mutation create_customers {
 
 #! email validation for user and customer
 #! search
+
+# find customer

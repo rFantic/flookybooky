@@ -39,3 +39,5 @@ mutation login {
 # update_user
 # change_password
 # set_role
+
+# find_user

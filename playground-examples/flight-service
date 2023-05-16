@@ -66,3 +66,5 @@ query getFlights {
 
 #! cancel_flight -> cancel_booking -> cancel_ticket
 #! create_flight -> create_seat
+
+# find flight
