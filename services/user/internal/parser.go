@@ -12,9 +12,9 @@ func ParseUserEntToPb(in *ent.User) (out *pb.User) {
 	copier.Copy(&out, in)
 	if in != nil {
 		out.Id = in.ID.String()
-		if in.CustomerID != "" {
+		if in.CustomerID != nil {
 			out.Customer = &pb.Customer{
-				Id: in.CustomerID,
+				Id: *in.CustomerID,
 			}
 		}
 	}

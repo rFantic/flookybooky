@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	PostUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	PostUser(ctx context.Context, in *UserInput, opts ...grpc.CallOption) (*User, error)
 	GetUser(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*User, error)
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
@@ -37,7 +37,7 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
-func (c *userServiceClient) PostUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
+func (c *userServiceClient) PostUser(ctx context.Context, in *UserInput, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := c.cc.Invoke(ctx, "/pb.UserService/PostUser", in, out, opts...)
 	if err != nil {
@@ -77,7 +77,7 @@ func (c *userServiceClient) Login(ctx context.Context, in *LoginRequest, opts ..
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
-	PostUser(context.Context, *User) (*User, error)
+	PostUser(context.Context, *UserInput) (*User, error)
 	GetUser(context.Context, *UUID) (*User, error)
 	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
@@ -88,7 +88,7 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) PostUser(context.Context, *User) (*User, error) {
+func (UnimplementedUserServiceServer) PostUser(context.Context, *UserInput) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostUser not implemented")
 }
 func (UnimplementedUserServiceServer) GetUser(context.Context, *UUID) (*User, error) {
@@ -114,7 +114,7 @@ func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
 }
 
 func _UserService_PostUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
+	in := new(UserInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func _UserService_PostUser_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/pb.UserService/PostUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).PostUser(ctx, req.(*User))
+		return srv.(UserServiceServer).PostUser(ctx, req.(*UserInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }

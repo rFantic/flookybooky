@@ -16,8 +16,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.UserInput) (*model.User, error) {
 	userReq := internal.ParseUserInputGraphqlToPb(&input)
 	if input.Customer != nil {
 		customerReq := internal.ParseCustomerInputGraphqlToPb(input.Customer)
@@ -25,7 +25,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		if err != nil {
 			return nil, err
 		}
-		userReq.Customer = customerRes
+		userReq.CustomerId = &customerRes.Id
 	}
 	userRes, err := r.client.UserClient.PostUser(ctx, userReq)
 	if err != nil {

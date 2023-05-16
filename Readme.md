@@ -15,4 +15,5 @@ make upProfile Profile="user"
 
 ## Planned feature
 - Implement transaction.
+- Implement pagination.
 - Add more fields validation.

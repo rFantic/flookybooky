@@ -189,7 +189,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := uc.mutation.CustomerID(); ok {
 		_spec.SetField(user.FieldCustomerID, field.TypeString, value)
-		_node.CustomerID = value
+		_node.CustomerID = &value
 	}
 	if value, ok := uc.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)

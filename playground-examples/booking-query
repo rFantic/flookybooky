@@ -25,14 +25,7 @@ query getBookings {
   }
 }
 
-
 # update_booking
 # delete_booking
-# cancel_booking
-# view ticket
-# update_ticket
-
-#! cancel_booking -> cancel_ticket
-
+# cancel_booking -> cancel_ticket
 # find booking
-# find ticket

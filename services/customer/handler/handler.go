@@ -51,6 +51,7 @@ func (h *CustomerHandler) PostCustomer(ctx context.Context, req *pb.CustomerInpu
 		SetLicenseID(req.LicenseId).
 		SetName(req.Name).
 		SetPhoneNumber(req.PhoneNumber).
+		SetEmail(req.Email).
 		Save(ctx)
 	if err != nil {
 		return nil, err

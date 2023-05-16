@@ -31,12 +31,9 @@ func ParseAirportsPbToGraphql(in *pb.Airports) (out []*model.Airport) {
 	return out
 }
 
-func ParseUserInputGraphqlToPb(in *model.UserInput) (out *pb.User) {
-	out = &pb.User{}
+func ParseUserInputGraphqlToPb(in *model.UserInput) (out *pb.UserInput) {
+	out = &pb.UserInput{}
 	copier.Copy(&out, in)
-	if out.Customer != nil {
-		out.Customer.LicenseId = in.Customer.LicenseID
-	}
 	return out
 }
 

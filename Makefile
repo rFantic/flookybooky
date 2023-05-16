@@ -26,3 +26,7 @@ downDebug:
 	docker compose -f docker-compose.debug.yml --profile graphql down --remove-orphans
 
 reUpDebug: downDebug upDebug
+
+genEnt:
+	cd services/$(service) \
+	&& go generate ./...

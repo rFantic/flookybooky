@@ -24,8 +24,8 @@ func (Customer) Fields() []ent.Field {
 		field.String("license_id").
 			Validate(validate.IsNumeric).
 			Validate(func(s string) error {
-				if len(s) >= 10 {
-					return errors.New("license id cannot be longer than 10")
+				if len(s) > 12 {
+					return errors.New("license id cannot be longer than 12")
 				}
 				return nil
 			}),

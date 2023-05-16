@@ -38,6 +38,7 @@ type Customer struct {
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
 }
 
 type CustomerInput struct {
@@ -45,6 +46,7 @@ type CustomerInput struct {
 	Address     string `json:"address"`
 	LicenseID   string `json:"license_id"`
 	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
 }
 
 type Flight struct {
@@ -78,6 +80,7 @@ type LoginInput struct {
 type User struct {
 	ID       string    `json:"id"`
 	Username string    `json:"username"`
+	Email    string    `json:"email"`
 	Role     string    `json:"role"`
 	Customer *Customer `json:"customer,omitempty"`
 }
@@ -85,6 +88,7 @@ type User struct {
 type UserInput struct {
 	Username string         `json:"username"`
 	Password string         `json:"password"`
+	Email    string         `json:"email"`
 	Role     string         `json:"role"`
 	Customer *CustomerInput `json:"customer,omitempty"`
 }

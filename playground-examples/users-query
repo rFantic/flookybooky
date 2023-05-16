@@ -1,0 +1,60 @@
+query get_users {
+  users {
+    username
+    customer {
+      name
+      license_id
+    }
+  }
+}
+
+mutation register_without_info {
+  register(input: {
+    username: "Miloo", 
+    password: "passwd", 
+    email: "miloo@gmail.com"
+    role: "admin"}) {
+    username
+    role
+    email
+    customer {
+      name
+    }
+  }
+}
+
+mutation register_with_info {
+  register(
+    input: {
+      username: "Lilooo", 
+      password: "passwd", 
+      email: "lilooo@gmail.com"
+      role: "admin", 
+      customer: {
+        name: "near nguyen", 
+        address: "fake address",
+        email: "lilooo@gmail.com"
+        license_id: "034098002348", 
+        phone_number: "0123456789"}}
+  ) {
+    username
+    email
+    role
+    customer {
+      name
+    }
+  }
+}
+
+mutation login {
+  login(input: {username: "Lilooo", password: "passwd"}) {
+    tokenString
+  }
+}
+
+# logout
+# delete_user
+# update_user
+# change_password
+# set_role
+# find_user

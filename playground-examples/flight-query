@@ -1,0 +1,42 @@
+mutation createFlight {
+  createFlight (input: {
+    name: "VN 157 Airbus A321"
+    originId: "78e36d0e-858b-4061-a6b8-9c5bbdf68be1"
+    destinationId: "78e36d0e-858b-4061-a6b8-9c5bbdf68be1"
+    available_slots: 100
+    departure_time: "2023-05-16"
+    arrival_time: "2023-05-18"
+  }){
+    id
+    name
+    origin{
+      id
+      name
+    }
+    destination{
+      id
+      name
+    }
+    available_slots
+    departure_time
+    arrival_time
+  }
+}
+
+query getFlights {
+	flight {
+    id
+    name
+    origin{
+      id
+      name
+    }
+  }
+}
+
+# update_flight
+# delete_flight
+# cancel_flight -> cancel_booking -> cancel_ticket
+# create_seats
+# find flight
+#! create_flight -> create_seat

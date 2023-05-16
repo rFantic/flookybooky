@@ -29,7 +29,7 @@ func NewUserHandler(client ent.Client) (*UserHandler, error) {
 
 // func (h *UserHandler).Login(context.Context, *pb.LoginRequest) (*pb.LoginResponse, error)
 
-func (h *UserHandler) PostUser(ctx context.Context, req *pb.User) (*pb.User, error) {
+func (h *UserHandler) PostUser(ctx context.Context, req *pb.UserInput) (*pb.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
 	if err != nil {
 		return nil, fmt.Errorf("generate hash: %w", err)
@@ -37,9 +37,10 @@ func (h *UserHandler) PostUser(ctx context.Context, req *pb.User) (*pb.User, err
 	query := h.client.User.Create().
 		SetUsername(req.Username).
 		SetPassword(string(hash)).
+		SetEmail(req.Email).
 		SetRole(user.Role(req.Role))
-	if req.Customer != nil {
-		query.SetCustomerID(req.Customer.Id)
+	if req.CustomerId != nil {
+		query.SetCustomerID(*req.CustomerId)
 	}
 	userRes, err := query.Save(ctx)
 	return internal.ParseUserEntToPb(userRes), err

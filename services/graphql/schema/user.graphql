@@ -8,6 +8,7 @@ enum Role {
 type User {
     id: ID!
     username: String!
+    email: String!
     role: String!
     customer: Customer
 }
@@ -15,6 +16,7 @@ type User {
 input UserInput {
     username: String!
     password: String!
+    email: String!
     role: String!
     customer: CustomerInput
 }
@@ -29,7 +31,7 @@ type LoginInfo {
 }
 
 extend type Mutation {
-    createUser(input: UserInput!): User!
+    register(input: UserInput!): User!
     login(input: LoginInput!): LoginInfo!
 }
 

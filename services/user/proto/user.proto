@@ -9,8 +9,17 @@ message User {
     string id = 1;
     string username = 2;
     string password = 3;
+    string email = 4;
+    string role = 5;
+    Customer customer = 6;
+}
+
+message UserInput {
+    string username = 1;
+    string password = 2;
+    string email = 3;
     string role = 4;
-    Customer customer = 5;
+    optional string customerId = 5;
 }
 
 message Users {
@@ -27,7 +36,7 @@ message LoginResponse{
 }
 
 service UserService {
-    rpc PostUser (User) returns (User) {}
+    rpc PostUser (UserInput) returns (User) {}
     rpc GetUser (UUID) returns (User) {}
     rpc GetUsers (google.protobuf.Empty) returns (Users) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}

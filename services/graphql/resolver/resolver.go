@@ -40,6 +40,9 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 				}
 				return util.Secretkey, nil
 			})
+			if err != nil {
+				return nil, fmt.Errorf("can't parse jwt: %w", err)
+			}
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				if float64(time.Now().Unix()) > claims["exp"].(float64) {
@@ -55,7 +58,7 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 					return nil, fmt.Errorf("current role not qualified")
 				}
 			} else {
-				fmt.Println(err)
+				return nil, err
 			}
 			return next(ctx)
 		},
