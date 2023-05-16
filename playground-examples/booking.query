@@ -1,8 +1,9 @@
 mutation createBooking {
   createBooking(
     input: {
-      customerId: "3e538851-3c7b-4b14-8e57-1f034e3d6063", 
-      goingFlightId: "1c72d78e-81ba-4c22-851b-b8a9fda633b6",
+      customerId: "4fac60dd-ed74-4af0-a992-5f61bc39a4dd", 
+      goingFlightId: "18a3eb63-d4f3-4715-bc4c-40c56475c4f1",
+      status: "Scheduled"
     }) {
     id
     going_flight{
@@ -15,6 +16,7 @@ mutation createBooking {
     customer {
       id
     }
+    status
   }
 }
 
@@ -32,6 +34,7 @@ query getBookings {
     customer {
       id
     }
+    status
   }
 }
 
@@ -39,4 +42,5 @@ query getBookings {
 # update_booking
 # delete_booking
 # cancel_booking -> cancel_ticket
+# set_status
 # find booking

@@ -61,6 +61,12 @@ func (bu *BookingUpdate) ClearReturnFlightID() *BookingUpdate {
 	return bu
 }
 
+// SetStatus sets the "status" field.
+func (bu *BookingUpdate) SetStatus(b booking.Status) *BookingUpdate {
+	bu.mutation.SetStatus(b)
+	return bu
+}
+
 // AddTicketIDs adds the "ticket" edge to the Ticket entity by IDs.
 func (bu *BookingUpdate) AddTicketIDs(ids ...uuid.UUID) *BookingUpdate {
 	bu.mutation.AddTicketIDs(ids...)
@@ -129,7 +135,20 @@ func (bu *BookingUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (bu *BookingUpdate) check() error {
+	if v, ok := bu.mutation.Status(); ok {
+		if err := booking.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Booking.status": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := bu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(booking.Table, booking.Columns, sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID))
 	if ps := bu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -149,6 +168,9 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if bu.mutation.ReturnFlightIDCleared() {
 		_spec.ClearField(booking.FieldReturnFlightID, field.TypeUUID)
+	}
+	if value, ok := bu.mutation.Status(); ok {
+		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
 	if bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -247,6 +269,12 @@ func (buo *BookingUpdateOne) ClearReturnFlightID() *BookingUpdateOne {
 	return buo
 }
 
+// SetStatus sets the "status" field.
+func (buo *BookingUpdateOne) SetStatus(b booking.Status) *BookingUpdateOne {
+	buo.mutation.SetStatus(b)
+	return buo
+}
+
 // AddTicketIDs adds the "ticket" edge to the Ticket entity by IDs.
 func (buo *BookingUpdateOne) AddTicketIDs(ids ...uuid.UUID) *BookingUpdateOne {
 	buo.mutation.AddTicketIDs(ids...)
@@ -328,7 +356,20 @@ func (buo *BookingUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (buo *BookingUpdateOne) check() error {
+	if v, ok := buo.mutation.Status(); ok {
+		if err := booking.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Booking.status": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err error) {
+	if err := buo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(booking.Table, booking.Columns, sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID))
 	id, ok := buo.mutation.ID()
 	if !ok {
@@ -365,6 +406,9 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	}
 	if buo.mutation.ReturnFlightIDCleared() {
 		_spec.ClearField(booking.FieldReturnFlightID, field.TypeUUID)
+	}
+	if value, ok := buo.mutation.Status(); ok {
+		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
 	if buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{

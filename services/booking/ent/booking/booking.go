@@ -3,6 +3,7 @@
 package booking
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -21,6 +22,8 @@ const (
 	FieldGoingFlightID = "going_flight_id"
 	// FieldReturnFlightID holds the string denoting the return_flight_id field in the database.
 	FieldReturnFlightID = "return_flight_id"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeTicket holds the string denoting the ticket edge name in mutations.
@@ -42,6 +45,7 @@ var Columns = []string{
 	FieldCustomerID,
 	FieldGoingFlightID,
 	FieldReturnFlightID,
+	FieldStatus,
 	FieldCreatedAt,
 }
 
@@ -61,6 +65,30 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// Status values.
+const (
+	StatusCanceled  Status = "Canceled"
+	StatusScheduled Status = "Scheduled"
+	StatusDeparted  Status = "Departed"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusCanceled, StatusScheduled, StatusDeparted:
+		return nil
+	default:
+		return fmt.Errorf("booking: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Booking queries.
 type OrderOption func(*sql.Selector)
@@ -83,6 +111,11 @@ func ByGoingFlightID(opts ...sql.OrderTermOption) OrderOption {
 // ByReturnFlightID orders the results by the return_flight_id field.
 func ByReturnFlightID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReturnFlightID, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

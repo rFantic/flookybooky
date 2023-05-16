@@ -316,6 +316,26 @@ func AvailableSlotsLTE(v int) predicate.Flight {
 	return predicate.Flight(sql.FieldLTE(FieldAvailableSlots, v))
 }
 
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v Status) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v Status) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...Status) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...Status) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldStatus, vs...))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldCreatedAt, v))

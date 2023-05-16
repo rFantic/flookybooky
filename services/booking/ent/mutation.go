@@ -39,6 +39,7 @@ type BookingMutation struct {
 	customer_id      *uuid.UUID
 	going_flight_id  *uuid.UUID
 	return_flight_id *uuid.UUID
+	status           *booking.Status
 	created_at       *time.Time
 	clearedFields    map[string]struct{}
 	ticket           map[uuid.UUID]struct{}
@@ -274,6 +275,42 @@ func (m *BookingMutation) ResetReturnFlightID() {
 	delete(m.clearedFields, booking.FieldReturnFlightID)
 }
 
+// SetStatus sets the "status" field.
+func (m *BookingMutation) SetStatus(b booking.Status) {
+	m.status = &b
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BookingMutation) Status() (r booking.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Booking entity.
+// If the Booking object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BookingMutation) OldStatus(ctx context.Context) (v booking.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BookingMutation) ResetStatus() {
+	m.status = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *BookingMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -398,7 +435,7 @@ func (m *BookingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BookingMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.customer_id != nil {
 		fields = append(fields, booking.FieldCustomerID)
 	}
@@ -407,6 +444,9 @@ func (m *BookingMutation) Fields() []string {
 	}
 	if m.return_flight_id != nil {
 		fields = append(fields, booking.FieldReturnFlightID)
+	}
+	if m.status != nil {
+		fields = append(fields, booking.FieldStatus)
 	}
 	if m.created_at != nil {
 		fields = append(fields, booking.FieldCreatedAt)
@@ -425,6 +465,8 @@ func (m *BookingMutation) Field(name string) (ent.Value, bool) {
 		return m.GoingFlightID()
 	case booking.FieldReturnFlightID:
 		return m.ReturnFlightID()
+	case booking.FieldStatus:
+		return m.Status()
 	case booking.FieldCreatedAt:
 		return m.CreatedAt()
 	}
@@ -442,6 +484,8 @@ func (m *BookingMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldGoingFlightID(ctx)
 	case booking.FieldReturnFlightID:
 		return m.OldReturnFlightID(ctx)
+	case booking.FieldStatus:
+		return m.OldStatus(ctx)
 	case booking.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	}
@@ -473,6 +517,13 @@ func (m *BookingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetReturnFlightID(v)
+		return nil
+	case booking.FieldStatus:
+		v, ok := value.(booking.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
 		return nil
 	case booking.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -547,6 +598,9 @@ func (m *BookingMutation) ResetField(name string) error {
 		return nil
 	case booking.FieldReturnFlightID:
 		m.ResetReturnFlightID()
+		return nil
+	case booking.FieldStatus:
+		m.ResetStatus()
 		return nil
 	case booking.FieldCreatedAt:
 		m.ResetCreatedAt()

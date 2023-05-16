@@ -59,6 +59,12 @@ func (fc *FlightCreate) SetAvailableSlots(i int) *FlightCreate {
 	return fc
 }
 
+// SetStatus sets the "status" field.
+func (fc *FlightCreate) SetStatus(f flight.Status) *FlightCreate {
+	fc.mutation.SetStatus(f)
+	return fc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (fc *FlightCreate) SetCreatedAt(t time.Time) *FlightCreate {
 	fc.mutation.SetCreatedAt(t)
@@ -183,6 +189,14 @@ func (fc *FlightCreate) check() error {
 	if _, ok := fc.mutation.AvailableSlots(); !ok {
 		return &ValidationError{Name: "available_slots", err: errors.New(`ent: missing required field "Flight.available_slots"`)}
 	}
+	if _, ok := fc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Flight.status"`)}
+	}
+	if v, ok := fc.mutation.Status(); ok {
+		if err := flight.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Flight.status": %w`, err)}
+		}
+	}
 	if _, ok := fc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Flight.created_at"`)}
 	}
@@ -242,6 +256,10 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 	if value, ok := fc.mutation.AvailableSlots(); ok {
 		_spec.SetField(flight.FieldAvailableSlots, field.TypeInt, value)
 		_node.AvailableSlots = value
+	}
+	if value, ok := fc.mutation.Status(); ok {
+		_spec.SetField(flight.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
 	}
 	if value, ok := fc.mutation.CreatedAt(); ok {
 		_spec.SetField(flight.FieldCreatedAt, field.TypeTime, value)

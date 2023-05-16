@@ -74,6 +74,12 @@ func (fu *FlightUpdate) AddAvailableSlots(i int) *FlightUpdate {
 	return fu
 }
 
+// SetStatus sets the "status" field.
+func (fu *FlightUpdate) SetStatus(f flight.Status) *FlightUpdate {
+	fu.mutation.SetStatus(f)
+	return fu
+}
+
 // AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
 func (fu *FlightUpdate) AddSeatIDs(ids ...uuid.UUID) *FlightUpdate {
 	fu.mutation.AddSeatIDs(ids...)
@@ -172,6 +178,11 @@ func (fu *FlightUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (fu *FlightUpdate) check() error {
+	if v, ok := fu.mutation.Status(); ok {
+		if err := flight.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Flight.status": %w`, err)}
+		}
+	}
 	if _, ok := fu.mutation.OriginID(); fu.mutation.OriginCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Flight.origin"`)
 	}
@@ -207,6 +218,9 @@ func (fu *FlightUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := fu.mutation.AddedAvailableSlots(); ok {
 		_spec.AddField(flight.FieldAvailableSlots, field.TypeInt, value)
+	}
+	if value, ok := fu.mutation.Status(); ok {
+		_spec.SetField(flight.FieldStatus, field.TypeEnum, value)
 	}
 	if fu.mutation.SeatsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -374,6 +388,12 @@ func (fuo *FlightUpdateOne) AddAvailableSlots(i int) *FlightUpdateOne {
 	return fuo
 }
 
+// SetStatus sets the "status" field.
+func (fuo *FlightUpdateOne) SetStatus(f flight.Status) *FlightUpdateOne {
+	fuo.mutation.SetStatus(f)
+	return fuo
+}
+
 // AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
 func (fuo *FlightUpdateOne) AddSeatIDs(ids ...uuid.UUID) *FlightUpdateOne {
 	fuo.mutation.AddSeatIDs(ids...)
@@ -485,6 +505,11 @@ func (fuo *FlightUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (fuo *FlightUpdateOne) check() error {
+	if v, ok := fuo.mutation.Status(); ok {
+		if err := flight.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Flight.status": %w`, err)}
+		}
+	}
 	if _, ok := fuo.mutation.OriginID(); fuo.mutation.OriginCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Flight.origin"`)
 	}
@@ -537,6 +562,9 @@ func (fuo *FlightUpdateOne) sqlSave(ctx context.Context) (_node *Flight, err err
 	}
 	if value, ok := fuo.mutation.AddedAvailableSlots(); ok {
 		_spec.AddField(flight.FieldAvailableSlots, field.TypeInt, value)
+	}
+	if value, ok := fuo.mutation.Status(); ok {
+		_spec.SetField(flight.FieldStatus, field.TypeEnum, value)
 	}
 	if fuo.mutation.SeatsCleared() {
 		edge := &sqlgraph.EdgeSpec{

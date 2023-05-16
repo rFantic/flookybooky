@@ -3,6 +3,7 @@
 package flight
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -27,6 +28,8 @@ const (
 	FieldArrivalTime = "arrival_time"
 	// FieldAvailableSlots holds the string denoting the available_slots field in the database.
 	FieldAvailableSlots = "available_slots"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeSeats holds the string denoting the seats edge name in mutations.
@@ -69,6 +72,7 @@ var Columns = []string{
 	FieldDepartureTime,
 	FieldArrivalTime,
 	FieldAvailableSlots,
+	FieldStatus,
 	FieldCreatedAt,
 }
 
@@ -88,6 +92,32 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// Status values.
+const (
+	StatusCanceled  Status = "Canceled"
+	StatusDeparted  Status = "Departed"
+	StatusLanded    Status = "Landed"
+	StatusScheduled Status = "Scheduled"
+	StatusDelayed   Status = "Delayed"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusCanceled, StatusDeparted, StatusLanded, StatusScheduled, StatusDelayed:
+		return nil
+	default:
+		return fmt.Errorf("flight: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Flight queries.
 type OrderOption func(*sql.Selector)
@@ -125,6 +155,11 @@ func ByArrivalTime(opts ...sql.OrderTermOption) OrderOption {
 // ByAvailableSlots orders the results by the available_slots field.
 func ByAvailableSlots(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvailableSlots, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

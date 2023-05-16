@@ -4,6 +4,7 @@ import (
 	"context"
 	"flookybooky/pb"
 	"flookybooky/services/booking/ent"
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/internal"
 
 	"github.com/google/uuid"
@@ -51,7 +52,8 @@ func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.BookingInput) 
 	}
 	query := h.client.Booking.Create().
 		SetCustomerID(_customerId).
-		SetGoingFlightID(_goingFlightId)
+		SetGoingFlightID(_goingFlightId).
+		SetStatus(booking.Status(req.Status))
 
 	if req.ReturnFlightId != nil {
 		_returnFlightId, err := uuid.Parse(*req.ReturnFlightId)

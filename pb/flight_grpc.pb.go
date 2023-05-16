@@ -29,7 +29,7 @@ type FlightServiceClient interface {
 	// rpc PostSeat (Seat) returns (Seat) {}
 	// rpc GetSeat (UUID) returns (Seat) {}
 	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
-	PostFlight(ctx context.Context, in *Flight, opts ...grpc.CallOption) (*Flight, error)
+	PostFlight(ctx context.Context, in *FlightInput, opts ...grpc.CallOption) (*Flight, error)
 	GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error)
 	GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error)
 }
@@ -69,7 +69,7 @@ func (c *flightServiceClient) GetAirports(ctx context.Context, in *emptypb.Empty
 	return out, nil
 }
 
-func (c *flightServiceClient) PostFlight(ctx context.Context, in *Flight, opts ...grpc.CallOption) (*Flight, error) {
+func (c *flightServiceClient) PostFlight(ctx context.Context, in *FlightInput, opts ...grpc.CallOption) (*Flight, error) {
 	out := new(Flight)
 	err := c.cc.Invoke(ctx, "/pb.FlightService/PostFlight", in, out, opts...)
 	if err != nil {
@@ -106,7 +106,7 @@ type FlightServiceServer interface {
 	// rpc PostSeat (Seat) returns (Seat) {}
 	// rpc GetSeat (UUID) returns (Seat) {}
 	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
-	PostFlight(context.Context, *Flight) (*Flight, error)
+	PostFlight(context.Context, *FlightInput) (*Flight, error)
 	GetFlight(context.Context, *UUID) (*Flight, error)
 	GetFlights(context.Context, *emptypb.Empty) (*Flights, error)
 	mustEmbedUnimplementedFlightServiceServer()
@@ -125,7 +125,7 @@ func (UnimplementedFlightServiceServer) GetAirport(context.Context, *UUID) (*Air
 func (UnimplementedFlightServiceServer) GetAirports(context.Context, *emptypb.Empty) (*Airports, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAirports not implemented")
 }
-func (UnimplementedFlightServiceServer) PostFlight(context.Context, *Flight) (*Flight, error) {
+func (UnimplementedFlightServiceServer) PostFlight(context.Context, *FlightInput) (*Flight, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostFlight not implemented")
 }
 func (UnimplementedFlightServiceServer) GetFlight(context.Context, *UUID) (*Flight, error) {
@@ -202,7 +202,7 @@ func _FlightService_GetAirports_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _FlightService_PostFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Flight)
+	in := new(FlightInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func _FlightService_PostFlight_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/pb.FlightService/PostFlight",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FlightServiceServer).PostFlight(ctx, req.(*Flight))
+		return srv.(FlightServiceServer).PostFlight(ctx, req.(*FlightInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }

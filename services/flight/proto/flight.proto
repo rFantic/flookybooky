@@ -11,6 +11,10 @@ message Airport {
     string address = 3;
 }
 
+message Airports {
+    repeated Airport airports = 1;
+}
+
 message Flight {
     string id = 1;
     string name = 2;
@@ -19,6 +23,21 @@ message Flight {
     int64 available_slots = 5;
     google.protobuf.Timestamp departure_time = 6;
     google.protobuf.Timestamp arrival_time = 7;
+    string status = 8;
+}
+
+message FlightInput {
+    string name = 2;
+    Airport origin = 3;
+    Airport destination = 4;
+    int64 available_slots = 5;
+    google.protobuf.Timestamp departure_time = 6;
+    google.protobuf.Timestamp arrival_time = 7;
+    string status = 8;
+}
+
+message Flights {
+    repeated Flight flights = 1;
 }
 
 // message Seat {
@@ -26,14 +45,6 @@ message Flight {
 //     string seat_number = 2;
 //     Flight flight = 3;
 // }
-
-message Airports {
-    repeated Airport airports = 1;
-}
-
-message Flights {
-    repeated Flight flights = 1;
-}
 
 // message Seats {
 //     repeated Seat seats = 1;
@@ -46,7 +57,7 @@ service FlightService {
     // rpc PostSeat (Seat) returns (Seat) {}
     // rpc GetSeat (UUID) returns (Seat) {}
     // rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
-    rpc PostFlight (Flight) returns (Flight) {}
+    rpc PostFlight (FlightInput) returns (Flight) {}
     rpc GetFlight (UUID) returns (Flight) {}
     rpc GetFlights (google.protobuf.Empty) returns (Flights) {}
 }

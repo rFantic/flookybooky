@@ -48,6 +48,12 @@ func (bc *BookingCreate) SetNillableReturnFlightID(u *uuid.UUID) *BookingCreate 
 	return bc
 }
 
+// SetStatus sets the "status" field.
+func (bc *BookingCreate) SetStatus(b booking.Status) *BookingCreate {
+	bc.mutation.SetStatus(b)
+	return bc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (bc *BookingCreate) SetCreatedAt(t time.Time) *BookingCreate {
 	bc.mutation.SetCreatedAt(t)
@@ -144,6 +150,14 @@ func (bc *BookingCreate) check() error {
 	if _, ok := bc.mutation.GoingFlightID(); !ok {
 		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Booking.going_flight_id"`)}
 	}
+	if _, ok := bc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Booking.status"`)}
+	}
+	if v, ok := bc.mutation.Status(); ok {
+		if err := booking.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Booking.status": %w`, err)}
+		}
+	}
 	if _, ok := bc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Booking.created_at"`)}
 	}
@@ -193,6 +207,10 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 	if value, ok := bc.mutation.ReturnFlightID(); ok {
 		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
 		_node.ReturnFlightID = &value
+	}
+	if value, ok := bc.mutation.Status(); ok {
+		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
 	}
 	if value, ok := bc.mutation.CreatedAt(); ok {
 		_spec.SetField(booking.FieldCreatedAt, field.TypeTime, value)

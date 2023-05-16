@@ -24,12 +24,14 @@ type Booking struct {
 	GoingFlight  *Flight   `json:"going_flight"`
 	ReturnFlight *Flight   `json:"return_flight,omitempty"`
 	Customer     *Customer `json:"customer"`
+	Status       string    `json:"status"`
 }
 
 type BookingInput struct {
 	CustomerID     string  `json:"customerId"`
 	GoingFlightID  string  `json:"goingFlightId"`
 	ReturnFlightID *string `json:"returnFlightId,omitempty"`
+	Status         string  `json:"status"`
 }
 
 type Customer struct {
@@ -57,6 +59,7 @@ type Flight struct {
 	AvailableSlots int      `json:"available_slots"`
 	DepartureTime  string   `json:"departure_time"`
 	ArrivalTime    string   `json:"arrival_time"`
+	Status         string   `json:"status"`
 }
 
 type FlightInput struct {
@@ -66,6 +69,7 @@ type FlightInput struct {
 	AvailableSlots int    `json:"available_slots"`
 	DepartureTime  string `json:"departure_time"`
 	ArrivalTime    string `json:"arrival_time"`
+	Status         string `json:"status"`
 }
 
 type LoginInfo struct {

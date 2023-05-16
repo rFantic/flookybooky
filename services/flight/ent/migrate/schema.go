@@ -27,6 +27,7 @@ var (
 		{Name: "departure_time", Type: field.TypeTime},
 		{Name: "arrival_time", Type: field.TypeTime},
 		{Name: "available_slots", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Departed", "Landed", "Scheduled", "Delayed"}},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "origin_id", Type: field.TypeUUID},
 		{Name: "destinartion_id", Type: field.TypeUUID},
@@ -39,13 +40,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "flights_airports_origin",
-				Columns:    []*schema.Column{FlightsColumns[6]},
+				Columns:    []*schema.Column{FlightsColumns[7]},
 				RefColumns: []*schema.Column{AirportsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "flights_airports_destination",
-				Columns:    []*schema.Column{FlightsColumns[7]},
+				Columns:    []*schema.Column{FlightsColumns[8]},
 				RefColumns: []*schema.Column{AirportsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

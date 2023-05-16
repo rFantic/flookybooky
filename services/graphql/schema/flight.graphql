@@ -6,6 +6,7 @@ type Flight {
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
+    status: String!
 }
 
 input FlightInput{
@@ -15,6 +16,7 @@ input FlightInput{
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
+    status: String!
 }
 
 extend type Query {

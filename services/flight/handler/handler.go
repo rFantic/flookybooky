@@ -4,6 +4,7 @@ import (
 	"context"
 	"flookybooky/pb"
 	"flookybooky/services/flight/ent"
+	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/internal"
 	"fmt"
 
@@ -69,7 +70,7 @@ func (h *FlightHandler) GetFlights(ctx context.Context, req *emptypb.Empty) (*pb
 	return internal.ParseFlightsEntToPb(flightsRes), nil
 }
 
-func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.Flight) (*pb.Flight, error) {
+func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.FlightInput) (*pb.Flight, error) {
 	if req.Origin == nil || req.Destination == nil {
 		return nil, fmt.Errorf("missing origin or destination")
 	}
@@ -87,7 +88,8 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.Flight) (*pb.Fli
 		SetArrivalTime(req.ArrivalTime.AsTime()).
 		SetName(req.Name).
 		SetDestinationID(_destinationReq.ID).
-		SetOriginID(_originReq.ID)
+		SetOriginID(_originReq.ID).
+		SetStatus(flight.Status(req.Status))
 	flightRes, err := query.Save(ctx)
 	if err != nil {
 		return nil, err

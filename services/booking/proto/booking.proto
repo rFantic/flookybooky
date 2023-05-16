@@ -11,6 +11,7 @@ message Booking {
     Customer customer = 2;
     Flight going_flight = 3;
     Flight return_flight = 4;
+    string status = 5;
 }
 
 message Bookings {
@@ -21,6 +22,7 @@ message BookingInput {
     string customer_id = 1;
     string going_flight_id = 2;
     optional string return_flight_id = 3;
+    string status = 4;
 }
 
 message Ticket {

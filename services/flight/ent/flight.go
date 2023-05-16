@@ -31,6 +31,8 @@ type Flight struct {
 	ArrivalTime time.Time `json:"arrival_time,omitempty"`
 	// AvailableSlots holds the value of the "available_slots" field.
 	AvailableSlots int `json:"available_slots,omitempty"`
+	// Status holds the value of the "status" field.
+	Status flight.Status `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -94,7 +96,7 @@ func (*Flight) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case flight.FieldAvailableSlots:
 			values[i] = new(sql.NullInt64)
-		case flight.FieldName:
+		case flight.FieldName, flight.FieldStatus:
 			values[i] = new(sql.NullString)
 		case flight.FieldDepartureTime, flight.FieldArrivalTime, flight.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -156,6 +158,12 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field available_slots", values[i])
 			} else if value.Valid {
 				f.AvailableSlots = int(value.Int64)
+			}
+		case flight.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				f.Status = flight.Status(value.String)
 			}
 		case flight.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -231,6 +239,9 @@ func (f *Flight) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("available_slots=")
 	builder.WriteString(fmt.Sprintf("%v", f.AvailableSlots))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", f.Status))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(f.CreatedAt.Format(time.ANSIC))

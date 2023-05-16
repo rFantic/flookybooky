@@ -79,7 +79,7 @@ func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
 	return out
 }
 
-func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight, err error) {
+func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.FlightInput, err error) {
 	if in == nil {
 		return nil, fmt.Errorf("nil flight input")
 	}
@@ -91,7 +91,7 @@ func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight, err err
 	if err != nil {
 		return nil, err
 	}
-	out = &pb.Flight{
+	out = &pb.FlightInput{
 		DepartureTime: timestamppb.New(_departureTime),
 		ArrivalTime:   timestamppb.New(_arrivalTime),
 	}
