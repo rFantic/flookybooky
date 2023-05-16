@@ -22,6 +22,8 @@ const (
 	FieldLicenseID = "license_id"
 	// FieldPhoneNumber holds the string denoting the phone_number field in the database.
 	FieldPhoneNumber = "phone_number"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
 	// FieldTimestamp holds the string denoting the timestamp field in the database.
 	FieldTimestamp = "timestamp"
 	// Table holds the table name of the customer in the database.
@@ -35,6 +37,7 @@ var Columns = []string{
 	FieldAddress,
 	FieldLicenseID,
 	FieldPhoneNumber,
+	FieldEmail,
 	FieldTimestamp,
 }
 
@@ -85,6 +88,11 @@ func ByLicenseID(opts ...sql.OrderTermOption) OrderOption {
 // ByPhoneNumber orders the results by the phone_number field.
 func ByPhoneNumber(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPhoneNumber, opts...).ToFunc()
+}
+
+// ByEmail orders the results by the email field.
+func ByEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
 // ByTimestamp orders the results by the timestamp field.

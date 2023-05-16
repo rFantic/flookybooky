@@ -14,6 +14,7 @@ var (
 		{Name: "customer_id", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "user"}},
 	}
 	// UsersTable holds the schema information for the "users" table.

@@ -33,7 +33,6 @@ mutation login {
   }
 }
 
-# register
 # logout
 # delete_user
 # update_user

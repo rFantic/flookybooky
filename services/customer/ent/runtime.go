@@ -19,13 +19,27 @@ func init() {
 	// customerDescLicenseID is the schema descriptor for license_id field.
 	customerDescLicenseID := customerFields[3].Descriptor()
 	// customer.LicenseIDValidator is a validator for the "license_id" field. It is called by the builders before save.
-	customer.LicenseIDValidator = customerDescLicenseID.Validators[0].(func(string) error)
+	customer.LicenseIDValidator = func() func(string) error {
+		validators := customerDescLicenseID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(license_id string) error {
+			for _, fn := range fns {
+				if err := fn(license_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// customerDescPhoneNumber is the schema descriptor for phone_number field.
 	customerDescPhoneNumber := customerFields[4].Descriptor()
 	// customer.PhoneNumberValidator is a validator for the "phone_number" field. It is called by the builders before save.
 	customer.PhoneNumberValidator = customerDescPhoneNumber.Validators[0].(func(string) error)
 	// customerDescTimestamp is the schema descriptor for timestamp field.
-	customerDescTimestamp := customerFields[5].Descriptor()
+	customerDescTimestamp := customerFields[6].Descriptor()
 	// customer.DefaultTimestamp holds the default value on creation for the timestamp field.
 	customer.DefaultTimestamp = customerDescTimestamp.Default.(time.Time)
 	// customerDescID is the schema descriptor for id field.

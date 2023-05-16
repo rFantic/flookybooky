@@ -45,6 +45,12 @@ func (cc *CustomerCreate) SetPhoneNumber(s string) *CustomerCreate {
 	return cc
 }
 
+// SetEmail sets the "email" field.
+func (cc *CustomerCreate) SetEmail(s string) *CustomerCreate {
+	cc.mutation.SetEmail(s)
+	return cc
+}
+
 // SetTimestamp sets the "timestamp" field.
 func (cc *CustomerCreate) SetTimestamp(t time.Time) *CustomerCreate {
 	cc.mutation.SetTimestamp(t)
@@ -142,6 +148,9 @@ func (cc *CustomerCreate) check() error {
 			return &ValidationError{Name: "phone_number", err: fmt.Errorf(`ent: validator failed for field "Customer.phone_number": %w`, err)}
 		}
 	}
+	if _, ok := cc.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Customer.email"`)}
+	}
 	if _, ok := cc.mutation.Timestamp(); !ok {
 		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "Customer.timestamp"`)}
 	}
@@ -195,6 +204,10 @@ func (cc *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.PhoneNumber(); ok {
 		_spec.SetField(customer.FieldPhoneNumber, field.TypeString, value)
 		_node.PhoneNumber = value
+	}
+	if value, ok := cc.mutation.Email(); ok {
+		_spec.SetField(customer.FieldEmail, field.TypeString, value)
+		_node.Email = value
 	}
 	if value, ok := cc.mutation.Timestamp(); ok {
 		_spec.SetField(customer.FieldTimestamp, field.TypeTime, value)

@@ -38,6 +38,7 @@ type CustomerMutation struct {
 	address       *string
 	license_id    *string
 	phone_number  *string
+	email         *string
 	timestamp     *time.Time
 	clearedFields map[string]struct{}
 	done          bool
@@ -293,6 +294,42 @@ func (m *CustomerMutation) ResetPhoneNumber() {
 	m.phone_number = nil
 }
 
+// SetEmail sets the "email" field.
+func (m *CustomerMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *CustomerMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Customer entity.
+// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CustomerMutation) OldEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *CustomerMutation) ResetEmail() {
+	m.email = nil
+}
+
 // SetTimestamp sets the "timestamp" field.
 func (m *CustomerMutation) SetTimestamp(t time.Time) {
 	m.timestamp = &t
@@ -363,7 +400,7 @@ func (m *CustomerMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CustomerMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.name != nil {
 		fields = append(fields, customer.FieldName)
 	}
@@ -375,6 +412,9 @@ func (m *CustomerMutation) Fields() []string {
 	}
 	if m.phone_number != nil {
 		fields = append(fields, customer.FieldPhoneNumber)
+	}
+	if m.email != nil {
+		fields = append(fields, customer.FieldEmail)
 	}
 	if m.timestamp != nil {
 		fields = append(fields, customer.FieldTimestamp)
@@ -395,6 +435,8 @@ func (m *CustomerMutation) Field(name string) (ent.Value, bool) {
 		return m.LicenseID()
 	case customer.FieldPhoneNumber:
 		return m.PhoneNumber()
+	case customer.FieldEmail:
+		return m.Email()
 	case customer.FieldTimestamp:
 		return m.Timestamp()
 	}
@@ -414,6 +456,8 @@ func (m *CustomerMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldLicenseID(ctx)
 	case customer.FieldPhoneNumber:
 		return m.OldPhoneNumber(ctx)
+	case customer.FieldEmail:
+		return m.OldEmail(ctx)
 	case customer.FieldTimestamp:
 		return m.OldTimestamp(ctx)
 	}
@@ -452,6 +496,13 @@ func (m *CustomerMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPhoneNumber(v)
+		return nil
+	case customer.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
 		return nil
 	case customer.FieldTimestamp:
 		v, ok := value.(time.Time)
@@ -520,6 +571,9 @@ func (m *CustomerMutation) ResetField(name string) error {
 		return nil
 	case customer.FieldPhoneNumber:
 		m.ResetPhoneNumber()
+		return nil
+	case customer.FieldEmail:
+		m.ResetEmail()
 		return nil
 	case customer.FieldTimestamp:
 		m.ResetTimestamp()

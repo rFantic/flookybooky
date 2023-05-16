@@ -17,7 +17,8 @@ func (User) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("customer_id").NotEmpty().Unique().Immutable().Optional(),
 		field.String("username").Immutable().Unique().NotEmpty(),
-		field.String("password").Immutable().NotEmpty().Sensitive(),
+		field.String("password").NotEmpty().Sensitive(),
+		field.String("email").NotEmpty().Unique(),
 		field.Enum("role").Values("admin", "user"),
 	}
 }

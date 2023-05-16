@@ -15,6 +15,7 @@ var (
 		{Name: "address", Type: field.TypeString},
 		{Name: "license_id", Type: field.TypeString},
 		{Name: "phone_number", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString},
 		{Name: "timestamp", Type: field.TypeTime},
 	}
 	// CustomersTable holds the schema information for the "customers" table.

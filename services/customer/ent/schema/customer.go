@@ -31,6 +31,7 @@ func (Customer) Fields() []ent.Field {
 			}),
 		field.String("phone_number").
 			Validate(validate.IsNumeric),
+		field.String("email"),
 		field.Time("timestamp").Immutable().Default(time.Now()),
 	}
 }

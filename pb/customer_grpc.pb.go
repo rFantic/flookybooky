@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CustomerServiceClient interface {
-	PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
+	PostCustomer(ctx context.Context, in *CustomerInput, opts ...grpc.CallOption) (*Customer, error)
 	GetCustomer(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Customer, error)
 	GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Customers, error)
 }
@@ -36,7 +36,7 @@ func NewCustomerServiceClient(cc grpc.ClientConnInterface) CustomerServiceClient
 	return &customerServiceClient{cc}
 }
 
-func (c *customerServiceClient) PostCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error) {
+func (c *customerServiceClient) PostCustomer(ctx context.Context, in *CustomerInput, opts ...grpc.CallOption) (*Customer, error) {
 	out := new(Customer)
 	err := c.cc.Invoke(ctx, "/pb.CustomerService/PostCustomer", in, out, opts...)
 	if err != nil {
@@ -67,7 +67,7 @@ func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Em
 // All implementations must embed UnimplementedCustomerServiceServer
 // for forward compatibility
 type CustomerServiceServer interface {
-	PostCustomer(context.Context, *Customer) (*Customer, error)
+	PostCustomer(context.Context, *CustomerInput) (*Customer, error)
 	GetCustomer(context.Context, *UUID) (*Customer, error)
 	GetCustomers(context.Context, *emptypb.Empty) (*Customers, error)
 	mustEmbedUnimplementedCustomerServiceServer()
@@ -77,7 +77,7 @@ type CustomerServiceServer interface {
 type UnimplementedCustomerServiceServer struct {
 }
 
-func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *Customer) (*Customer, error) {
+func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *CustomerInput) (*Customer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostCustomer not implemented")
 }
 func (UnimplementedCustomerServiceServer) GetCustomer(context.Context, *UUID) (*Customer, error) {
@@ -100,7 +100,7 @@ func RegisterCustomerServiceServer(s grpc.ServiceRegistrar, srv CustomerServiceS
 }
 
 func _CustomerService_PostCustomer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Customer)
+	in := new(CustomerInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func _CustomerService_PostCustomer_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/pb.CustomerService/PostCustomer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CustomerServiceServer).PostCustomer(ctx, req.(*Customer))
+		return srv.(CustomerServiceServer).PostCustomer(ctx, req.(*CustomerInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }

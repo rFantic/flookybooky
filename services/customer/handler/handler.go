@@ -44,7 +44,7 @@ func (h *CustomerHandler) GetCustomers(ctx context.Context, req *emptypb.Empty) 
 	return internal.ParseCustomersEntToPb(customersRes), nil
 }
 
-func (h *CustomerHandler) PostCustomer(ctx context.Context, req *pb.Customer) (*pb.Customer, error) {
+func (h *CustomerHandler) PostCustomer(ctx context.Context, req *pb.CustomerInput) (*pb.Customer, error) {
 	customerRes, err := h.client.Customer.Create().
 		SetName(req.Name).
 		SetAddress(req.Address).

@@ -51,6 +51,12 @@ func (cu *CustomerUpdate) SetPhoneNumber(s string) *CustomerUpdate {
 	return cu
 }
 
+// SetEmail sets the "email" field.
+func (cu *CustomerUpdate) SetEmail(s string) *CustomerUpdate {
+	cu.mutation.SetEmail(s)
+	return cu
+}
+
 // Mutation returns the CustomerMutation object of the builder.
 func (cu *CustomerUpdate) Mutation() *CustomerMutation {
 	return cu.mutation
@@ -122,6 +128,9 @@ func (cu *CustomerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.PhoneNumber(); ok {
 		_spec.SetField(customer.FieldPhoneNumber, field.TypeString, value)
 	}
+	if value, ok := cu.mutation.Email(); ok {
+		_spec.SetField(customer.FieldEmail, field.TypeString, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{customer.Label}
@@ -163,6 +172,12 @@ func (cuo *CustomerUpdateOne) SetLicenseID(s string) *CustomerUpdateOne {
 // SetPhoneNumber sets the "phone_number" field.
 func (cuo *CustomerUpdateOne) SetPhoneNumber(s string) *CustomerUpdateOne {
 	cuo.mutation.SetPhoneNumber(s)
+	return cuo
+}
+
+// SetEmail sets the "email" field.
+func (cuo *CustomerUpdateOne) SetEmail(s string) *CustomerUpdateOne {
+	cuo.mutation.SetEmail(s)
 	return cuo
 }
 
@@ -266,6 +281,9 @@ func (cuo *CustomerUpdateOne) sqlSave(ctx context.Context) (_node *Customer, err
 	}
 	if value, ok := cuo.mutation.PhoneNumber(); ok {
 		_spec.SetField(customer.FieldPhoneNumber, field.TypeString, value)
+	}
+	if value, ok := cuo.mutation.Email(); ok {
+		_spec.SetField(customer.FieldEmail, field.TypeString, value)
 	}
 	_node = &Customer{config: cuo.config}
 	_spec.Assign = _node.assignValues

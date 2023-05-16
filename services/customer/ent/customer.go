@@ -26,6 +26,8 @@ type Customer struct {
 	LicenseID string `json:"license_id,omitempty"`
 	// PhoneNumber holds the value of the "phone_number" field.
 	PhoneNumber string `json:"phone_number,omitempty"`
+	// Email holds the value of the "email" field.
+	Email string `json:"email,omitempty"`
 	// Timestamp holds the value of the "timestamp" field.
 	Timestamp    time.Time `json:"timestamp,omitempty"`
 	selectValues sql.SelectValues
@@ -36,7 +38,7 @@ func (*Customer) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case customer.FieldName, customer.FieldAddress, customer.FieldLicenseID, customer.FieldPhoneNumber:
+		case customer.FieldName, customer.FieldAddress, customer.FieldLicenseID, customer.FieldPhoneNumber, customer.FieldEmail:
 			values[i] = new(sql.NullString)
 		case customer.FieldTimestamp:
 			values[i] = new(sql.NullTime)
@@ -86,6 +88,12 @@ func (c *Customer) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field phone_number", values[i])
 			} else if value.Valid {
 				c.PhoneNumber = value.String
+			}
+		case customer.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				c.Email = value.String
 			}
 		case customer.FieldTimestamp:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -140,6 +148,9 @@ func (c *Customer) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("phone_number=")
 	builder.WriteString(c.PhoneNumber)
+	builder.WriteString(", ")
+	builder.WriteString("email=")
+	builder.WriteString(c.Email)
 	builder.WriteString(", ")
 	builder.WriteString("timestamp=")
 	builder.WriteString(c.Timestamp.Format(time.ANSIC))

@@ -4,6 +4,7 @@ type Customer {
     address: String!
     license_id: String!
     phone_number: String!
+    email: String!
 }
 
 input CustomerInput {
@@ -11,6 +12,7 @@ input CustomerInput {
     address: String!
     license_id: String!
     phone_number: String!
+    email: String!
 }
 
 extend type Mutation {

@@ -10,13 +10,23 @@ message Customer {
     string address = 3;
     string license_id = 4;
     string phone_number = 5;
+    string email = 6;
 }
+
+message CustomerInput {
+    string name = 2;
+    string address = 3;
+    string license_id = 4;
+    string phone_number = 5;
+    string email = 6;
+}
+
 message Customers {
     repeated Customer customers = 1;
 }
 
 service CustomerService {
-    rpc PostCustomer (Customer) returns (Customer) {}
+    rpc PostCustomer (CustomerInput) returns (Customer) {}
     rpc GetCustomer (UUID) returns (Customer) {}
     rpc GetCustomers (google.protobuf.Empty) returns (Customers) {}
 }
