@@ -1,7 +1,7 @@
 type Booking {
     id: String!
     going_flight: Flight!
-    return_flight: Flight!
+    return_flight: Flight
     customer: Customer!
 }
 

@@ -526,7 +526,7 @@ extend type Mutation {
 	{Name: "../schema/booking.graphql", Input: `type Booking {
     id: String!
     going_flight: Flight!
-    return_flight: Flight!
+    return_flight: Flight
     customer: Customer!
 }
 
@@ -1078,14 +1078,11 @@ func (ec *executionContext) _Booking_return_flight(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Flight)
 	fc.Result = res
-	return ec.marshalNFlight2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlight(ctx, field.Selections, res)
+	return ec.marshalOFlight2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlight(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Booking_return_flight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4955,9 +4952,6 @@ func (ec *executionContext) _Booking(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Booking_return_flight(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -6490,6 +6484,13 @@ func (ec *executionContext) unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋ
 	}
 	res, err := ec.unmarshalInputCustomerInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFlight2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlight(ctx context.Context, sel ast.SelectionSet, v *model.Flight) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Flight(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

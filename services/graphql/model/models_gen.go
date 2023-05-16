@@ -22,7 +22,7 @@ type AirportInput struct {
 type Booking struct {
 	ID           string    `json:"id"`
 	GoingFlight  *Flight   `json:"going_flight"`
-	ReturnFlight *Flight   `json:"return_flight"`
+	ReturnFlight *Flight   `json:"return_flight,omitempty"`
 	Customer     *Customer `json:"customer"`
 }
 

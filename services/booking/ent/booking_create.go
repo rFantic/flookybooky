@@ -192,7 +192,7 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := bc.mutation.ReturnFlightID(); ok {
 		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
-		_node.ReturnFlightID = value
+		_node.ReturnFlightID = &value
 	}
 	if value, ok := bc.mutation.CreatedAt(); ok {
 		_spec.SetField(booking.FieldCreatedAt, field.TypeTime, value)

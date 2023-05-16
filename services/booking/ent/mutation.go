@@ -242,7 +242,7 @@ func (m *BookingMutation) ReturnFlightID() (r uuid.UUID, exists bool) {
 // OldReturnFlightID returns the old "return_flight_id" field's value of the Booking entity.
 // If the Booking object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BookingMutation) OldReturnFlightID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *BookingMutation) OldReturnFlightID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldReturnFlightID is only allowed on UpdateOne operations")
 	}

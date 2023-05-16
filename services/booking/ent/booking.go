@@ -23,7 +23,7 @@ type Booking struct {
 	// GoingFlightID holds the value of the "going_flight_id" field.
 	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
 	// ReturnFlightID holds the value of the "return_flight_id" field.
-	ReturnFlightID uuid.UUID `json:"return_flight_id,omitempty"`
+	ReturnFlightID *uuid.UUID `json:"return_flight_id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -55,9 +55,11 @@ func (*Booking) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case booking.FieldReturnFlightID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case booking.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingFlightID, booking.FieldReturnFlightID:
+		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingFlightID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -93,10 +95,11 @@ func (b *Booking) assignValues(columns []string, values []any) error {
 				b.GoingFlightID = *value
 			}
 		case booking.FieldReturnFlightID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
-			} else if value != nil {
-				b.ReturnFlightID = *value
+			} else if value.Valid {
+				b.ReturnFlightID = new(uuid.UUID)
+				*b.ReturnFlightID = *value.S.(*uuid.UUID)
 			}
 		case booking.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -151,8 +154,10 @@ func (b *Booking) String() string {
 	builder.WriteString("going_flight_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.GoingFlightID))
 	builder.WriteString(", ")
-	builder.WriteString("return_flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", b.ReturnFlightID))
+	if v := b.ReturnFlightID; v != nil {
+		builder.WriteString("return_flight_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(b.CreatedAt.Format(time.ANSIC))

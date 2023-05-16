@@ -21,8 +21,10 @@ func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	out.GoingFlight = &pb.Flight{
 		Id: in.GoingFlightID.String(),
 	}
-	out.ReturnFlight = &pb.Flight{
-		Id: in.ReturnFlightID.String(),
+	if in.ReturnFlightID != nil {
+		out.ReturnFlight = &pb.Flight{
+			Id: in.ReturnFlightID.String(),
+		}
 	}
 	return out
 }
