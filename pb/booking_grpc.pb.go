@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookingServiceClient interface {
-	PostBooking(ctx context.Context, in *Booking, opts ...grpc.CallOption) (*Booking, error)
+	PostBooking(ctx context.Context, in *BookingInput, opts ...grpc.CallOption) (*Booking, error)
 	GetBooking(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Booking, error)
 	GetBookings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Bookings, error)
 	PostTicket(ctx context.Context, in *Ticket, opts ...grpc.CallOption) (*Ticket, error)
@@ -39,7 +39,7 @@ func NewBookingServiceClient(cc grpc.ClientConnInterface) BookingServiceClient {
 	return &bookingServiceClient{cc}
 }
 
-func (c *bookingServiceClient) PostBooking(ctx context.Context, in *Booking, opts ...grpc.CallOption) (*Booking, error) {
+func (c *bookingServiceClient) PostBooking(ctx context.Context, in *BookingInput, opts ...grpc.CallOption) (*Booking, error) {
 	out := new(Booking)
 	err := c.cc.Invoke(ctx, "/pb.BookingService/PostBooking", in, out, opts...)
 	if err != nil {
@@ -97,7 +97,7 @@ func (c *bookingServiceClient) GetTickets(ctx context.Context, in *emptypb.Empty
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
 type BookingServiceServer interface {
-	PostBooking(context.Context, *Booking) (*Booking, error)
+	PostBooking(context.Context, *BookingInput) (*Booking, error)
 	GetBooking(context.Context, *UUID) (*Booking, error)
 	GetBookings(context.Context, *emptypb.Empty) (*Bookings, error)
 	PostTicket(context.Context, *Ticket) (*Ticket, error)
@@ -110,7 +110,7 @@ type BookingServiceServer interface {
 type UnimplementedBookingServiceServer struct {
 }
 
-func (UnimplementedBookingServiceServer) PostBooking(context.Context, *Booking) (*Booking, error) {
+func (UnimplementedBookingServiceServer) PostBooking(context.Context, *BookingInput) (*Booking, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostBooking not implemented")
 }
 func (UnimplementedBookingServiceServer) GetBooking(context.Context, *UUID) (*Booking, error) {
@@ -142,7 +142,7 @@ func RegisterBookingServiceServer(s grpc.ServiceRegistrar, srv BookingServiceSer
 }
 
 func _BookingService_PostBooking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Booking)
+	in := new(BookingInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func _BookingService_PostBooking_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/pb.BookingService/PostBooking",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookingServiceServer).PostBooking(ctx, req.(*Booking))
+		return srv.(BookingServiceServer).PostBooking(ctx, req.(*BookingInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -22,5 +22,14 @@ models:
     fields:
       customer:
         resolver: true
-      flight:
+      going_flight:
+        resolver: true
+      return_flight:
+        resolver: true
+  
+  Flight:
+    fields:
+      origin:
+        resolver: true
+      destination:
         resolver: true

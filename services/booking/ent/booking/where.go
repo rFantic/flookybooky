@@ -61,9 +61,14 @@ func CustomerID(v uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldEQ(FieldCustomerID, v))
 }
 
-// FlightID applies equality check predicate on the "flight_id" field. It's identical to FlightIDEQ.
-func FlightID(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldFlightID, v))
+// GoingFlightID applies equality check predicate on the "going_flight_id" field. It's identical to GoingFlightIDEQ.
+func GoingFlightID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldGoingFlightID, v))
+}
+
+// ReturnFlightID applies equality check predicate on the "return_flight_id" field. It's identical to ReturnFlightIDEQ.
+func ReturnFlightID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldReturnFlightID, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -111,44 +116,94 @@ func CustomerIDLTE(v uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldLTE(FieldCustomerID, v))
 }
 
-// FlightIDEQ applies the EQ predicate on the "flight_id" field.
-func FlightIDEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldFlightID, v))
+// GoingFlightIDEQ applies the EQ predicate on the "going_flight_id" field.
+func GoingFlightIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldGoingFlightID, v))
 }
 
-// FlightIDNEQ applies the NEQ predicate on the "flight_id" field.
-func FlightIDNEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNEQ(FieldFlightID, v))
+// GoingFlightIDNEQ applies the NEQ predicate on the "going_flight_id" field.
+func GoingFlightIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldGoingFlightID, v))
 }
 
-// FlightIDIn applies the In predicate on the "flight_id" field.
-func FlightIDIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldIn(FieldFlightID, vs...))
+// GoingFlightIDIn applies the In predicate on the "going_flight_id" field.
+func GoingFlightIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldGoingFlightID, vs...))
 }
 
-// FlightIDNotIn applies the NotIn predicate on the "flight_id" field.
-func FlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNotIn(FieldFlightID, vs...))
+// GoingFlightIDNotIn applies the NotIn predicate on the "going_flight_id" field.
+func GoingFlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldGoingFlightID, vs...))
 }
 
-// FlightIDGT applies the GT predicate on the "flight_id" field.
-func FlightIDGT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGT(FieldFlightID, v))
+// GoingFlightIDGT applies the GT predicate on the "going_flight_id" field.
+func GoingFlightIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldGoingFlightID, v))
 }
 
-// FlightIDGTE applies the GTE predicate on the "flight_id" field.
-func FlightIDGTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGTE(FieldFlightID, v))
+// GoingFlightIDGTE applies the GTE predicate on the "going_flight_id" field.
+func GoingFlightIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldGoingFlightID, v))
 }
 
-// FlightIDLT applies the LT predicate on the "flight_id" field.
-func FlightIDLT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLT(FieldFlightID, v))
+// GoingFlightIDLT applies the LT predicate on the "going_flight_id" field.
+func GoingFlightIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldGoingFlightID, v))
 }
 
-// FlightIDLTE applies the LTE predicate on the "flight_id" field.
-func FlightIDLTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLTE(FieldFlightID, v))
+// GoingFlightIDLTE applies the LTE predicate on the "going_flight_id" field.
+func GoingFlightIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldGoingFlightID, v))
+}
+
+// ReturnFlightIDEQ applies the EQ predicate on the "return_flight_id" field.
+func ReturnFlightIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDNEQ applies the NEQ predicate on the "return_flight_id" field.
+func ReturnFlightIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDIn applies the In predicate on the "return_flight_id" field.
+func ReturnFlightIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldReturnFlightID, vs...))
+}
+
+// ReturnFlightIDNotIn applies the NotIn predicate on the "return_flight_id" field.
+func ReturnFlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldReturnFlightID, vs...))
+}
+
+// ReturnFlightIDGT applies the GT predicate on the "return_flight_id" field.
+func ReturnFlightIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDGTE applies the GTE predicate on the "return_flight_id" field.
+func ReturnFlightIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDLT applies the LT predicate on the "return_flight_id" field.
+func ReturnFlightIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDLTE applies the LTE predicate on the "return_flight_id" field.
+func ReturnFlightIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDIsNil applies the IsNil predicate on the "return_flight_id" field.
+func ReturnFlightIDIsNil() predicate.Booking {
+	return predicate.Booking(sql.FieldIsNull(FieldReturnFlightID))
+}
+
+// ReturnFlightIDNotNil applies the NotNil predicate on the "return_flight_id" field.
+func ReturnFlightIDNotNil() predicate.Booking {
+	return predicate.Booking(sql.FieldNotNull(FieldReturnFlightID))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

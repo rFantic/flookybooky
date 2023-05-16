@@ -9,11 +9,18 @@ option go_package = "./;pb";
 message Booking {
     string id = 1;
     Customer customer = 2;
-    Flight flight = 3;
+    Flight going_flight = 3;
+    Flight return_flight = 4;
 }
 
 message Bookings {
     repeated Booking bookings = 1;
+}
+
+message BookingInput {
+    string customer_id = 1;
+    string going_flight_id = 2;
+    optional string return_flight_id = 3;
 }
 
 message Ticket {
@@ -28,7 +35,7 @@ message Tickets {
 }
 
 service BookingService {
-    rpc PostBooking (Booking) returns (Booking) {}
+    rpc PostBooking (BookingInput) returns (Booking) {}
     rpc GetBooking (UUID) returns (Booking) {}
     rpc GetBookings (google.protobuf.Empty) returns (Bookings) {}
 

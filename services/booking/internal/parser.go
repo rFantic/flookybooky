@@ -18,8 +18,11 @@ func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	out.Customer = &pb.Customer{
 		Id: in.CustomerID.String(),
 	}
-	out.Flight = &pb.Flight{
-		Id: in.FlightID.String(),
+	out.GoingFlight = &pb.Flight{
+		Id: in.GoingFlightID.String(),
+	}
+	out.ReturnFlight = &pb.Flight{
+		Id: in.ReturnFlightID.String(),
 	}
 	return out
 }

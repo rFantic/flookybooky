@@ -20,8 +20,10 @@ type Booking struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// CustomerID holds the value of the "customer_id" field.
 	CustomerID uuid.UUID `json:"customer_id,omitempty"`
-	// FlightID holds the value of the "flight_id" field.
-	FlightID uuid.UUID `json:"flight_id,omitempty"`
+	// GoingFlightID holds the value of the "going_flight_id" field.
+	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
+	// ReturnFlightID holds the value of the "return_flight_id" field.
+	ReturnFlightID uuid.UUID `json:"return_flight_id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -55,7 +57,7 @@ func (*Booking) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case booking.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case booking.FieldID, booking.FieldCustomerID, booking.FieldFlightID:
+		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingFlightID, booking.FieldReturnFlightID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -84,11 +86,17 @@ func (b *Booking) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				b.CustomerID = *value
 			}
-		case booking.FieldFlightID:
+		case booking.FieldGoingFlightID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field flight_id", values[i])
+				return fmt.Errorf("unexpected type %T for field going_flight_id", values[i])
 			} else if value != nil {
-				b.FlightID = *value
+				b.GoingFlightID = *value
+			}
+		case booking.FieldReturnFlightID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
+			} else if value != nil {
+				b.ReturnFlightID = *value
 			}
 		case booking.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -140,8 +148,11 @@ func (b *Booking) String() string {
 	builder.WriteString("customer_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.CustomerID))
 	builder.WriteString(", ")
-	builder.WriteString("flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", b.FlightID))
+	builder.WriteString("going_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", b.GoingFlightID))
+	builder.WriteString(", ")
+	builder.WriteString("return_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", b.ReturnFlightID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(b.CreatedAt.Format(time.ANSIC))

@@ -10,16 +10,28 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-	"fmt"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// Flight is the resolver for the flight field.
-func (r *bookingResolver) Flight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
+// GoingFlight is the resolver for the going_flight field.
+func (r *bookingResolver) GoingFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
 	var out *model.Flight
-	if obj.Flight != nil {
-		flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.Flight.ID})
+	if obj.GoingFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.GoingFlight.ID})
+		if err != nil {
+			return nil, err
+		}
+		out = internal.ParseFlightPbToGraphql(flightRes)
+	}
+	return out, nil
+}
+
+// ReturnFlight is the resolver for the return_flight field.
+func (r *bookingResolver) ReturnFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
+	var out *model.Flight
+	if obj.ReturnFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.ReturnFlight.ID})
 		if err != nil {
 			return nil, err
 		}
@@ -43,20 +55,25 @@ func (r *bookingResolver) Customer(ctx context.Context, obj *model.Booking) (*mo
 
 // CreateBooking is the resolver for the createBooking field.
 func (r *mutationResolver) CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error) {
-	customerRes, err := r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{
+	_, err := r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{
 		Id: input.CustomerID,
 	})
 	if err != nil {
 		return nil, err
 	}
-	flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-		Id: input.FlightID,
+	_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
+		Id: input.GoingFlightID,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if customerRes == nil || flightRes == nil {
-		return nil, fmt.Errorf("wrong customer id or flight id")
+	if input.ReturnFlightID != nil {
+		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
+			Id: *input.ReturnFlightID,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	bookingRes, err := r.client.BookingClient.PostBooking(ctx, internal.ParseBookingInputGraphqlToPb(&input))
 	return internal.ParseBookingPbToGraphql(bookingRes), err

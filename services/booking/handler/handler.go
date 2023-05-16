@@ -40,19 +40,27 @@ func (h *BookingHandler) GetBookings(ctx context.Context, req *emptypb.Empty) (*
 	return internal.ParseBookingsEntToPb(bookingsRes), nil
 }
 
-func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.Booking) (*pb.Booking, error) {
-	_customerId, err := uuid.Parse(req.Customer.Id)
+func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.BookingInput) (*pb.Booking, error) {
+	_customerId, err := uuid.Parse(req.CustomerId)
 	if err != nil {
 		return nil, err
 	}
-	_flightId, err := uuid.Parse(req.Flight.Id)
+	_goingFlightId, err := uuid.Parse(req.GoingFlightId)
 	if err != nil {
 		return nil, err
 	}
-	bookingRes, err := h.client.Booking.Create().
+	query := h.client.Booking.Create().
 		SetCustomerID(_customerId).
-		SetFlightID(_flightId).
-		Save(ctx)
+		SetGoingFlightID(_goingFlightId)
+
+	if req.ReturnFlightId != nil {
+		_returnFlightId, err := uuid.Parse(*req.ReturnFlightId)
+		if err != nil {
+			return nil, err
+		}
+		query.SetReturnFlightID(_returnFlightId)
+	}
+	bookingRes, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
 	}

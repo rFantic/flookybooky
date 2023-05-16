@@ -12,7 +12,8 @@ var (
 	BookingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "customer_id", Type: field.TypeUUID},
-		{Name: "flight_id", Type: field.TypeUUID},
+		{Name: "going_flight_id", Type: field.TypeUUID},
+		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 	}
 	// BookingsTable holds the schema information for the "bookings" table.

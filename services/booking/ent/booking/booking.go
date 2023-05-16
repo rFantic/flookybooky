@@ -17,8 +17,10 @@ const (
 	FieldID = "id"
 	// FieldCustomerID holds the string denoting the customer_id field in the database.
 	FieldCustomerID = "customer_id"
-	// FieldFlightID holds the string denoting the flight_id field in the database.
-	FieldFlightID = "flight_id"
+	// FieldGoingFlightID holds the string denoting the going_flight_id field in the database.
+	FieldGoingFlightID = "going_flight_id"
+	// FieldReturnFlightID holds the string denoting the return_flight_id field in the database.
+	FieldReturnFlightID = "return_flight_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeTicket holds the string denoting the ticket edge name in mutations.
@@ -38,7 +40,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCustomerID,
-	FieldFlightID,
+	FieldGoingFlightID,
+	FieldReturnFlightID,
 	FieldCreatedAt,
 }
 
@@ -72,9 +75,14 @@ func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCustomerID, opts...).ToFunc()
 }
 
-// ByFlightID orders the results by the flight_id field.
-func ByFlightID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFlightID, opts...).ToFunc()
+// ByGoingFlightID orders the results by the going_flight_id field.
+func ByGoingFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGoingFlightID, opts...).ToFunc()
+}
+
+// ByReturnFlightID orders the results by the return_flight_id field.
+func ByReturnFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReturnFlightID, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

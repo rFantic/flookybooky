@@ -1,12 +1,14 @@
 type Booking {
     id: String!
-    flight: Flight!
+    going_flight: Flight!
+    return_flight: Flight!
     customer: Customer!
 }
 
 input BookingInput{
     customerId: String!
-    flightId: String!
+    goingFlightId: String!
+    returnFlightId: String
 }
 
 extend type Query {

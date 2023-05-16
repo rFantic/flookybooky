@@ -19,7 +19,8 @@ func (Booking) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("customer_id", uuid.UUID{}),
-		field.UUID("flight_id", uuid.UUID{}),
+		field.UUID("going_flight_id", uuid.UUID{}),
+		field.UUID("return_flight_id", uuid.UUID{}).Optional(),
 		field.Time("created_at").Immutable().Default(time.Now),
 	}
 }

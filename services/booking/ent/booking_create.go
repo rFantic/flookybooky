@@ -28,9 +28,23 @@ func (bc *BookingCreate) SetCustomerID(u uuid.UUID) *BookingCreate {
 	return bc
 }
 
-// SetFlightID sets the "flight_id" field.
-func (bc *BookingCreate) SetFlightID(u uuid.UUID) *BookingCreate {
-	bc.mutation.SetFlightID(u)
+// SetGoingFlightID sets the "going_flight_id" field.
+func (bc *BookingCreate) SetGoingFlightID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetGoingFlightID(u)
+	return bc
+}
+
+// SetReturnFlightID sets the "return_flight_id" field.
+func (bc *BookingCreate) SetReturnFlightID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetReturnFlightID(u)
+	return bc
+}
+
+// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
+func (bc *BookingCreate) SetNillableReturnFlightID(u *uuid.UUID) *BookingCreate {
+	if u != nil {
+		bc.SetReturnFlightID(*u)
+	}
 	return bc
 }
 
@@ -127,8 +141,8 @@ func (bc *BookingCreate) check() error {
 	if _, ok := bc.mutation.CustomerID(); !ok {
 		return &ValidationError{Name: "customer_id", err: errors.New(`ent: missing required field "Booking.customer_id"`)}
 	}
-	if _, ok := bc.mutation.FlightID(); !ok {
-		return &ValidationError{Name: "flight_id", err: errors.New(`ent: missing required field "Booking.flight_id"`)}
+	if _, ok := bc.mutation.GoingFlightID(); !ok {
+		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Booking.going_flight_id"`)}
 	}
 	if _, ok := bc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Booking.created_at"`)}
@@ -172,9 +186,13 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 		_node.CustomerID = value
 	}
-	if value, ok := bc.mutation.FlightID(); ok {
-		_spec.SetField(booking.FieldFlightID, field.TypeUUID, value)
-		_node.FlightID = value
+	if value, ok := bc.mutation.GoingFlightID(); ok {
+		_spec.SetField(booking.FieldGoingFlightID, field.TypeUUID, value)
+		_node.GoingFlightID = value
+	}
+	if value, ok := bc.mutation.ReturnFlightID(); ok {
+		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
+		_node.ReturnFlightID = value
 	}
 	if value, ok := bc.mutation.CreatedAt(); ok {
 		_spec.SetField(booking.FieldCreatedAt, field.TypeTime, value)

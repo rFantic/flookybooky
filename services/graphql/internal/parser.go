@@ -122,11 +122,13 @@ func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
 		out.Origin = &model.Airport{
 			ID: in.Origin.Id,
 		}
+		copier.Copy(&out.Origin, in.Origin)
 	}
 	if in.Destination != nil {
 		out.Destination = &model.Airport{
 			ID: in.Destination.Id,
 		}
+		copier.Copy(&out.Destination, in.Destination)
 	}
 	return out
 }
@@ -147,17 +149,16 @@ func ParseFlightsPbToGraphql(in *pb.Flights) (out []*model.Flight) {
 // 	return out
 // }
 
-func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.Booking) {
+func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput) {
 	if in == nil {
 		return nil
 	}
-	out = &pb.Booking{
-		Customer: &pb.Customer{
-			Id: in.CustomerID,
-		},
-		Flight: &pb.Flight{
-			Id: in.FlightID,
-		},
+	out = &pb.BookingInput{
+		CustomerId:    in.CustomerID,
+		GoingFlightId: in.GoingFlightID,
+	}
+	if in.ReturnFlightID != nil {
+		out.ReturnFlightId = in.ReturnFlightID
 	}
 	copier.Copy(&out, in)
 	return out
@@ -177,11 +178,17 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 		}
 		copier.Copy(&out.Customer, in.Customer)
 	}
-	if in.Flight != nil {
-		out.Flight = &model.Flight{
-			ID: in.Flight.GetId(),
+	if in.GoingFlight != nil {
+		out.GoingFlight = &model.Flight{
+			ID: in.GoingFlight.Id,
 		}
-		copier.Copy(&out.Flight, in.Flight)
+		copier.Copy(&out.GoingFlight, in.GoingFlight)
+	}
+	if in.ReturnFlight != nil {
+		out.ReturnFlight = &model.Flight{
+			ID: in.ReturnFlight.Id,
+		}
+		copier.Copy(&out.ReturnFlight, in.ReturnFlight)
 	}
 	return out
 }
@@ -203,11 +210,17 @@ func ParseBookingsPbToGraphql(in *pb.Bookings) (out []*model.Booking) {
 			}
 			copier.Copy(&out[i].Customer, a.Customer)
 		}
-		if a.Flight != nil {
-			out[i].Flight = &model.Flight{
-				ID: a.Flight.Id,
+		if a.GoingFlight != nil {
+			out[i].GoingFlight = &model.Flight{
+				ID: a.GoingFlight.Id,
 			}
-			copier.Copy(&out[i].Flight, a.Flight)
+			copier.Copy(&out[i].GoingFlight, a.GoingFlight)
+		}
+		if a.ReturnFlight != nil {
+			out[i].ReturnFlight = &model.Flight{
+				ID: a.ReturnFlight.Id,
+			}
+			copier.Copy(&out[i].ReturnFlight, a.ReturnFlight)
 		}
 	}
 	return out

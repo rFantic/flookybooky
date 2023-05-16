@@ -35,9 +35,29 @@ func (bu *BookingUpdate) SetCustomerID(u uuid.UUID) *BookingUpdate {
 	return bu
 }
 
-// SetFlightID sets the "flight_id" field.
-func (bu *BookingUpdate) SetFlightID(u uuid.UUID) *BookingUpdate {
-	bu.mutation.SetFlightID(u)
+// SetGoingFlightID sets the "going_flight_id" field.
+func (bu *BookingUpdate) SetGoingFlightID(u uuid.UUID) *BookingUpdate {
+	bu.mutation.SetGoingFlightID(u)
+	return bu
+}
+
+// SetReturnFlightID sets the "return_flight_id" field.
+func (bu *BookingUpdate) SetReturnFlightID(u uuid.UUID) *BookingUpdate {
+	bu.mutation.SetReturnFlightID(u)
+	return bu
+}
+
+// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
+func (bu *BookingUpdate) SetNillableReturnFlightID(u *uuid.UUID) *BookingUpdate {
+	if u != nil {
+		bu.SetReturnFlightID(*u)
+	}
+	return bu
+}
+
+// ClearReturnFlightID clears the value of the "return_flight_id" field.
+func (bu *BookingUpdate) ClearReturnFlightID() *BookingUpdate {
+	bu.mutation.ClearReturnFlightID()
 	return bu
 }
 
@@ -121,8 +141,14 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bu.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
-	if value, ok := bu.mutation.FlightID(); ok {
-		_spec.SetField(booking.FieldFlightID, field.TypeUUID, value)
+	if value, ok := bu.mutation.GoingFlightID(); ok {
+		_spec.SetField(booking.FieldGoingFlightID, field.TypeUUID, value)
+	}
+	if value, ok := bu.mutation.ReturnFlightID(); ok {
+		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
+	}
+	if bu.mutation.ReturnFlightIDCleared() {
+		_spec.ClearField(booking.FieldReturnFlightID, field.TypeUUID)
 	}
 	if bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -195,9 +221,29 @@ func (buo *BookingUpdateOne) SetCustomerID(u uuid.UUID) *BookingUpdateOne {
 	return buo
 }
 
-// SetFlightID sets the "flight_id" field.
-func (buo *BookingUpdateOne) SetFlightID(u uuid.UUID) *BookingUpdateOne {
-	buo.mutation.SetFlightID(u)
+// SetGoingFlightID sets the "going_flight_id" field.
+func (buo *BookingUpdateOne) SetGoingFlightID(u uuid.UUID) *BookingUpdateOne {
+	buo.mutation.SetGoingFlightID(u)
+	return buo
+}
+
+// SetReturnFlightID sets the "return_flight_id" field.
+func (buo *BookingUpdateOne) SetReturnFlightID(u uuid.UUID) *BookingUpdateOne {
+	buo.mutation.SetReturnFlightID(u)
+	return buo
+}
+
+// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
+func (buo *BookingUpdateOne) SetNillableReturnFlightID(u *uuid.UUID) *BookingUpdateOne {
+	if u != nil {
+		buo.SetReturnFlightID(*u)
+	}
+	return buo
+}
+
+// ClearReturnFlightID clears the value of the "return_flight_id" field.
+func (buo *BookingUpdateOne) ClearReturnFlightID() *BookingUpdateOne {
+	buo.mutation.ClearReturnFlightID()
 	return buo
 }
 
@@ -311,8 +357,14 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	if value, ok := buo.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
-	if value, ok := buo.mutation.FlightID(); ok {
-		_spec.SetField(booking.FieldFlightID, field.TypeUUID, value)
+	if value, ok := buo.mutation.GoingFlightID(); ok {
+		_spec.SetField(booking.FieldGoingFlightID, field.TypeUUID, value)
+	}
+	if value, ok := buo.mutation.ReturnFlightID(); ok {
+		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
+	}
+	if buo.mutation.ReturnFlightIDCleared() {
+		_spec.ClearField(booking.FieldReturnFlightID, field.TypeUUID)
 	}
 	if buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
