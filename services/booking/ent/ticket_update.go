@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"errors"
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/predicate"
 	"flookybooky/services/booking/ent/ticket"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // TicketUpdate is the builder for updating Ticket entities.
@@ -27,9 +29,38 @@ func (tu *TicketUpdate) Where(ps ...predicate.Ticket) *TicketUpdate {
 	return tu
 }
 
+// SetBookingID sets the "booking_id" field.
+func (tu *TicketUpdate) SetBookingID(u uuid.UUID) *TicketUpdate {
+	tu.mutation.SetBookingID(u)
+	return tu
+}
+
+// SetSeatID sets the "seat_id" field.
+func (tu *TicketUpdate) SetSeatID(u uuid.UUID) *TicketUpdate {
+	tu.mutation.SetSeatID(u)
+	return tu
+}
+
+// SetLicenseID sets the "license_id" field.
+func (tu *TicketUpdate) SetLicenseID(s string) *TicketUpdate {
+	tu.mutation.SetLicenseID(s)
+	return tu
+}
+
+// SetBooking sets the "booking" edge to the Booking entity.
+func (tu *TicketUpdate) SetBooking(b *Booking) *TicketUpdate {
+	return tu.SetBookingID(b.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tu *TicketUpdate) Mutation() *TicketMutation {
 	return tu.mutation
+}
+
+// ClearBooking clears the "booking" edge to the Booking entity.
+func (tu *TicketUpdate) ClearBooking() *TicketUpdate {
+	tu.mutation.ClearBooking()
+	return tu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -59,14 +90,60 @@ func (tu *TicketUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (tu *TicketUpdate) check() error {
+	if _, ok := tu.mutation.BookingID(); tu.mutation.BookingCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Ticket.booking"`)
+	}
+	return nil
+}
+
 func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt))
+	if err := tu.check(); err != nil {
+		return n, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID))
 	if ps := tu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := tu.mutation.SeatID(); ok {
+		_spec.SetField(ticket.FieldSeatID, field.TypeUUID, value)
+	}
+	if value, ok := tu.mutation.LicenseID(); ok {
+		_spec.SetField(ticket.FieldLicenseID, field.TypeString, value)
+	}
+	if tu.mutation.BookingCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: []string{ticket.BookingColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.BookingIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: []string{ticket.BookingColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -88,9 +165,38 @@ type TicketUpdateOne struct {
 	mutation *TicketMutation
 }
 
+// SetBookingID sets the "booking_id" field.
+func (tuo *TicketUpdateOne) SetBookingID(u uuid.UUID) *TicketUpdateOne {
+	tuo.mutation.SetBookingID(u)
+	return tuo
+}
+
+// SetSeatID sets the "seat_id" field.
+func (tuo *TicketUpdateOne) SetSeatID(u uuid.UUID) *TicketUpdateOne {
+	tuo.mutation.SetSeatID(u)
+	return tuo
+}
+
+// SetLicenseID sets the "license_id" field.
+func (tuo *TicketUpdateOne) SetLicenseID(s string) *TicketUpdateOne {
+	tuo.mutation.SetLicenseID(s)
+	return tuo
+}
+
+// SetBooking sets the "booking" edge to the Booking entity.
+func (tuo *TicketUpdateOne) SetBooking(b *Booking) *TicketUpdateOne {
+	return tuo.SetBookingID(b.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tuo *TicketUpdateOne) Mutation() *TicketMutation {
 	return tuo.mutation
+}
+
+// ClearBooking clears the "booking" edge to the Booking entity.
+func (tuo *TicketUpdateOne) ClearBooking() *TicketUpdateOne {
+	tuo.mutation.ClearBooking()
+	return tuo
 }
 
 // Where appends a list predicates to the TicketUpdate builder.
@@ -133,8 +239,19 @@ func (tuo *TicketUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (tuo *TicketUpdateOne) check() error {
+	if _, ok := tuo.mutation.BookingID(); tuo.mutation.BookingCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Ticket.booking"`)
+	}
+	return nil
+}
+
 func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err error) {
-	_spec := sqlgraph.NewUpdateSpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt))
+	if err := tuo.check(); err != nil {
+		return _node, err
+	}
+	_spec := sqlgraph.NewUpdateSpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID))
 	id, ok := tuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Ticket.id" for update`)}
@@ -158,6 +275,41 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := tuo.mutation.SeatID(); ok {
+		_spec.SetField(ticket.FieldSeatID, field.TypeUUID, value)
+	}
+	if value, ok := tuo.mutation.LicenseID(); ok {
+		_spec.SetField(ticket.FieldLicenseID, field.TypeString, value)
+	}
+	if tuo.mutation.BookingCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: []string{ticket.BookingColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.BookingIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: []string{ticket.BookingColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Ticket{config: tuo.config}
 	_spec.Assign = _node.assignValues

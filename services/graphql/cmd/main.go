@@ -68,9 +68,15 @@ func servicesConn() resolver.Client {
 		panic(err)
 	}
 	flightClient := pb.NewFlightServiceClient(flightConn)
+	bookingConn, err := grpc.Dial("booking:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	bookingClient := pb.NewBookingServiceClient(bookingConn)
 	return resolver.Client{
 		UserClient:     userClient,
 		CustomerClient: customerClient,
 		FlightClient:   flightClient,
+		BookingClient:  bookingClient,
 	}
 }

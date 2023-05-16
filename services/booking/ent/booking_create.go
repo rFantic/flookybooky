@@ -4,11 +4,15 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"flookybooky/services/booking/ent/booking"
+	"flookybooky/services/booking/ent/ticket"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // BookingCreate is the builder for creating a Booking entity.
@@ -18,6 +22,61 @@ type BookingCreate struct {
 	hooks    []Hook
 }
 
+// SetCustomerID sets the "customer_id" field.
+func (bc *BookingCreate) SetCustomerID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetCustomerID(u)
+	return bc
+}
+
+// SetFlightID sets the "flight_id" field.
+func (bc *BookingCreate) SetFlightID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetFlightID(u)
+	return bc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (bc *BookingCreate) SetCreatedAt(t time.Time) *BookingCreate {
+	bc.mutation.SetCreatedAt(t)
+	return bc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (bc *BookingCreate) SetNillableCreatedAt(t *time.Time) *BookingCreate {
+	if t != nil {
+		bc.SetCreatedAt(*t)
+	}
+	return bc
+}
+
+// SetID sets the "id" field.
+func (bc *BookingCreate) SetID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetID(u)
+	return bc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (bc *BookingCreate) SetNillableID(u *uuid.UUID) *BookingCreate {
+	if u != nil {
+		bc.SetID(*u)
+	}
+	return bc
+}
+
+// AddTicketIDs adds the "ticket" edge to the Ticket entity by IDs.
+func (bc *BookingCreate) AddTicketIDs(ids ...uuid.UUID) *BookingCreate {
+	bc.mutation.AddTicketIDs(ids...)
+	return bc
+}
+
+// AddTicket adds the "ticket" edges to the Ticket entity.
+func (bc *BookingCreate) AddTicket(t ...*Ticket) *BookingCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bc.AddTicketIDs(ids...)
+}
+
 // Mutation returns the BookingMutation object of the builder.
 func (bc *BookingCreate) Mutation() *BookingMutation {
 	return bc.mutation
@@ -25,6 +84,7 @@ func (bc *BookingCreate) Mutation() *BookingMutation {
 
 // Save creates the Booking in the database.
 func (bc *BookingCreate) Save(ctx context.Context) (*Booking, error) {
+	bc.defaults()
 	return withHooks[*Booking, BookingMutation](ctx, bc.sqlSave, bc.mutation, bc.hooks)
 }
 
@@ -50,8 +110,29 @@ func (bc *BookingCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (bc *BookingCreate) defaults() {
+	if _, ok := bc.mutation.CreatedAt(); !ok {
+		v := booking.DefaultCreatedAt()
+		bc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := bc.mutation.ID(); !ok {
+		v := booking.DefaultID()
+		bc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (bc *BookingCreate) check() error {
+	if _, ok := bc.mutation.CustomerID(); !ok {
+		return &ValidationError{Name: "customer_id", err: errors.New(`ent: missing required field "Booking.customer_id"`)}
+	}
+	if _, ok := bc.mutation.FlightID(); !ok {
+		return &ValidationError{Name: "flight_id", err: errors.New(`ent: missing required field "Booking.flight_id"`)}
+	}
+	if _, ok := bc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Booking.created_at"`)}
+	}
 	return nil
 }
 
@@ -66,8 +147,13 @@ func (bc *BookingCreate) sqlSave(ctx context.Context) (*Booking, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	bc.mutation.id = &_node.ID
 	bc.mutation.done = true
 	return _node, nil
@@ -76,8 +162,40 @@ func (bc *BookingCreate) sqlSave(ctx context.Context) (*Booking, error) {
 func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Booking{config: bc.config}
-		_spec = sqlgraph.NewCreateSpec(booking.Table, sqlgraph.NewFieldSpec(booking.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(booking.Table, sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID))
 	)
+	if id, ok := bc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := bc.mutation.CustomerID(); ok {
+		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
+		_node.CustomerID = value
+	}
+	if value, ok := bc.mutation.FlightID(); ok {
+		_spec.SetField(booking.FieldFlightID, field.TypeUUID, value)
+		_node.FlightID = value
+	}
+	if value, ok := bc.mutation.CreatedAt(); ok {
+		_spec.SetField(booking.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if nodes := bc.mutation.TicketIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: []string{booking.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -95,6 +213,7 @@ func (bcb *BookingCreateBulk) Save(ctx context.Context) ([]*Booking, error) {
 	for i := range bcb.builders {
 		func(i int, root context.Context) {
 			builder := bcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*BookingMutation)
 				if !ok {
@@ -121,10 +240,6 @@ func (bcb *BookingCreateBulk) Save(ctx context.Context) ([]*Booking, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

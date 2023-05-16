@@ -37,6 +37,18 @@ func (fu *FlightUpdate) SetName(s string) *FlightUpdate {
 	return fu
 }
 
+// SetOriginID sets the "origin_id" field.
+func (fu *FlightUpdate) SetOriginID(u uuid.UUID) *FlightUpdate {
+	fu.mutation.SetOriginID(u)
+	return fu
+}
+
+// SetDestinartionID sets the "destinartion_id" field.
+func (fu *FlightUpdate) SetDestinartionID(u uuid.UUID) *FlightUpdate {
+	fu.mutation.SetDestinartionID(u)
+	return fu
+}
+
 // SetDepartureTime sets the "departure_time" field.
 func (fu *FlightUpdate) SetDepartureTime(t time.Time) *FlightUpdate {
 	fu.mutation.SetDepartureTime(t)
@@ -77,20 +89,6 @@ func (fu *FlightUpdate) AddSeats(s ...*Seat) *FlightUpdate {
 	return fu.AddSeatIDs(ids...)
 }
 
-// SetOriginID sets the "origin" edge to the Airport entity by ID.
-func (fu *FlightUpdate) SetOriginID(id uuid.UUID) *FlightUpdate {
-	fu.mutation.SetOriginID(id)
-	return fu
-}
-
-// SetNillableOriginID sets the "origin" edge to the Airport entity by ID if the given value is not nil.
-func (fu *FlightUpdate) SetNillableOriginID(id *uuid.UUID) *FlightUpdate {
-	if id != nil {
-		fu = fu.SetOriginID(*id)
-	}
-	return fu
-}
-
 // SetOrigin sets the "origin" edge to the Airport entity.
 func (fu *FlightUpdate) SetOrigin(a *Airport) *FlightUpdate {
 	return fu.SetOriginID(a.ID)
@@ -99,14 +97,6 @@ func (fu *FlightUpdate) SetOrigin(a *Airport) *FlightUpdate {
 // SetDestinationID sets the "destination" edge to the Airport entity by ID.
 func (fu *FlightUpdate) SetDestinationID(id uuid.UUID) *FlightUpdate {
 	fu.mutation.SetDestinationID(id)
-	return fu
-}
-
-// SetNillableDestinationID sets the "destination" edge to the Airport entity by ID if the given value is not nil.
-func (fu *FlightUpdate) SetNillableDestinationID(id *uuid.UUID) *FlightUpdate {
-	if id != nil {
-		fu = fu.SetDestinationID(*id)
-	}
 	return fu
 }
 
@@ -180,7 +170,21 @@ func (fu *FlightUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (fu *FlightUpdate) check() error {
+	if _, ok := fu.mutation.OriginID(); fu.mutation.OriginCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Flight.origin"`)
+	}
+	if _, ok := fu.mutation.DestinationID(); fu.mutation.DestinationCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Flight.destination"`)
+	}
+	return nil
+}
+
 func (fu *FlightUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := fu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(flight.Table, flight.Columns, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID))
 	if ps := fu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -333,6 +337,18 @@ func (fuo *FlightUpdateOne) SetName(s string) *FlightUpdateOne {
 	return fuo
 }
 
+// SetOriginID sets the "origin_id" field.
+func (fuo *FlightUpdateOne) SetOriginID(u uuid.UUID) *FlightUpdateOne {
+	fuo.mutation.SetOriginID(u)
+	return fuo
+}
+
+// SetDestinartionID sets the "destinartion_id" field.
+func (fuo *FlightUpdateOne) SetDestinartionID(u uuid.UUID) *FlightUpdateOne {
+	fuo.mutation.SetDestinartionID(u)
+	return fuo
+}
+
 // SetDepartureTime sets the "departure_time" field.
 func (fuo *FlightUpdateOne) SetDepartureTime(t time.Time) *FlightUpdateOne {
 	fuo.mutation.SetDepartureTime(t)
@@ -373,20 +389,6 @@ func (fuo *FlightUpdateOne) AddSeats(s ...*Seat) *FlightUpdateOne {
 	return fuo.AddSeatIDs(ids...)
 }
 
-// SetOriginID sets the "origin" edge to the Airport entity by ID.
-func (fuo *FlightUpdateOne) SetOriginID(id uuid.UUID) *FlightUpdateOne {
-	fuo.mutation.SetOriginID(id)
-	return fuo
-}
-
-// SetNillableOriginID sets the "origin" edge to the Airport entity by ID if the given value is not nil.
-func (fuo *FlightUpdateOne) SetNillableOriginID(id *uuid.UUID) *FlightUpdateOne {
-	if id != nil {
-		fuo = fuo.SetOriginID(*id)
-	}
-	return fuo
-}
-
 // SetOrigin sets the "origin" edge to the Airport entity.
 func (fuo *FlightUpdateOne) SetOrigin(a *Airport) *FlightUpdateOne {
 	return fuo.SetOriginID(a.ID)
@@ -395,14 +397,6 @@ func (fuo *FlightUpdateOne) SetOrigin(a *Airport) *FlightUpdateOne {
 // SetDestinationID sets the "destination" edge to the Airport entity by ID.
 func (fuo *FlightUpdateOne) SetDestinationID(id uuid.UUID) *FlightUpdateOne {
 	fuo.mutation.SetDestinationID(id)
-	return fuo
-}
-
-// SetNillableDestinationID sets the "destination" edge to the Airport entity by ID if the given value is not nil.
-func (fuo *FlightUpdateOne) SetNillableDestinationID(id *uuid.UUID) *FlightUpdateOne {
-	if id != nil {
-		fuo = fuo.SetDestinationID(*id)
-	}
 	return fuo
 }
 
@@ -489,7 +483,21 @@ func (fuo *FlightUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (fuo *FlightUpdateOne) check() error {
+	if _, ok := fuo.mutation.OriginID(); fuo.mutation.OriginCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Flight.origin"`)
+	}
+	if _, ok := fuo.mutation.DestinationID(); fuo.mutation.DestinationCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Flight.destination"`)
+	}
+	return nil
+}
+
 func (fuo *FlightUpdateOne) sqlSave(ctx context.Context) (_node *Flight, err error) {
+	if err := fuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(flight.Table, flight.Columns, sqlgraph.NewFieldSpec(flight.FieldID, field.TypeUUID))
 	id, ok := fuo.mutation.ID()
 	if !ok {

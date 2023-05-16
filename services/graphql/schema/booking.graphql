@@ -1,0 +1,18 @@
+type Booking {
+    id: String!
+    flight: Flight!
+    customer: Customer!
+}
+
+input BookingInput{
+    customerId: String!
+    flightId: String!
+}
+
+extend type Query {
+    booking: [Booking!]!
+}
+
+extend type Mutation {
+    createBooking(input: BookingInput!): Booking!
+}

@@ -19,6 +19,8 @@ func (Flight) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("name"),
+		field.UUID("origin_id", uuid.UUID{}),
+		field.UUID("destinartion_id", uuid.UUID{}),
 		field.Time("departure_time"),
 		field.Time("arrival_time"),
 		field.Int("available_slots"),
@@ -30,7 +32,7 @@ func (Flight) Fields() []ent.Field {
 func (Flight) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("seats", Seat.Type),
-		edge.From("origin", Airport.Type).Ref("origin").Unique(),
-		edge.From("destination", Airport.Type).Ref("destination").Unique(),
+		edge.From("origin", Airport.Type).Ref("origin").Unique().Field("origin_id").Required(),
+		edge.From("destination", Airport.Type).Ref("destination").Unique().Field("destinartion_id").Required(),
 	}
 }

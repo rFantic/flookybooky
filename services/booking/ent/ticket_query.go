@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/predicate"
 	"flookybooky/services/booking/ent/ticket"
 	"fmt"
@@ -12,15 +13,17 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // TicketQuery is the builder for querying Ticket entities.
 type TicketQuery struct {
 	config
-	ctx        *QueryContext
-	order      []ticket.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Ticket
+	ctx         *QueryContext
+	order       []ticket.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Ticket
+	withBooking *BookingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +60,28 @@ func (tq *TicketQuery) Order(o ...ticket.OrderOption) *TicketQuery {
 	return tq
 }
 
+// QueryBooking chains the current query on the "booking" edge.
+func (tq *TicketQuery) QueryBooking() *BookingQuery {
+	query := (&BookingClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(booking.Table, booking.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.BookingTable, ticket.BookingColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Ticket entity from the query.
 // Returns a *NotFoundError when no Ticket was found.
 func (tq *TicketQuery) First(ctx context.Context) (*Ticket, error) {
@@ -81,8 +106,8 @@ func (tq *TicketQuery) FirstX(ctx context.Context) *Ticket {
 
 // FirstID returns the first Ticket ID from the query.
 // Returns a *NotFoundError when no Ticket ID was found.
-func (tq *TicketQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (tq *TicketQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = tq.Limit(1).IDs(setContextOp(ctx, tq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +119,7 @@ func (tq *TicketQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tq *TicketQuery) FirstIDX(ctx context.Context) int {
+func (tq *TicketQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := tq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +157,8 @@ func (tq *TicketQuery) OnlyX(ctx context.Context) *Ticket {
 // OnlyID is like Only, but returns the only Ticket ID in the query.
 // Returns a *NotSingularError when more than one Ticket ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tq *TicketQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (tq *TicketQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = tq.Limit(2).IDs(setContextOp(ctx, tq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +174,7 @@ func (tq *TicketQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tq *TicketQuery) OnlyIDX(ctx context.Context) int {
+func (tq *TicketQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := tq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +202,7 @@ func (tq *TicketQuery) AllX(ctx context.Context) []*Ticket {
 }
 
 // IDs executes the query and returns a list of Ticket IDs.
-func (tq *TicketQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (tq *TicketQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if tq.ctx.Unique == nil && tq.path != nil {
 		tq.Unique(true)
 	}
@@ -189,7 +214,7 @@ func (tq *TicketQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tq *TicketQuery) IDsX(ctx context.Context) []int {
+func (tq *TicketQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := tq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -244,19 +269,43 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		return nil
 	}
 	return &TicketQuery{
-		config:     tq.config,
-		ctx:        tq.ctx.Clone(),
-		order:      append([]ticket.OrderOption{}, tq.order...),
-		inters:     append([]Interceptor{}, tq.inters...),
-		predicates: append([]predicate.Ticket{}, tq.predicates...),
+		config:      tq.config,
+		ctx:         tq.ctx.Clone(),
+		order:       append([]ticket.OrderOption{}, tq.order...),
+		inters:      append([]Interceptor{}, tq.inters...),
+		predicates:  append([]predicate.Ticket{}, tq.predicates...),
+		withBooking: tq.withBooking.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
 	}
 }
 
+// WithBooking tells the query-builder to eager-load the nodes that are connected to
+// the "booking" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithBooking(opts ...func(*BookingQuery)) *TicketQuery {
+	query := (&BookingClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withBooking = query
+	return tq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		BookingID uuid.UUID `json:"booking_id,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Ticket.Query().
+//		GroupBy(ticket.FieldBookingID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
 func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
 	tq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &TicketGroupBy{build: tq}
@@ -268,6 +317,16 @@ func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		BookingID uuid.UUID `json:"booking_id,omitempty"`
+//	}
+//
+//	client.Ticket.Query().
+//		Select(ticket.FieldBookingID).
+//		Scan(ctx, &v)
 func (tq *TicketQuery) Select(fields ...string) *TicketSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
 	sbuild := &TicketSelect{TicketQuery: tq}
@@ -309,8 +368,11 @@ func (tq *TicketQuery) prepareQuery(ctx context.Context) error {
 
 func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticket, error) {
 	var (
-		nodes = []*Ticket{}
-		_spec = tq.querySpec()
+		nodes       = []*Ticket{}
+		_spec       = tq.querySpec()
+		loadedTypes = [1]bool{
+			tq.withBooking != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Ticket).scanValues(nil, columns)
@@ -318,6 +380,7 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Ticket{config: tq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -329,7 +392,43 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := tq.withBooking; query != nil {
+		if err := tq.loadBooking(ctx, query, nodes, nil,
+			func(n *Ticket, e *Booking) { n.Edges.Booking = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (tq *TicketQuery) loadBooking(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].BookingID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(booking.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "booking_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (tq *TicketQuery) sqlCount(ctx context.Context) (int, error) {
@@ -342,7 +441,7 @@ func (tq *TicketQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(ticket.Table, ticket.Columns, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID))
 	_spec.From = tq.sql
 	if unique := tq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -356,6 +455,9 @@ func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != ticket.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if tq.withBooking != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldBookingID)
 		}
 	}
 	if ps := tq.predicates; len(ps) > 0 {

@@ -3,20 +3,53 @@
 package ent
 
 import (
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/ticket"
 	"fmt"
 	"strings"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Ticket is the model entity for the Ticket schema.
 type Ticket struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID           int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// BookingID holds the value of the "booking_id" field.
+	BookingID uuid.UUID `json:"booking_id,omitempty"`
+	// SeatID holds the value of the "seat_id" field.
+	SeatID uuid.UUID `json:"seat_id,omitempty"`
+	// LicenseID holds the value of the "license_id" field.
+	LicenseID string `json:"license_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TicketQuery when eager-loading is set.
+	Edges        TicketEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// TicketEdges holds the relations/edges for other nodes in the graph.
+type TicketEdges struct {
+	// Booking holds the value of the booking edge.
+	Booking *Booking `json:"booking,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// BookingOrErr returns the Booking value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) BookingOrErr() (*Booking, error) {
+	if e.loadedTypes[0] {
+		if e.Booking == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: booking.Label}
+		}
+		return e.Booking, nil
+	}
+	return nil, &NotLoadedError{edge: "booking"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -24,8 +57,10 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID:
-			values[i] = new(sql.NullInt64)
+		case ticket.FieldLicenseID:
+			values[i] = new(sql.NullString)
+		case ticket.FieldID, ticket.FieldBookingID, ticket.FieldSeatID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -42,11 +77,29 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case ticket.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				t.ID = *value
 			}
-			t.ID = int(value.Int64)
+		case ticket.FieldBookingID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field booking_id", values[i])
+			} else if value != nil {
+				t.BookingID = *value
+			}
+		case ticket.FieldSeatID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field seat_id", values[i])
+			} else if value != nil {
+				t.SeatID = *value
+			}
+		case ticket.FieldLicenseID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field license_id", values[i])
+			} else if value.Valid {
+				t.LicenseID = value.String
+			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
 		}
@@ -58,6 +111,11 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Ticket) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
+}
+
+// QueryBooking queries the "booking" edge of the Ticket entity.
+func (t *Ticket) QueryBooking() *BookingQuery {
+	return NewTicketClient(t.config).QueryBooking(t)
 }
 
 // Update returns a builder for updating this Ticket.
@@ -82,7 +140,15 @@ func (t *Ticket) Unwrap() *Ticket {
 func (t *Ticket) String() string {
 	var builder strings.Builder
 	builder.WriteString("Ticket(")
-	builder.WriteString(fmt.Sprintf("id=%v", t.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString("booking_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.BookingID))
+	builder.WriteString(", ")
+	builder.WriteString("seat_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.SeatID))
+	builder.WriteString(", ")
+	builder.WriteString("license_id=")
+	builder.WriteString(t.LicenseID)
 	builder.WriteByte(')')
 	return builder.String()
 }

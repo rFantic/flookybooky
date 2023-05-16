@@ -28,8 +28,8 @@ var (
 		{Name: "arrival_time", Type: field.TypeTime},
 		{Name: "available_slots", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "airport_origin", Type: field.TypeUUID, Nullable: true},
-		{Name: "airport_destination", Type: field.TypeUUID, Nullable: true},
+		{Name: "origin_id", Type: field.TypeUUID},
+		{Name: "destinartion_id", Type: field.TypeUUID},
 	}
 	// FlightsTable holds the schema information for the "flights" table.
 	FlightsTable = &schema.Table{
@@ -41,13 +41,13 @@ var (
 				Symbol:     "flights_airports_origin",
 				Columns:    []*schema.Column{FlightsColumns[6]},
 				RefColumns: []*schema.Column{AirportsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "flights_airports_destination",
 				Columns:    []*schema.Column{FlightsColumns[7]},
 				RefColumns: []*schema.Column{AirportsColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}

@@ -29,6 +29,18 @@ func (fc *FlightCreate) SetName(s string) *FlightCreate {
 	return fc
 }
 
+// SetOriginID sets the "origin_id" field.
+func (fc *FlightCreate) SetOriginID(u uuid.UUID) *FlightCreate {
+	fc.mutation.SetOriginID(u)
+	return fc
+}
+
+// SetDestinartionID sets the "destinartion_id" field.
+func (fc *FlightCreate) SetDestinartionID(u uuid.UUID) *FlightCreate {
+	fc.mutation.SetDestinartionID(u)
+	return fc
+}
+
 // SetDepartureTime sets the "departure_time" field.
 func (fc *FlightCreate) SetDepartureTime(t time.Time) *FlightCreate {
 	fc.mutation.SetDepartureTime(t)
@@ -90,20 +102,6 @@ func (fc *FlightCreate) AddSeats(s ...*Seat) *FlightCreate {
 	return fc.AddSeatIDs(ids...)
 }
 
-// SetOriginID sets the "origin" edge to the Airport entity by ID.
-func (fc *FlightCreate) SetOriginID(id uuid.UUID) *FlightCreate {
-	fc.mutation.SetOriginID(id)
-	return fc
-}
-
-// SetNillableOriginID sets the "origin" edge to the Airport entity by ID if the given value is not nil.
-func (fc *FlightCreate) SetNillableOriginID(id *uuid.UUID) *FlightCreate {
-	if id != nil {
-		fc = fc.SetOriginID(*id)
-	}
-	return fc
-}
-
 // SetOrigin sets the "origin" edge to the Airport entity.
 func (fc *FlightCreate) SetOrigin(a *Airport) *FlightCreate {
 	return fc.SetOriginID(a.ID)
@@ -112,14 +110,6 @@ func (fc *FlightCreate) SetOrigin(a *Airport) *FlightCreate {
 // SetDestinationID sets the "destination" edge to the Airport entity by ID.
 func (fc *FlightCreate) SetDestinationID(id uuid.UUID) *FlightCreate {
 	fc.mutation.SetDestinationID(id)
-	return fc
-}
-
-// SetNillableDestinationID sets the "destination" edge to the Airport entity by ID if the given value is not nil.
-func (fc *FlightCreate) SetNillableDestinationID(id *uuid.UUID) *FlightCreate {
-	if id != nil {
-		fc = fc.SetDestinationID(*id)
-	}
 	return fc
 }
 
@@ -178,6 +168,12 @@ func (fc *FlightCreate) check() error {
 	if _, ok := fc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Flight.name"`)}
 	}
+	if _, ok := fc.mutation.OriginID(); !ok {
+		return &ValidationError{Name: "origin_id", err: errors.New(`ent: missing required field "Flight.origin_id"`)}
+	}
+	if _, ok := fc.mutation.DestinartionID(); !ok {
+		return &ValidationError{Name: "destinartion_id", err: errors.New(`ent: missing required field "Flight.destinartion_id"`)}
+	}
 	if _, ok := fc.mutation.DepartureTime(); !ok {
 		return &ValidationError{Name: "departure_time", err: errors.New(`ent: missing required field "Flight.departure_time"`)}
 	}
@@ -189,6 +185,12 @@ func (fc *FlightCreate) check() error {
 	}
 	if _, ok := fc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Flight.created_at"`)}
+	}
+	if _, ok := fc.mutation.OriginID(); !ok {
+		return &ValidationError{Name: "origin", err: errors.New(`ent: missing required edge "Flight.origin"`)}
+	}
+	if _, ok := fc.mutation.DestinationID(); !ok {
+		return &ValidationError{Name: "destination", err: errors.New(`ent: missing required edge "Flight.destination"`)}
 	}
 	return nil
 }
@@ -275,7 +277,7 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.airport_origin = &nodes[0]
+		_node.OriginID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := fc.mutation.DestinationIDs(); len(nodes) > 0 {
@@ -292,7 +294,7 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.airport_destination = &nodes[0]
+		_node.DestinartionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

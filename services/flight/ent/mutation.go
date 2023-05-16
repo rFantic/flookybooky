@@ -759,6 +759,78 @@ func (m *FlightMutation) ResetName() {
 	m.name = nil
 }
 
+// SetOriginID sets the "origin_id" field.
+func (m *FlightMutation) SetOriginID(u uuid.UUID) {
+	m.origin = &u
+}
+
+// OriginID returns the value of the "origin_id" field in the mutation.
+func (m *FlightMutation) OriginID() (r uuid.UUID, exists bool) {
+	v := m.origin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginID returns the old "origin_id" field's value of the Flight entity.
+// If the Flight object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FlightMutation) OldOriginID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginID: %w", err)
+	}
+	return oldValue.OriginID, nil
+}
+
+// ResetOriginID resets all changes to the "origin_id" field.
+func (m *FlightMutation) ResetOriginID() {
+	m.origin = nil
+}
+
+// SetDestinartionID sets the "destinartion_id" field.
+func (m *FlightMutation) SetDestinartionID(u uuid.UUID) {
+	m.destination = &u
+}
+
+// DestinartionID returns the value of the "destinartion_id" field in the mutation.
+func (m *FlightMutation) DestinartionID() (r uuid.UUID, exists bool) {
+	v := m.destination
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDestinartionID returns the old "destinartion_id" field's value of the Flight entity.
+// If the Flight object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FlightMutation) OldDestinartionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDestinartionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDestinartionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDestinartionID: %w", err)
+	}
+	return oldValue.DestinartionID, nil
+}
+
+// ResetDestinartionID resets all changes to the "destinartion_id" field.
+func (m *FlightMutation) ResetDestinartionID() {
+	m.destination = nil
+}
+
 // SetDepartureTime sets the "departure_time" field.
 func (m *FlightMutation) SetDepartureTime(t time.Time) {
 	m.departure_time = &t
@@ -977,11 +1049,6 @@ func (m *FlightMutation) ResetSeats() {
 	m.removedseats = nil
 }
 
-// SetOriginID sets the "origin" edge to the Airport entity by id.
-func (m *FlightMutation) SetOriginID(id uuid.UUID) {
-	m.origin = &id
-}
-
 // ClearOrigin clears the "origin" edge to the Airport entity.
 func (m *FlightMutation) ClearOrigin() {
 	m.clearedorigin = true
@@ -990,14 +1057,6 @@ func (m *FlightMutation) ClearOrigin() {
 // OriginCleared reports if the "origin" edge to the Airport entity was cleared.
 func (m *FlightMutation) OriginCleared() bool {
 	return m.clearedorigin
-}
-
-// OriginID returns the "origin" edge ID in the mutation.
-func (m *FlightMutation) OriginID() (id uuid.UUID, exists bool) {
-	if m.origin != nil {
-		return *m.origin, true
-	}
-	return
 }
 
 // OriginIDs returns the "origin" edge IDs in the mutation.
@@ -1089,9 +1148,15 @@ func (m *FlightMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *FlightMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 7)
 	if m.name != nil {
 		fields = append(fields, flight.FieldName)
+	}
+	if m.origin != nil {
+		fields = append(fields, flight.FieldOriginID)
+	}
+	if m.destination != nil {
+		fields = append(fields, flight.FieldDestinartionID)
 	}
 	if m.departure_time != nil {
 		fields = append(fields, flight.FieldDepartureTime)
@@ -1115,6 +1180,10 @@ func (m *FlightMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case flight.FieldName:
 		return m.Name()
+	case flight.FieldOriginID:
+		return m.OriginID()
+	case flight.FieldDestinartionID:
+		return m.DestinartionID()
 	case flight.FieldDepartureTime:
 		return m.DepartureTime()
 	case flight.FieldArrivalTime:
@@ -1134,6 +1203,10 @@ func (m *FlightMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case flight.FieldName:
 		return m.OldName(ctx)
+	case flight.FieldOriginID:
+		return m.OldOriginID(ctx)
+	case flight.FieldDestinartionID:
+		return m.OldDestinartionID(ctx)
 	case flight.FieldDepartureTime:
 		return m.OldDepartureTime(ctx)
 	case flight.FieldArrivalTime:
@@ -1157,6 +1230,20 @@ func (m *FlightMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case flight.FieldOriginID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginID(v)
+		return nil
+	case flight.FieldDestinartionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDestinartionID(v)
 		return nil
 	case flight.FieldDepartureTime:
 		v, ok := value.(time.Time)
@@ -1252,6 +1339,12 @@ func (m *FlightMutation) ResetField(name string) error {
 	switch name {
 	case flight.FieldName:
 		m.ResetName()
+		return nil
+	case flight.FieldOriginID:
+		m.ResetOriginID()
+		return nil
+	case flight.FieldDestinartionID:
+		m.ResetDestinartionID()
 		return nil
 	case flight.FieldDepartureTime:
 		m.ResetDepartureTime()

@@ -16,6 +16,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // Client is the client that holds all ent builders.
@@ -244,7 +246,7 @@ func (c *BookingClient) UpdateOne(b *Booking) *BookingUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *BookingClient) UpdateOneID(id int) *BookingUpdateOne {
+func (c *BookingClient) UpdateOneID(id uuid.UUID) *BookingUpdateOne {
 	mutation := newBookingMutation(c.config, OpUpdateOne, withBookingID(id))
 	return &BookingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -261,7 +263,7 @@ func (c *BookingClient) DeleteOne(b *Booking) *BookingDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *BookingClient) DeleteOneID(id int) *BookingDeleteOne {
+func (c *BookingClient) DeleteOneID(id uuid.UUID) *BookingDeleteOne {
 	builder := c.Delete().Where(booking.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -278,17 +280,33 @@ func (c *BookingClient) Query() *BookingQuery {
 }
 
 // Get returns a Booking entity by its id.
-func (c *BookingClient) Get(ctx context.Context, id int) (*Booking, error) {
+func (c *BookingClient) Get(ctx context.Context, id uuid.UUID) (*Booking, error) {
 	return c.Query().Where(booking.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *BookingClient) GetX(ctx context.Context, id int) *Booking {
+func (c *BookingClient) GetX(ctx context.Context, id uuid.UUID) *Booking {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryTicket queries the ticket edge of a Booking.
+func (c *BookingClient) QueryTicket(b *Booking) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := b.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(booking.Table, booking.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, booking.TicketTable, booking.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -362,7 +380,7 @@ func (c *TicketClient) UpdateOne(t *Ticket) *TicketUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *TicketClient) UpdateOneID(id int) *TicketUpdateOne {
+func (c *TicketClient) UpdateOneID(id uuid.UUID) *TicketUpdateOne {
 	mutation := newTicketMutation(c.config, OpUpdateOne, withTicketID(id))
 	return &TicketUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -379,7 +397,7 @@ func (c *TicketClient) DeleteOne(t *Ticket) *TicketDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *TicketClient) DeleteOneID(id int) *TicketDeleteOne {
+func (c *TicketClient) DeleteOneID(id uuid.UUID) *TicketDeleteOne {
 	builder := c.Delete().Where(ticket.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -396,17 +414,33 @@ func (c *TicketClient) Query() *TicketQuery {
 }
 
 // Get returns a Ticket entity by its id.
-func (c *TicketClient) Get(ctx context.Context, id int) (*Ticket, error) {
+func (c *TicketClient) Get(ctx context.Context, id uuid.UUID) (*Ticket, error) {
 	return c.Query().Where(ticket.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *TicketClient) GetX(ctx context.Context, id int) *Ticket {
+func (c *TicketClient) GetX(ctx context.Context, id uuid.UUID) *Ticket {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryBooking queries the booking edge of a Ticket.
+func (c *TicketClient) QueryBooking(t *Ticket) *BookingQuery {
+	query := (&BookingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(booking.Table, booking.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.BookingTable, ticket.BookingColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

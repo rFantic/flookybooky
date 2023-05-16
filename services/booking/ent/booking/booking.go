@@ -3,7 +3,11 @@
 package booking
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -11,13 +15,31 @@ const (
 	Label = "booking"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCustomerID holds the string denoting the customer_id field in the database.
+	FieldCustomerID = "customer_id"
+	// FieldFlightID holds the string denoting the flight_id field in the database.
+	FieldFlightID = "flight_id"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// EdgeTicket holds the string denoting the ticket edge name in mutations.
+	EdgeTicket = "ticket"
 	// Table holds the table name of the booking in the database.
 	Table = "bookings"
+	// TicketTable is the table that holds the ticket relation/edge.
+	TicketTable = "tickets"
+	// TicketInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketInverseTable = "tickets"
+	// TicketColumn is the table column denoting the ticket relation/edge.
+	TicketColumn = "booking_id"
 )
 
 // Columns holds all SQL columns for booking fields.
 var Columns = []string{
 	FieldID,
+	FieldCustomerID,
+	FieldFlightID,
+	FieldCreatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -30,10 +52,53 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
+
 // OrderOption defines the ordering options for the Booking queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCustomerID orders the results by the customer_id field.
+func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCustomerID, opts...).ToFunc()
+}
+
+// ByFlightID orders the results by the flight_id field.
+func ByFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFlightID, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByTicketCount orders the results by ticket count.
+func ByTicketCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketStep(), opts...)
+	}
+}
+
+// ByTicket orders the results by ticket terms.
+func ByTicket(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTicketStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketTable, TicketColumn),
+	)
 }

@@ -17,6 +17,10 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldOriginID holds the string denoting the origin_id field in the database.
+	FieldOriginID = "origin_id"
+	// FieldDestinartionID holds the string denoting the destinartion_id field in the database.
+	FieldDestinartionID = "destinartion_id"
 	// FieldDepartureTime holds the string denoting the departure_time field in the database.
 	FieldDepartureTime = "departure_time"
 	// FieldArrivalTime holds the string denoting the arrival_time field in the database.
@@ -46,42 +50,32 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "airport" package.
 	OriginInverseTable = "airports"
 	// OriginColumn is the table column denoting the origin relation/edge.
-	OriginColumn = "airport_origin"
+	OriginColumn = "origin_id"
 	// DestinationTable is the table that holds the destination relation/edge.
 	DestinationTable = "flights"
 	// DestinationInverseTable is the table name for the Airport entity.
 	// It exists in this package in order to avoid circular dependency with the "airport" package.
 	DestinationInverseTable = "airports"
 	// DestinationColumn is the table column denoting the destination relation/edge.
-	DestinationColumn = "airport_destination"
+	DestinationColumn = "destinartion_id"
 )
 
 // Columns holds all SQL columns for flight fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldOriginID,
+	FieldDestinartionID,
 	FieldDepartureTime,
 	FieldArrivalTime,
 	FieldAvailableSlots,
 	FieldCreatedAt,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "flights"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"airport_origin",
-	"airport_destination",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -106,6 +100,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByOriginID orders the results by the origin_id field.
+func ByOriginID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOriginID, opts...).ToFunc()
+}
+
+// ByDestinartionID orders the results by the destinartion_id field.
+func ByDestinartionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDestinartionID, opts...).ToFunc()
 }
 
 // ByDepartureTime orders the results by the departure_time field.

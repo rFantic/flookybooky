@@ -21,6 +21,7 @@ type Client struct {
 	UserClient     pb.UserServiceClient
 	CustomerClient pb.CustomerServiceClient
 	FlightClient   pb.FlightServiceClient
+	BookingClient  pb.BookingServiceClient
 }
 
 type Resolver struct{ client Client }

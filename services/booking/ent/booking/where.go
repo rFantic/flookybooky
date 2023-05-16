@@ -4,53 +4,214 @@ package booking
 
 import (
 	"flookybooky/services/booking/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Booking {
+func ID(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Booking {
+func IDEQ(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Booking {
+func IDNEQ(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Booking {
+func IDIn(ids ...uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Booking {
+func IDNotIn(ids ...uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Booking {
+func IDGT(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Booking {
+func IDGTE(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Booking {
+func IDLT(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Booking {
+func IDLTE(id uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldLTE(FieldID, id))
+}
+
+// CustomerID applies equality check predicate on the "customer_id" field. It's identical to CustomerIDEQ.
+func CustomerID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldCustomerID, v))
+}
+
+// FlightID applies equality check predicate on the "flight_id" field. It's identical to FlightIDEQ.
+func FlightID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldFlightID, v))
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CustomerIDEQ applies the EQ predicate on the "customer_id" field.
+func CustomerIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldCustomerID, v))
+}
+
+// CustomerIDNEQ applies the NEQ predicate on the "customer_id" field.
+func CustomerIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldCustomerID, v))
+}
+
+// CustomerIDIn applies the In predicate on the "customer_id" field.
+func CustomerIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldCustomerID, vs...))
+}
+
+// CustomerIDNotIn applies the NotIn predicate on the "customer_id" field.
+func CustomerIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldCustomerID, vs...))
+}
+
+// CustomerIDGT applies the GT predicate on the "customer_id" field.
+func CustomerIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldCustomerID, v))
+}
+
+// CustomerIDGTE applies the GTE predicate on the "customer_id" field.
+func CustomerIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldCustomerID, v))
+}
+
+// CustomerIDLT applies the LT predicate on the "customer_id" field.
+func CustomerIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldCustomerID, v))
+}
+
+// CustomerIDLTE applies the LTE predicate on the "customer_id" field.
+func CustomerIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldCustomerID, v))
+}
+
+// FlightIDEQ applies the EQ predicate on the "flight_id" field.
+func FlightIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldFlightID, v))
+}
+
+// FlightIDNEQ applies the NEQ predicate on the "flight_id" field.
+func FlightIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldFlightID, v))
+}
+
+// FlightIDIn applies the In predicate on the "flight_id" field.
+func FlightIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldFlightID, vs...))
+}
+
+// FlightIDNotIn applies the NotIn predicate on the "flight_id" field.
+func FlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldFlightID, vs...))
+}
+
+// FlightIDGT applies the GT predicate on the "flight_id" field.
+func FlightIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldFlightID, v))
+}
+
+// FlightIDGTE applies the GTE predicate on the "flight_id" field.
+func FlightIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldFlightID, v))
+}
+
+// FlightIDLT applies the LT predicate on the "flight_id" field.
+func FlightIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldFlightID, v))
+}
+
+// FlightIDLTE applies the LTE predicate on the "flight_id" field.
+func FlightIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldFlightID, v))
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldCreatedAt, v))
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldCreatedAt, v))
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldCreatedAt, v))
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// HasTicket applies the HasEdge predicate on the "ticket" edge.
+func HasTicket() predicate.Booking {
+	return predicate.Booking(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketTable, TicketColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketWith applies the HasEdge predicate on the "ticket" edge with a given conditions (other predicates).
+func HasTicketWith(preds ...predicate.Ticket) predicate.Booking {
+	return predicate.Booking(func(s *sql.Selector) {
+		step := newTicketStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

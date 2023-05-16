@@ -29,14 +29,14 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "flight" package.
 	OriginInverseTable = "flights"
 	// OriginColumn is the table column denoting the origin relation/edge.
-	OriginColumn = "airport_origin"
+	OriginColumn = "origin_id"
 	// DestinationTable is the table that holds the destination relation/edge.
 	DestinationTable = "flights"
 	// DestinationInverseTable is the table name for the Flight entity.
 	// It exists in this package in order to avoid circular dependency with the "flight" package.
 	DestinationInverseTable = "flights"
 	// DestinationColumn is the table column denoting the destination relation/edge.
-	DestinationColumn = "airport_destination"
+	DestinationColumn = "destinartion_id"
 )
 
 // Columns holds all SQL columns for airport fields.

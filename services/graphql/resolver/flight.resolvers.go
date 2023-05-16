@@ -8,7 +8,8 @@ import (
 	"context"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-	"fmt"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateFlight is the resolver for the createFlight field.
@@ -19,5 +20,6 @@ func (r *mutationResolver) CreateFlight(ctx context.Context, input model.FlightI
 
 // Flight is the resolver for the flight field.
 func (r *queryResolver) Flight(ctx context.Context) ([]*model.Flight, error) {
-	panic(fmt.Errorf("not implemented: Flight - flight"))
+	flightsRes, err := r.client.FlightClient.GetFlights(ctx, &emptypb.Empty{})
+	return internal.ParseFlightsPbToGraphql(flightsRes), err
 }

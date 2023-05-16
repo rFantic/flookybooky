@@ -28,7 +28,6 @@ type FlightQuery struct {
 	withSeats       *SeatQuery
 	withOrigin      *AirportQuery
 	withDestination *AirportQuery
-	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -442,7 +441,6 @@ func (fq *FlightQuery) prepareQuery(ctx context.Context) error {
 func (fq *FlightQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Flight, error) {
 	var (
 		nodes       = []*Flight{}
-		withFKs     = fq.withFKs
 		_spec       = fq.querySpec()
 		loadedTypes = [3]bool{
 			fq.withSeats != nil,
@@ -450,12 +448,6 @@ func (fq *FlightQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Fligh
 			fq.withDestination != nil,
 		}
 	)
-	if fq.withOrigin != nil || fq.withDestination != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, flight.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Flight).scanValues(nil, columns)
 	}
@@ -531,10 +523,7 @@ func (fq *FlightQuery) loadOrigin(ctx context.Context, query *AirportQuery, node
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Flight)
 	for i := range nodes {
-		if nodes[i].airport_origin == nil {
-			continue
-		}
-		fk := *nodes[i].airport_origin
+		fk := nodes[i].OriginID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -551,7 +540,7 @@ func (fq *FlightQuery) loadOrigin(ctx context.Context, query *AirportQuery, node
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "airport_origin" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "origin_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -563,10 +552,7 @@ func (fq *FlightQuery) loadDestination(ctx context.Context, query *AirportQuery,
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Flight)
 	for i := range nodes {
-		if nodes[i].airport_destination == nil {
-			continue
-		}
-		fk := *nodes[i].airport_destination
+		fk := nodes[i].DestinartionID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -583,7 +569,7 @@ func (fq *FlightQuery) loadDestination(ctx context.Context, query *AirportQuery,
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "airport_destination" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "destinartion_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -616,6 +602,12 @@ func (fq *FlightQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != flight.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if fq.withOrigin != nil {
+			_spec.Node.AddColumnOnce(flight.FieldOriginID)
+		}
+		if fq.withDestination != nil {
+			_spec.Node.AddColumnOnce(flight.FieldDestinartionID)
 		}
 	}
 	if ps := fq.predicates; len(ps) > 0 {

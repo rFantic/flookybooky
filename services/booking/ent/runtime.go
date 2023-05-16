@@ -2,8 +2,33 @@
 
 package ent
 
+import (
+	"flookybooky/services/booking/ent/booking"
+	"flookybooky/services/booking/ent/schema"
+	"flookybooky/services/booking/ent/ticket"
+	"time"
+
+	"github.com/google/uuid"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	bookingFields := schema.Booking{}.Fields()
+	_ = bookingFields
+	// bookingDescCreatedAt is the schema descriptor for created_at field.
+	bookingDescCreatedAt := bookingFields[3].Descriptor()
+	// booking.DefaultCreatedAt holds the default value on creation for the created_at field.
+	booking.DefaultCreatedAt = bookingDescCreatedAt.Default.(func() time.Time)
+	// bookingDescID is the schema descriptor for id field.
+	bookingDescID := bookingFields[0].Descriptor()
+	// booking.DefaultID holds the default value on creation for the id field.
+	booking.DefaultID = bookingDescID.Default.(func() uuid.UUID)
+	ticketFields := schema.Ticket{}.Fields()
+	_ = ticketFields
+	// ticketDescID is the schema descriptor for id field.
+	ticketDescID := ticketFields[0].Descriptor()
+	// ticket.DefaultID holds the default value on creation for the id field.
+	ticket.DefaultID = ticketDescID.Default.(func() uuid.UUID)
 }

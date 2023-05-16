@@ -61,6 +61,16 @@ func Name(v string) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldName, v))
 }
 
+// OriginID applies equality check predicate on the "origin_id" field. It's identical to OriginIDEQ.
+func OriginID(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldOriginID, v))
+}
+
+// DestinartionID applies equality check predicate on the "destinartion_id" field. It's identical to DestinartionIDEQ.
+func DestinartionID(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldDestinartionID, v))
+}
+
 // DepartureTime applies equality check predicate on the "departure_time" field. It's identical to DepartureTimeEQ.
 func DepartureTime(v time.Time) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldDepartureTime, v))
@@ -144,6 +154,46 @@ func NameEqualFold(v string) predicate.Flight {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Flight {
 	return predicate.Flight(sql.FieldContainsFold(FieldName, v))
+}
+
+// OriginIDEQ applies the EQ predicate on the "origin_id" field.
+func OriginIDEQ(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldOriginID, v))
+}
+
+// OriginIDNEQ applies the NEQ predicate on the "origin_id" field.
+func OriginIDNEQ(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldOriginID, v))
+}
+
+// OriginIDIn applies the In predicate on the "origin_id" field.
+func OriginIDIn(vs ...uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldOriginID, vs...))
+}
+
+// OriginIDNotIn applies the NotIn predicate on the "origin_id" field.
+func OriginIDNotIn(vs ...uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldOriginID, vs...))
+}
+
+// DestinartionIDEQ applies the EQ predicate on the "destinartion_id" field.
+func DestinartionIDEQ(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldDestinartionID, v))
+}
+
+// DestinartionIDNEQ applies the NEQ predicate on the "destinartion_id" field.
+func DestinartionIDNEQ(v uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldDestinartionID, v))
+}
+
+// DestinartionIDIn applies the In predicate on the "destinartion_id" field.
+func DestinartionIDIn(vs ...uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldDestinartionID, vs...))
+}
+
+// DestinartionIDNotIn applies the NotIn predicate on the "destinartion_id" field.
+func DestinartionIDNotIn(vs ...uuid.UUID) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldDestinartionID, vs...))
 }
 
 // DepartureTimeEQ applies the EQ predicate on the "departure_time" field.

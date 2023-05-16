@@ -456,7 +456,9 @@ func (aq *AirportQuery) loadOrigin(ctx context.Context, query *FlightQuery, node
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(flight.FieldOriginID)
+	}
 	query.Where(predicate.Flight(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(airport.OriginColumn), fks...))
 	}))
@@ -465,13 +467,10 @@ func (aq *AirportQuery) loadOrigin(ctx context.Context, query *FlightQuery, node
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.airport_origin
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "airport_origin" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.OriginID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "airport_origin" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "origin_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -487,7 +486,9 @@ func (aq *AirportQuery) loadDestination(ctx context.Context, query *FlightQuery,
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(flight.FieldDestinartionID)
+	}
 	query.Where(predicate.Flight(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(airport.DestinationColumn), fks...))
 	}))
@@ -496,13 +497,10 @@ func (aq *AirportQuery) loadDestination(ctx context.Context, query *FlightQuery,
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.airport_destination
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "airport_destination" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.DestinartionID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "airport_destination" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "destinartion_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

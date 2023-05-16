@@ -25,7 +25,7 @@ func init() {
 	flightFields := schema.Flight{}.Fields()
 	_ = flightFields
 	// flightDescCreatedAt is the schema descriptor for created_at field.
-	flightDescCreatedAt := flightFields[5].Descriptor()
+	flightDescCreatedAt := flightFields[7].Descriptor()
 	// flight.DefaultCreatedAt holds the default value on creation for the created_at field.
 	flight.DefaultCreatedAt = flightDescCreatedAt.Default.(func() time.Time)
 	// flightDescID is the schema descriptor for id field.

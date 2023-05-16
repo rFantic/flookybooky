@@ -1,0 +1,38 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+import "internal/proto/common.proto";
+import "services/flight/proto/flight.proto";
+import "services/customer/proto/customer.proto";
+package pb;
+option go_package = "./;pb";
+
+message Booking {
+    string id = 1;
+    Customer customer = 2;
+    Flight flight = 3;
+}
+
+message Bookings {
+    repeated Booking bookings = 1;
+}
+
+message Ticket {
+    string id = 1;
+    string booking_id = 2;
+    string seat_id = 3;
+    string license_id = 4;
+}
+
+message Tickets {
+    repeated Ticket tickets = 1;
+}
+
+service BookingService {
+    rpc PostBooking (Booking) returns (Booking) {}
+    rpc GetBooking (UUID) returns (Booking) {}
+    rpc GetBookings (google.protobuf.Empty) returns (Bookings) {}
+
+    rpc PostTicket (Ticket) returns (Ticket) {}
+    rpc GetTicket (UUID) returns (Ticket) {}
+    rpc GetTickets (google.protobuf.Empty) returns (Tickets) {}
+}

@@ -24,8 +24,6 @@ services:
       dockerfile: ./services/user/user.dockerfile
     restart: on-failure
     command: ["app"]
-    ports:
-      - 4001:4000
 
   flightdb:
     profiles: ["flight", "graphql"]
@@ -45,8 +43,6 @@ services:
       dockerfile: ./services/flight/flight.dockerfile
     restart: on-failure
     command: ["app"]
-    ports:
-      - 4003:4000
 
   customerdb:
     profiles: ["customer", "graphql"]
@@ -66,8 +62,25 @@ services:
       dockerfile: ./services/customer/customer.dockerfile
     restart: on-failure
     command: ["app"]
-    ports:
-      - 4002:4000
+
+  bookingdb:
+    profiles: ["booking", "graphql"]
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: booking
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: passwd
+
+  booking:
+    profiles: ["booking", "graphql"]
+    depends_on:
+      - bookingdb
+    build:
+      context: .
+      dockerfile: ./services/booking/booking.dockerfile
+    restart: on-failure
+    command: ["app"]
 
   graphql:
     profiles: ["graphql"]
@@ -78,4 +91,3 @@ services:
     command: ["app"]
     ports:
       - 8081:8081
-      - 4000:4000

@@ -21,6 +21,10 @@ type Flight struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// OriginID holds the value of the "origin_id" field.
+	OriginID uuid.UUID `json:"origin_id,omitempty"`
+	// DestinartionID holds the value of the "destinartion_id" field.
+	DestinartionID uuid.UUID `json:"destinartion_id,omitempty"`
 	// DepartureTime holds the value of the "departure_time" field.
 	DepartureTime time.Time `json:"departure_time,omitempty"`
 	// ArrivalTime holds the value of the "arrival_time" field.
@@ -31,10 +35,8 @@ type Flight struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the FlightQuery when eager-loading is set.
-	Edges               FlightEdges `json:"edges"`
-	airport_origin      *uuid.UUID
-	airport_destination *uuid.UUID
-	selectValues        sql.SelectValues
+	Edges        FlightEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // FlightEdges holds the relations/edges for other nodes in the graph.
@@ -96,12 +98,8 @@ func (*Flight) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case flight.FieldDepartureTime, flight.FieldArrivalTime, flight.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case flight.FieldID:
+		case flight.FieldID, flight.FieldOriginID, flight.FieldDestinartionID:
 			values[i] = new(uuid.UUID)
-		case flight.ForeignKeys[0]: // airport_origin
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case flight.ForeignKeys[1]: // airport_destination
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -129,6 +127,18 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.Name = value.String
 			}
+		case flight.FieldOriginID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field origin_id", values[i])
+			} else if value != nil {
+				f.OriginID = *value
+			}
+		case flight.FieldDestinartionID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field destinartion_id", values[i])
+			} else if value != nil {
+				f.DestinartionID = *value
+			}
 		case flight.FieldDepartureTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field departure_time", values[i])
@@ -152,20 +162,6 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				f.CreatedAt = value.Time
-			}
-		case flight.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field airport_origin", values[i])
-			} else if value.Valid {
-				f.airport_origin = new(uuid.UUID)
-				*f.airport_origin = *value.S.(*uuid.UUID)
-			}
-		case flight.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field airport_destination", values[i])
-			} else if value.Valid {
-				f.airport_destination = new(uuid.UUID)
-				*f.airport_destination = *value.S.(*uuid.UUID)
 			}
 		default:
 			f.selectValues.Set(columns[i], values[i])
@@ -220,6 +216,12 @@ func (f *Flight) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", f.ID))
 	builder.WriteString("name=")
 	builder.WriteString(f.Name)
+	builder.WriteString(", ")
+	builder.WriteString("origin_id=")
+	builder.WriteString(fmt.Sprintf("%v", f.OriginID))
+	builder.WriteString(", ")
+	builder.WriteString("destinartion_id=")
+	builder.WriteString(fmt.Sprintf("%v", f.DestinartionID))
 	builder.WriteString(", ")
 	builder.WriteString("departure_time=")
 	builder.WriteString(f.DepartureTime.Format(time.ANSIC))

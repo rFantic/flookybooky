@@ -66,6 +66,27 @@ services:
     ports:
       - 4002:4000
 
+  bookingdb:
+    profiles: ["booking", "graphql"]
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: booking
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: passwd
+
+  booking:
+    profiles: ["booking", "graphql"]
+    depends_on:
+      - bookingdb
+    build:
+      context: .
+      dockerfile: ./services/booking/booking.dockerfile
+    restart: on-failure
+    command: ["app"]
+    ports:
+      - 4004:4000
+
   graphql:
     profiles: ["graphql"]
     build:

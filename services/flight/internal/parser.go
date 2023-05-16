@@ -44,6 +44,8 @@ func ParseFlightEntToPb(in *ent.Flight) (out *pb.Flight) {
 	copier.Copy(&out, in)
 	if in != nil {
 		out.Id = in.ID.String()
+		out.Origin = &pb.Airport{Id: in.OriginID.String()}
+		out.Destination = &pb.Airport{Id: in.DestinartionID.String()}
 	}
 	return out
 }

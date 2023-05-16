@@ -4,11 +4,14 @@ package ent
 
 import (
 	"context"
+	"errors"
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/ticket"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // TicketCreate is the builder for creating a Ticket entity.
@@ -18,6 +21,43 @@ type TicketCreate struct {
 	hooks    []Hook
 }
 
+// SetBookingID sets the "booking_id" field.
+func (tc *TicketCreate) SetBookingID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetBookingID(u)
+	return tc
+}
+
+// SetSeatID sets the "seat_id" field.
+func (tc *TicketCreate) SetSeatID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetSeatID(u)
+	return tc
+}
+
+// SetLicenseID sets the "license_id" field.
+func (tc *TicketCreate) SetLicenseID(s string) *TicketCreate {
+	tc.mutation.SetLicenseID(s)
+	return tc
+}
+
+// SetID sets the "id" field.
+func (tc *TicketCreate) SetID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetID(u)
+	return tc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableID(u *uuid.UUID) *TicketCreate {
+	if u != nil {
+		tc.SetID(*u)
+	}
+	return tc
+}
+
+// SetBooking sets the "booking" edge to the Booking entity.
+func (tc *TicketCreate) SetBooking(b *Booking) *TicketCreate {
+	return tc.SetBookingID(b.ID)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tc *TicketCreate) Mutation() *TicketMutation {
 	return tc.mutation
@@ -25,6 +65,7 @@ func (tc *TicketCreate) Mutation() *TicketMutation {
 
 // Save creates the Ticket in the database.
 func (tc *TicketCreate) Save(ctx context.Context) (*Ticket, error) {
+	tc.defaults()
 	return withHooks[*Ticket, TicketMutation](ctx, tc.sqlSave, tc.mutation, tc.hooks)
 }
 
@@ -50,8 +91,28 @@ func (tc *TicketCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (tc *TicketCreate) defaults() {
+	if _, ok := tc.mutation.ID(); !ok {
+		v := ticket.DefaultID()
+		tc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (tc *TicketCreate) check() error {
+	if _, ok := tc.mutation.BookingID(); !ok {
+		return &ValidationError{Name: "booking_id", err: errors.New(`ent: missing required field "Ticket.booking_id"`)}
+	}
+	if _, ok := tc.mutation.SeatID(); !ok {
+		return &ValidationError{Name: "seat_id", err: errors.New(`ent: missing required field "Ticket.seat_id"`)}
+	}
+	if _, ok := tc.mutation.LicenseID(); !ok {
+		return &ValidationError{Name: "license_id", err: errors.New(`ent: missing required field "Ticket.license_id"`)}
+	}
+	if _, ok := tc.mutation.BookingID(); !ok {
+		return &ValidationError{Name: "booking", err: errors.New(`ent: missing required edge "Ticket.booking"`)}
+	}
 	return nil
 }
 
@@ -66,8 +127,13 @@ func (tc *TicketCreate) sqlSave(ctx context.Context) (*Ticket, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	tc.mutation.id = &_node.ID
 	tc.mutation.done = true
 	return _node, nil
@@ -76,8 +142,37 @@ func (tc *TicketCreate) sqlSave(ctx context.Context) (*Ticket, error) {
 func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Ticket{config: tc.config}
-		_spec = sqlgraph.NewCreateSpec(ticket.Table, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(ticket.Table, sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID))
 	)
+	if id, ok := tc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := tc.mutation.SeatID(); ok {
+		_spec.SetField(ticket.FieldSeatID, field.TypeUUID, value)
+		_node.SeatID = value
+	}
+	if value, ok := tc.mutation.LicenseID(); ok {
+		_spec.SetField(ticket.FieldLicenseID, field.TypeString, value)
+		_node.LicenseID = value
+	}
+	if nodes := tc.mutation.BookingIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: []string{ticket.BookingColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.BookingID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -95,6 +190,7 @@ func (tcb *TicketCreateBulk) Save(ctx context.Context) ([]*Ticket, error) {
 	for i := range tcb.builders {
 		func(i int, root context.Context) {
 			builder := tcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketMutation)
 				if !ok {
@@ -121,10 +217,6 @@ func (tcb *TicketCreateBulk) Save(ctx context.Context) ([]*Ticket, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})
