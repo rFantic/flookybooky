@@ -19,11 +19,45 @@ mutation createAirport {
   }
 }
 
-# create_airport
+mutation createFlight {
+  createFlight (input: {
+    name: "VN 157 Airbus A321"
+    originId: "4064ef6b-afec-430e-8028-65eb01152ef8"
+    destinationId: "4064ef6b-afec-430e-8028-65eb01152ef8"
+    available_slots: 100
+    departure_time: "16549879"
+    arrival_time: ""
+  }){
+    id
+    name
+    origin{
+      id
+      name
+    }
+    destination{
+      id
+      name
+    }
+    available_slots
+    departure_time
+    arrival_time
+  }
+}
+
+query getFlights {
+	flight {
+    id
+    name
+    origin{
+      id
+      name
+    }
+  }
+}
+
 # update_airport
 # delete_airport
 
-# create_flight
 # update_flight
 # delete_flight
 # cancel_flight

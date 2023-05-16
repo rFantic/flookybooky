@@ -1,4 +1,31 @@
-# create_booking
+mutation createBooking {
+  createBooking(
+    input: {customerId: "da6403fb-9c2a-480f-80ab-783141cdf41f", flightId: "7fa3e4d9-7749-4519-bed2-f057a1c69c25"}
+  ) {
+    id
+    flight {
+      id
+    }
+    customer {
+      id
+    }
+  }
+}
+
+query getBookings {
+  booking {
+    id
+    flight {
+      id
+      name
+    }
+    customer {
+      id
+    }
+  }
+}
+
+
 # update_booking
 # delete_booking
 # cancel_booking

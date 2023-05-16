@@ -36,6 +36,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Booking() BookingResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	User() UserResolver
@@ -105,6 +106,10 @@ type ComplexityRoot struct {
 	}
 }
 
+type BookingResolver interface {
+	Flight(ctx context.Context, obj *model.Booking) (*model.Flight, error)
+	Customer(ctx context.Context, obj *model.Booking) (*model.Customer, error)
+}
 type MutationResolver interface {
 	CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error)
 	CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error)
@@ -990,7 +995,7 @@ func (ec *executionContext) _Booking_flight(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Flight, nil
+		return ec.resolvers.Booking().Flight(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1011,8 +1016,8 @@ func (ec *executionContext) fieldContext_Booking_flight(ctx context.Context, fie
 	fc = &graphql.FieldContext{
 		Object:     "Booking",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -1050,7 +1055,7 @@ func (ec *executionContext) _Booking_customer(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Customer, nil
+		return ec.resolvers.Booking().Customer(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1071,8 +1076,8 @@ func (ec *executionContext) fieldContext_Booking_customer(ctx context.Context, f
 	fc = &graphql.FieldContext{
 		Object:     "Booking",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -4829,22 +4834,48 @@ func (ec *executionContext) _Booking(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Booking_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "flight":
+			field := field
 
-			out.Values[i] = ec._Booking_flight(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Booking_flight(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "customer":
+			field := field
 
-			out.Values[i] = ec._Booking_customer(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Booking_customer(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

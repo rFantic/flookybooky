@@ -31,5 +31,5 @@ func ParseBookingsEntToPb(in []*ent.Booking) (out *pb.Bookings) {
 	for i, a := range in {
 		out.Bookings[i] = ParseBookingEntToPb(a)
 	}
-	return nil
+	return out
 }

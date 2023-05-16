@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func ParseAirportEntToPb(in *ent.Airport) (out *pb.Airport) {
@@ -46,6 +47,8 @@ func ParseFlightEntToPb(in *ent.Flight) (out *pb.Flight) {
 		out.Id = in.ID.String()
 		out.Origin = &pb.Airport{Id: in.OriginID.String()}
 		out.Destination = &pb.Airport{Id: in.DestinartionID.String()}
+		out.ArrivalTime = timestamppb.New(in.ArrivalTime)
+		out.DepartureTime = timestamppb.New(in.DepartureTime)
 	}
 	return out
 }

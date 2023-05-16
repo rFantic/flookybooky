@@ -17,3 +17,10 @@ models:
     fields:
       customer:
         resolver: true
+    
+  Booking:
+    fields:
+      customer:
+        resolver: true
+      flight:
+        resolver: true

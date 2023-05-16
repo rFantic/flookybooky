@@ -77,7 +77,7 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.Flight) (*pb.Fli
 	if err != nil {
 		return nil, err
 	}
-	_destination, err := internal.ParseAirportPbToEnt(req.Destination)
+	_destinationReq, err := internal.ParseAirportPbToEnt(req.Destination)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.Flight) (*pb.Fli
 		SetDepartureTime(req.DepartureTime.AsTime()).
 		SetArrivalTime(req.ArrivalTime.AsTime()).
 		SetName(req.Name).
-		SetDestinationID(_destination.ID).
+		SetDestinationID(_destinationReq.ID).
 		SetOriginID(_originReq.ID)
 	flightRes, err := query.Save(ctx)
 	if err != nil {

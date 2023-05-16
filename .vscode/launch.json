@@ -39,6 +39,15 @@
             "mode": "remote",
             "port": 4003,
             "host": "127.0.0.1",
+        },
+
+        {
+            "name": "booking",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 4004,
+            "host": "127.0.0.1",
         }
     ],  
     "compounds": [
@@ -49,6 +58,7 @@
             "flight",
             "customer",
             "user",
+            "booking",
           ],
           "stopAll": true
         }

@@ -14,7 +14,11 @@ import (
 
 // CreateFlight is the resolver for the createFlight field.
 func (r *mutationResolver) CreateFlight(ctx context.Context, input model.FlightInput) (*model.Flight, error) {
-	flightRes, err := r.client.FlightClient.PostFlight(ctx, internal.ParseFlightInputGraphqlToPb(&input))
+	flightReq, err := internal.ParseFlightInputGraphqlToPb(&input)
+	if err != nil {
+		return nil, err
+	}
+	flightRes, err := r.client.FlightClient.PostFlight(ctx, flightReq)
 	return internal.ParseFlightPbToGraphql(flightRes), err
 }
 

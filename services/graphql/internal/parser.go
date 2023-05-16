@@ -3,8 +3,11 @@ package internal
 import (
 	"flookybooky/pb"
 	"flookybooky/services/graphql/model"
+	"fmt"
+	"time"
 
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func ParseAirportInputGraphqlToPb(in *model.AirportInput) (out *pb.Airport) {
@@ -79,11 +82,22 @@ func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
 	return out
 }
 
-func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight) {
+func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight, err error) {
 	if in == nil {
-		return nil
+		return nil, fmt.Errorf("nil flight input")
 	}
-	out = &pb.Flight{}
+	_departureTime, err := time.Parse("2006-01-02", in.DepartureTime)
+	if err != nil {
+		return nil, err
+	}
+	_arrivalTime, err := time.Parse("2006-01-02", in.ArrivalTime)
+	if err != nil {
+		return nil, err
+	}
+	out = &pb.Flight{
+		DepartureTime: timestamppb.New(_departureTime),
+		ArrivalTime:   timestamppb.New(_arrivalTime),
+	}
 	copier.Copy(&out, in)
 	out.Origin = &pb.Airport{
 		Id: in.OriginID,
@@ -91,7 +105,7 @@ func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.Flight) {
 	out.Destination = &pb.Airport{
 		Id: in.DestinationID,
 	}
-	return out
+	return out, err
 }
 
 func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
@@ -99,7 +113,9 @@ func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
 		return nil
 	}
 	out = &model.Flight{
-		ID: in.GetId(),
+		ID:            in.GetId(),
+		DepartureTime: in.DepartureTime.AsTime().String(),
+		ArrivalTime:   in.ArrivalTime.AsTime().String(),
 	}
 	copier.Copy(&out, in)
 	if in.Origin != nil {
@@ -180,6 +196,19 @@ func ParseBookingsPbToGraphql(in *pb.Bookings) (out []*model.Booking) {
 			ID: a.Id,
 		}
 		copier.Copy(&out[i], a)
+		if a.Customer != nil {
+			out[i].Customer = &model.Customer{
+				ID:        a.Customer.Id,
+				LicenseID: a.Customer.LicenseId,
+			}
+			copier.Copy(&out[i].Customer, a.Customer)
+		}
+		if a.Flight != nil {
+			out[i].Flight = &model.Flight{
+				ID: a.Flight.Id,
+			}
+			copier.Copy(&out[i].Flight, a.Flight)
+		}
 	}
 	return out
 }
