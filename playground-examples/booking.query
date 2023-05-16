@@ -1,9 +1,15 @@
 mutation createBooking {
   createBooking(
-    input: {customerId: "da6403fb-9c2a-480f-80ab-783141cdf41f", flightId: "7fa3e4d9-7749-4519-bed2-f057a1c69c25"}
-  ) {
+    input: {
+      customerId: "3e538851-3c7b-4b14-8e57-1f034e3d6063", 
+      goingFlightId: "1c72d78e-81ba-4c22-851b-b8a9fda633b6",
+    }) {
     id
-    flight {
+    going_flight{
+      id
+      name
+    }
+    return_flight{
       id
     }
     customer {
@@ -15,7 +21,11 @@ mutation createBooking {
 query getBookings {
   booking {
     id
-    flight {
+    going_flight {
+      id
+      name
+    }
+    return_flight{
       id
       name
     }
@@ -24,6 +34,7 @@ query getBookings {
     }
   }
 }
+
 
 # update_booking
 # delete_booking
