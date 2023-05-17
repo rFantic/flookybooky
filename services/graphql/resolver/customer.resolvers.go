@@ -23,6 +23,16 @@ func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.Custo
 	return internal.ParseCustomerPbToGraphql(customerRes), nil
 }
 
+// UpdateCustomer is the resolver for the updateCustomer field.
+func (r *mutationResolver) UpdateCustomer(ctx context.Context, input model.CustomerUpdateInput) (bool, error) {
+	_, err := r.client.CustomerClient.UpdateCustomer(ctx,
+		internal.ParseCustomerUpdateInputGraphqlToPb(&input))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // Customers is the resolver for the customers field.
 func (r *queryResolver) Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error) {
 	customersRes, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})

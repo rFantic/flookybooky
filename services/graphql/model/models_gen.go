@@ -51,6 +51,15 @@ type CustomerInput struct {
 	Email       string `json:"email"`
 }
 
+type CustomerUpdateInput struct {
+	ID          string  `json:"id"`
+	Name        *string `json:"name,omitempty"`
+	Address     *string `json:"address,omitempty"`
+	LicenseID   *string `json:"license_id,omitempty"`
+	PhoneNumber *string `json:"phone_number,omitempty"`
+	Email       *string `json:"email,omitempty"`
+}
+
 type Flight struct {
 	ID             string   `json:"id"`
 	Name           string   `json:"name"`
@@ -85,7 +94,7 @@ type Pagination struct {
 	AscFields []*string `json:"ascFields,omitempty"`
 	DesFields []*string `json:"desFields,omitempty"`
 	Limit     *int      `json:"limit,omitempty"`
-	Offset    *int      `json:"Offset,omitempty"`
+	Offset    *int      `json:"offset,omitempty"`
 }
 
 type PasswordUpdateInput struct {

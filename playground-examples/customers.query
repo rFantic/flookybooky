@@ -8,6 +8,13 @@ query get_customers {
   }
 }
 
+mutation update_customers {
+  updateCustomer (input:{
+    id: "3102c90a-54e0-4c98-a4b7-7ed419704b24"
+    address: "change fake address"
+  })
+}
+
 mutation create_customers {
   createCustomer(
     input: {
@@ -25,7 +32,4 @@ mutation create_customers {
   }
 }
 
-
-# update_customers
-# delete_customers
 # find customer

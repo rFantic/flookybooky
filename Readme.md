@@ -17,3 +17,6 @@ make upProfile Profile="user"
 
 ## Planned feature
 - Implement transaction.
+
+## Database schema
+<iframe width="560" height="315" src='https://dbdiagram.io/embed/64547112dca9fb07c48a6dfc'> </iframe>

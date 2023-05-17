@@ -248,3 +248,15 @@ func ParsePaginationGraphqlToPb(in *model.Pagination) (out *pb.Pagination) {
 	copier.Copy(&out, in)
 	return out
 }
+
+func ParseCustomerUpdateInputGraphqlToPb(in *model.CustomerUpdateInput) (out *pb.CustomerUpdateInput) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.CustomerUpdateInput{
+		Id:        in.ID,
+		LicenseId: in.LicenseID,
+	}
+	copier.Copy(&out, in)
+	return out
+}

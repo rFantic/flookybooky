@@ -58,3 +58,31 @@ func (h *CustomerHandler) PostCustomer(ctx context.Context, req *pb.CustomerInpu
 	}
 	return internal.ParseCustomerEntToPb(customerRes), err
 }
+
+func (h *CustomerHandler) UpdateCustomer(ctx context.Context, req *pb.CustomerUpdateInput) (*emptypb.Empty, error) {
+	_customerId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	query := h.client.Customer.UpdateOneID(_customerId)
+	if req.Email != nil {
+		query.SetEmail(*req.Email)
+	}
+	if req.Address != nil {
+		query.SetAddress(*req.Address)
+	}
+	if req.LicenseId != nil {
+		query.SetAddress(*req.LicenseId)
+	}
+	if req.Name != nil {
+		query.SetAddress(*req.Name)
+	}
+	if req.PhoneNumber != nil {
+		query.SetAddress(*req.PhoneNumber)
+	}
+	err = query.Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
