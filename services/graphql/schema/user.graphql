@@ -44,12 +44,12 @@ type LoginInfo {
 
 extend type Mutation {
     register(input: UserInput!): User!
-    login(input: LoginInput!): LoginInfo!
     updateUser(input: UserUpdateInput!): Boolean!
     updatePassword(input: PasswordUpdateInput!): Boolean!
 }
 
 extend type Query {
-    users: [User!]! @hasRole(role: admin)
+    users(input: Pagination): [User!]! @hasRole(role: admin)
+    login(input: LoginInput!): LoginInfo!
     logout: Boolean!
 }

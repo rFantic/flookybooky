@@ -81,6 +81,13 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
+type Pagination struct {
+	AscFields []*string `json:"ascFields,omitempty"`
+	DesFields []*string `json:"desFields,omitempty"`
+	Limit     *int      `json:"limit,omitempty"`
+	Offset    *int      `json:"Offset,omitempty"`
+}
+
 type PasswordUpdateInput struct {
 	ID               string `json:"id"`
 	PreviousPassword string `json:"previous_password"`

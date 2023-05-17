@@ -5,6 +5,8 @@
 ```
 make up
 ```
+- Playground will be host at: *localhost:8081*
+- Example queries' written in playground-examples
 
 ### Run single service
 - Supported profile: flight, user, customer, graphql, booking
@@ -15,5 +17,3 @@ make upProfile Profile="user"
 
 ## Planned feature
 - Implement transaction.
-- Implement pagination.
-- Add more fields validation.

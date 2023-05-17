@@ -1,2 +1,9 @@
 type Mutation
 type Query 
+
+input Pagination {
+    ascFields: [String]
+    desFields: [String]
+    limit: Int
+    offset: Int
+}

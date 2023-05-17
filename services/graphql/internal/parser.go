@@ -49,6 +49,9 @@ func ParseUserPbToGraphql(in *pb.User) (out *model.User) {
 }
 
 func ParseUsersPbToGraphql(in *pb.Users) (out []*model.User) {
+	if in == nil {
+		return nil
+	}
 	out = make([]*model.User, len(in.Users))
 	for i, a := range in.Users {
 		out[i] = ParseUserPbToGraphql(a)
@@ -137,14 +140,6 @@ func ParseFlightsPbToGraphql(in *pb.Flights) (out []*model.Flight) {
 	}
 	return out
 }
-
-// func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
-// 	out = make([]*model.Customer, len(in.Customers))
-// 	for i, a := range in.Customers {
-// 		out[i] = ParseCustomerPbToGraphql(a)\
-
-// 	return out
-// }
 
 func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput) {
 	if in == nil {
@@ -241,6 +236,15 @@ func ParsePasswordInputGraphqlToPb(in *model.PasswordUpdateInput) (out *pb.Passw
 	out = &pb.PasswordUpdateInput{
 		Id: in.ID,
 	}
+	copier.Copy(&out, in)
+	return out
+}
+
+func ParsePaginationGraphqlToPb(in *model.Pagination) (out *pb.Pagination) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.Pagination{}
 	copier.Copy(&out, in)
 	return out
 }

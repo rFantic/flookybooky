@@ -27,7 +27,7 @@ type UserServiceClient interface {
 	UpdateUser(ctx context.Context, in *UserUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PostUser(ctx context.Context, in *UserInput, opts ...grpc.CallOption) (*User, error)
 	GetUser(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*User, error)
-	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
+	GetUsers(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Users, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 }
 
@@ -75,7 +75,7 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *UUID, opts ...grpc.
 	return out, nil
 }
 
-func (c *userServiceClient) GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error) {
+func (c *userServiceClient) GetUsers(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Users, error) {
 	out := new(Users)
 	err := c.cc.Invoke(ctx, "/pb.UserService/GetUsers", in, out, opts...)
 	if err != nil {
@@ -101,7 +101,7 @@ type UserServiceServer interface {
 	UpdateUser(context.Context, *UserUpdateInput) (*emptypb.Empty, error)
 	PostUser(context.Context, *UserInput) (*User, error)
 	GetUser(context.Context, *UUID) (*User, error)
-	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
+	GetUsers(context.Context, *Pagination) (*Users, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
@@ -122,7 +122,7 @@ func (UnimplementedUserServiceServer) PostUser(context.Context, *UserInput) (*Us
 func (UnimplementedUserServiceServer) GetUser(context.Context, *UUID) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedUserServiceServer) GetUsers(context.Context, *emptypb.Empty) (*Users, error) {
+func (UnimplementedUserServiceServer) GetUsers(context.Context, *Pagination) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
 func (UnimplementedUserServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
@@ -214,7 +214,7 @@ func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _UserService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(Pagination)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func _UserService_GetUsers_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/pb.UserService/GetUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUsers(ctx, req.(*emptypb.Empty))
+		return srv.(UserServiceServer).GetUsers(ctx, req.(*Pagination))
 	}
 	return interceptor(ctx, in, info, handler)
 }

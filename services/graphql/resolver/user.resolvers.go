@@ -13,7 +13,6 @@ import (
 	"flookybooky/services/graphql/model"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Register is the resolver for the register field.
@@ -32,31 +31,6 @@ func (r *mutationResolver) Register(ctx context.Context, input model.UserInput) 
 		return nil, err
 	}
 	return internal.ParseUserPbToGraphql(userRes), nil
-}
-
-// Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error) {
-	res, err := r.client.UserClient.Login(ctx,
-		&pb.LoginRequest{
-			User: &pb.User{
-				Username: input.Username,
-				Password: input.Password,
-			},
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
-	c.SetCookie(
-		"Authentication", res.JwtToken,
-		int(res.ExpireTime), "", "", false, false,
-	)
-	return &model.LoginInfo{
-		TokenString: res.JwtToken,
-	}, nil
 }
 
 // UpdateUser is the resolver for the updateUser field.
@@ -78,9 +52,35 @@ func (r *mutationResolver) UpdatePassword(ctx context.Context, input model.Passw
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	usersRes, err := r.client.UserClient.GetUsers(ctx, &emptypb.Empty{})
+func (r *queryResolver) Users(ctx context.Context, input *model.Pagination) ([]*model.User, error) {
+	usersRes, err := r.client.UserClient.GetUsers(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseUsersPbToGraphql(usersRes), err
+}
+
+// Login is the resolver for the login field.
+func (r *queryResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error) {
+	res, err := r.client.UserClient.Login(ctx,
+		&pb.LoginRequest{
+			User: &pb.User{
+				Username: input.Username,
+				Password: input.Password,
+			},
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
+	c.SetCookie(
+		"Authentication", res.JwtToken,
+		int(res.ExpireTime), "", "", false, false,
+	)
+	return &model.LoginInfo{
+		TokenString: res.JwtToken,
+	}, nil
 }
 
 // Logout is the resolver for the logout field.

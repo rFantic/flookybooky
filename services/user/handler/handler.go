@@ -27,8 +27,6 @@ func NewUserHandler(client ent.Client) (*UserHandler, error) {
 	}, nil
 }
 
-// func (h *UserHandler).Login(context.Context, *pb.LoginRequest) (*pb.LoginResponse, error)
-
 func (h *UserHandler) PostUser(ctx context.Context, req *pb.UserInput) (*pb.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
 	if err != nil {
@@ -55,9 +53,24 @@ func (h *UserHandler) GetUser(ctx context.Context, req *pb.UUID) (*pb.User, erro
 	return internal.ParseUserEntToPb(userRes), err
 }
 
-func (h *UserHandler) GetUsers(ctx context.Context, req *emptypb.Empty) (*pb.Users, error) {
+func (h *UserHandler) GetUsers(ctx context.Context, req *pb.Pagination) (*pb.Users, error) {
 	query := h.client.User.Query()
-	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	if req != nil {
+		var options []user.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
 	usersRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err

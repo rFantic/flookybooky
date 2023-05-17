@@ -52,6 +52,6 @@ service UserService {
     rpc UpdateUser(UserUpdateInput) returns (google.protobuf.Empty) {}
     rpc PostUser (UserInput) returns (User) {}
     rpc GetUser (UUID) returns (User) {}
-    rpc GetUsers (google.protobuf.Empty) returns (Users) {}
+    rpc GetUsers (Pagination) returns (Users) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
 }
