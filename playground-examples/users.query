@@ -1,6 +1,8 @@
 query get_users {
   users {
+    id
     username
+    email
     customer {
       name
       license_id
@@ -46,15 +48,30 @@ mutation register_with_info {
   }
 }
 
+mutation updateUser {
+  updateUser(input: {
+    id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
+    email: "liban@gmail.com"
+    role: "user"
+  })
+}
+
+mutation updatePassword {
+  updatePassword(input: {
+    id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
+    new_password: "passwd",
+    previous_password: "passwd"
+  })
+}
+
 mutation login {
   login(input: {username: "Lilooo", password: "passwd"}) {
     tokenString
   }
 }
 
-# logout
-# delete_user
-# update_user
-# change_password
-# set_role
+query logout {
+	logout
+}
+
 # find_user

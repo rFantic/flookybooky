@@ -222,3 +222,25 @@ func ParseBookingsPbToGraphql(in *pb.Bookings) (out []*model.Booking) {
 	}
 	return out
 }
+
+func ParseUserUpdateInputGraphqlToPb(in *model.UserUpdateInput) (out *pb.UserUpdateInput) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.UserUpdateInput{
+		Id: in.ID,
+	}
+	copier.Copy(&out, in)
+	return out
+}
+
+func ParsePasswordInputGraphqlToPb(in *model.PasswordUpdateInput) (out *pb.PasswordUpdateInput) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.PasswordUpdateInput{
+		Id: in.ID,
+	}
+	copier.Copy(&out, in)
+	return out
+}

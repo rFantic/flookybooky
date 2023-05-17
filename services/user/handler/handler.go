@@ -91,3 +91,48 @@ func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		ExpireTime: expireTime,
 	}, err
 }
+
+func (h *UserHandler) UpdatePassword(ctx context.Context, req *pb.PasswordUpdateInput) (*emptypb.Empty, error) {
+	_userId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	_user, err := h.client.User.Get(ctx, _userId)
+	if err != nil {
+		return nil, err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(_user.Password), []byte(req.PreviousPassword))
+	if err != nil {
+		return nil, fmt.Errorf("wrong old password")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 10)
+	if err != nil {
+		return nil, fmt.Errorf("generate hash: %w", err)
+	}
+
+	err = h.client.User.UpdateOneID(_userId).SetPassword(string(hash)).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *UserHandler) UpdateUser(ctx context.Context, req *pb.UserUpdateInput) (*emptypb.Empty, error) {
+	_userId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	query := h.client.User.UpdateOneID(_userId)
+	if req.Email != nil {
+		query.SetEmail(*req.Email)
+	}
+	if req.Role != nil {
+		query.SetRole(user.Role(*req.Role))
+	}
+	err = query.Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

@@ -22,6 +22,18 @@ message UserInput {
     optional string customerId = 5;
 }
 
+message PasswordUpdateInput {
+    string id = 1;
+    string previous_password = 2;
+    string new_password = 3;
+}
+
+message UserUpdateInput {
+    string id = 1;
+    optional string email = 2;
+    optional string role = 3;
+}
+
 message Users {
     repeated User users = 1;
 }
@@ -36,6 +48,8 @@ message LoginResponse{
 }
 
 service UserService {
+    rpc UpdatePassword(PasswordUpdateInput) returns (google.protobuf.Empty) {}
+    rpc UpdateUser(UserUpdateInput) returns (google.protobuf.Empty) {}
     rpc PostUser (UserInput) returns (User) {}
     rpc GetUser (UUID) returns (User) {}
     rpc GetUsers (google.protobuf.Empty) returns (Users) {}

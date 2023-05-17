@@ -59,10 +59,38 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	}, nil
 }
 
+// UpdateUser is the resolver for the updateUser field.
+func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UserUpdateInput) (bool, error) {
+	_, err := r.client.UserClient.UpdateUser(ctx, internal.ParseUserUpdateInputGraphqlToPb(&input))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdatePassword is the resolver for the updatePassword field.
+func (r *mutationResolver) UpdatePassword(ctx context.Context, input model.PasswordUpdateInput) (bool, error) {
+	_, err := r.client.UserClient.UpdatePassword(ctx, internal.ParsePasswordInputGraphqlToPb(&input))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	usersRes, err := r.client.UserClient.GetUsers(ctx, &emptypb.Empty{})
 	return internal.ParseUsersPbToGraphql(usersRes), err
+}
+
+// Logout is the resolver for the logout field.
+func (r *queryResolver) Logout(ctx context.Context) (bool, error) {
+	c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
+	c.SetCookie(
+		"Authentication", "",
+		-1, "", "", false, false,
+	)
+	return true, nil
 }
 
 // Customer is the resolver for the customer field.

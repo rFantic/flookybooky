@@ -81,6 +81,12 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
+type PasswordUpdateInput struct {
+	ID               string `json:"id"`
+	PreviousPassword string `json:"previous_password"`
+	NewPassword      string `json:"new_password"`
+}
+
 type User struct {
 	ID       string    `json:"id"`
 	Username string    `json:"username"`
@@ -95,6 +101,12 @@ type UserInput struct {
 	Email    string         `json:"email"`
 	Role     string         `json:"role"`
 	Customer *CustomerInput `json:"customer,omitempty"`
+}
+
+type UserUpdateInput struct {
+	ID    string  `json:"id"`
+	Email *string `json:"email,omitempty"`
+	Role  *string `json:"role,omitempty"`
 }
 
 type Role string

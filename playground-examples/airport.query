@@ -19,5 +19,18 @@ mutation createAirport {
   }
 }
 
+mutation createAirport2 {
+  createAirport(
+    input: {
+      name: "Bardan International Airport (HAN)",
+      address: "Da Nang",
+    }
+  ) {
+    id
+    name
+    address
+  }
+}
+
 # delete_airport
 # update_airport
