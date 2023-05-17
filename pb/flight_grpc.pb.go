@@ -32,6 +32,7 @@ type FlightServiceClient interface {
 	PostFlight(ctx context.Context, in *FlightInput, opts ...grpc.CallOption) (*Flight, error)
 	GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error)
 	GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error)
+	UpdateFlight(ctx context.Context, in *FlightUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type flightServiceClient struct {
@@ -96,6 +97,15 @@ func (c *flightServiceClient) GetFlights(ctx context.Context, in *emptypb.Empty,
 	return out, nil
 }
 
+func (c *flightServiceClient) UpdateFlight(ctx context.Context, in *FlightUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/UpdateFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FlightServiceServer is the server API for FlightService service.
 // All implementations must embed UnimplementedFlightServiceServer
 // for forward compatibility
@@ -109,6 +119,7 @@ type FlightServiceServer interface {
 	PostFlight(context.Context, *FlightInput) (*Flight, error)
 	GetFlight(context.Context, *UUID) (*Flight, error)
 	GetFlights(context.Context, *emptypb.Empty) (*Flights, error)
+	UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
 
@@ -133,6 +144,9 @@ func (UnimplementedFlightServiceServer) GetFlight(context.Context, *UUID) (*Flig
 }
 func (UnimplementedFlightServiceServer) GetFlights(context.Context, *emptypb.Empty) (*Flights, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlights not implemented")
+}
+func (UnimplementedFlightServiceServer) UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateFlight not implemented")
 }
 func (UnimplementedFlightServiceServer) mustEmbedUnimplementedFlightServiceServer() {}
 
@@ -255,6 +269,24 @@ func _FlightService_GetFlights_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_UpdateFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlightUpdateInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).UpdateFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/UpdateFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).UpdateFlight(ctx, req.(*FlightUpdateInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FlightService_ServiceDesc is the grpc.ServiceDesc for FlightService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -285,6 +317,10 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFlights",
 			Handler:    _FlightService_GetFlights_Handler,
+		},
+		{
+			MethodName: "UpdateFlight",
+			Handler:    _FlightService_UpdateFlight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

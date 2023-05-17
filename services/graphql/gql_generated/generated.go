@@ -93,6 +93,7 @@ type ComplexityRoot struct {
 		CreateFlight   func(childComplexity int, input model.FlightInput) int
 		Register       func(childComplexity int, input model.UserInput) int
 		UpdateCustomer func(childComplexity int, input model.CustomerUpdateInput) int
+		UpdateFlight   func(childComplexity int, input model.FlightUpdateInput) int
 		UpdatePassword func(childComplexity int, input model.PasswordUpdateInput) int
 		UpdateUser     func(childComplexity int, input model.UserUpdateInput) int
 	}
@@ -131,6 +132,7 @@ type MutationResolver interface {
 	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 	UpdateCustomer(ctx context.Context, input model.CustomerUpdateInput) (bool, error)
 	CreateFlight(ctx context.Context, input model.FlightInput) (*model.Flight, error)
+	UpdateFlight(ctx context.Context, input model.FlightUpdateInput) (bool, error)
 	Register(ctx context.Context, input model.UserInput) (*model.User, error)
 	UpdateUser(ctx context.Context, input model.UserUpdateInput) (bool, error)
 	UpdatePassword(ctx context.Context, input model.PasswordUpdateInput) (bool, error)
@@ -396,6 +398,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateCustomer(childComplexity, args["input"].(model.CustomerUpdateInput)), true
 
+	case "Mutation.updateFlight":
+		if e.complexity.Mutation.UpdateFlight == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateFlight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateFlight(childComplexity, args["input"].(model.FlightUpdateInput)), true
+
 	case "Mutation.updatePassword":
 		if e.complexity.Mutation.UpdatePassword == nil {
 			break
@@ -532,6 +546,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCustomerInput,
 		ec.unmarshalInputCustomerUpdateInput,
 		ec.unmarshalInputFlightInput,
+		ec.unmarshalInputFlightUpdateInput,
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPasswordUpdateInput,
@@ -702,12 +717,24 @@ input FlightInput{
     status: String!
 }
 
+input FlightUpdateInput{
+    id: String!
+    name: String
+    originId: String
+    destinationId: String
+    available_slots: Int
+    departure_time: String
+    arrival_time: String
+    status: String
+}
+
 extend type Query {
     flight: [Flight!]!
 }
 
 extend type Mutation {
     createFlight(input: FlightInput!): Flight!
+    updateFlight(input: FlightUpdateInput!): Boolean!
 }`, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
 
@@ -868,6 +895,21 @@ func (ec *executionContext) field_Mutation_updateCustomer_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCustomerUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.FlightUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNFlightUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2409,6 +2451,61 @@ func (ec *executionContext) fieldContext_Mutation_createFlight(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateFlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateFlight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateFlight(rctx, fc.Args["input"].(model.FlightUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -5474,6 +5571,98 @@ func (ec *executionContext) unmarshalInputFlightInput(ctx context.Context, obj i
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputFlightUpdateInput(ctx context.Context, obj interface{}) (model.FlightUpdateInput, error) {
+	var it model.FlightUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "originId", "destinationId", "available_slots", "departure_time", "arrival_time", "status"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "originId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginID = data
+		case "destinationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DestinationID = data
+		case "available_slots":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("available_slots"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AvailableSlots = data
+		case "departure_time":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("departure_time"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DepartureTime = data
+		case "arrival_time":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arrival_time"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ArrivalTime = data
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj interface{}) (model.LoginInput, error) {
 	var it model.LoginInput
 	asMap := map[string]interface{}{}
@@ -6122,6 +6311,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createFlight(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateFlight":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateFlight(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -7021,6 +7219,11 @@ func (ec *executionContext) marshalNFlight2ᚖflookybookyᚋservicesᚋgraphql�
 
 func (ec *executionContext) unmarshalNFlightInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightInput(ctx context.Context, v interface{}) (model.FlightInput, error) {
 	res, err := ec.unmarshalInputFlightInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNFlightUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightUpdateInput(ctx context.Context, v interface{}) (model.FlightUpdateInput, error) {
+	res, err := ec.unmarshalInputFlightUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

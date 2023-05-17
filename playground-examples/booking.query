@@ -38,9 +38,5 @@ query getBookings {
   }
 }
 
-
-# update_booking
-# delete_booking
-# cancel_booking -> cancel_ticket
 # set_status
 # find booking

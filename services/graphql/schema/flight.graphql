@@ -19,10 +19,22 @@ input FlightInput{
     status: String!
 }
 
+input FlightUpdateInput{
+    id: String!
+    name: String
+    originId: String
+    destinationId: String
+    available_slots: Int
+    departure_time: String
+    arrival_time: String
+    status: String
+}
+
 extend type Query {
     flight: [Flight!]!
 }
 
 extend type Mutation {
     createFlight(input: FlightInput!): Flight!
+    updateFlight(input: FlightUpdateInput!): Boolean!
 }

@@ -99,12 +99,8 @@ func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.FlightInput, er
 		ArrivalTime:   timestamppb.New(_arrivalTime),
 	}
 	copier.Copy(&out, in)
-	out.Origin = &pb.Airport{
-		Id: in.OriginID,
-	}
-	out.Destination = &pb.Airport{
-		Id: in.DestinationID,
-	}
+	out.OriginId = in.OriginID
+	out.DestinationId = in.DestinationID
 	return out, err
 }
 
@@ -259,4 +255,33 @@ func ParseCustomerUpdateInputGraphqlToPb(in *model.CustomerUpdateInput) (out *pb
 	}
 	copier.Copy(&out, in)
 	return out
+}
+
+func ParseFlightUpdateInputGraphqlToPb(in *model.FlightUpdateInput) (out *pb.FlightUpdateInput, err error) {
+	if in == nil {
+		return nil, fmt.Errorf("nil flight input")
+	}
+	out = &pb.FlightUpdateInput{}
+	if in.DepartureTime != nil {
+		_departureTime, err := time.Parse("2006-01-02", *in.DepartureTime)
+		if err != nil {
+			return nil, err
+		}
+		out.DepartureTime = timestamppb.New(_departureTime)
+	}
+	if in.ArrivalTime != nil {
+		_arrivalTime, err := time.Parse("2006-01-02", *in.ArrivalTime)
+		if err != nil {
+			return nil, err
+		}
+		out.ArrivalTime = timestamppb.New(_arrivalTime)
+	}
+	copier.Copy(&out, in)
+	if in.OriginID != nil {
+		out.OriginId = in.OriginID
+	}
+	if in.DestinationID != nil {
+		out.DestinationId = in.DestinationID
+	}
+	return out, err
 }

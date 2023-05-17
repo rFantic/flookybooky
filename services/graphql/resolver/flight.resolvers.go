@@ -50,6 +50,19 @@ func (r *mutationResolver) CreateFlight(ctx context.Context, input model.FlightI
 	return internal.ParseFlightPbToGraphql(flightRes), err
 }
 
+// UpdateFlight is the resolver for the updateFlight field.
+func (r *mutationResolver) UpdateFlight(ctx context.Context, input model.FlightUpdateInput) (bool, error) {
+	updateInput, err := internal.ParseFlightUpdateInputGraphqlToPb(&input)
+	if err != nil {
+		return false, err
+	}
+	_, err = r.client.FlightClient.UpdateFlight(ctx, updateInput)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // Flight is the resolver for the flight field.
 func (r *queryResolver) Flight(ctx context.Context) ([]*model.Flight, error) {
 	flightsRes, err := r.client.FlightClient.GetFlights(ctx, &emptypb.Empty{})

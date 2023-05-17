@@ -71,14 +71,14 @@ func (h *FlightHandler) GetFlights(ctx context.Context, req *emptypb.Empty) (*pb
 }
 
 func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.FlightInput) (*pb.Flight, error) {
-	if req.Origin == nil || req.Destination == nil {
-		return nil, fmt.Errorf("missing origin or destination")
+	if req == nil {
+		return nil, nil
 	}
-	_originReq, err := internal.ParseAirportPbToEnt(req.Origin)
+	_originReq, err := uuid.Parse(req.OriginId)
 	if err != nil {
 		return nil, err
 	}
-	_destinationReq, err := internal.ParseAirportPbToEnt(req.Destination)
+	_destinationReq, err := uuid.Parse(req.DestinationId)
 	if err != nil {
 		return nil, err
 	}
@@ -87,14 +87,63 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.FlightInput) (*p
 		SetDepartureTime(req.DepartureTime.AsTime()).
 		SetArrivalTime(req.ArrivalTime.AsTime()).
 		SetName(req.Name).
-		SetDestinationID(_destinationReq.ID).
-		SetOriginID(_originReq.ID).
+		SetDestinationID(_destinationReq).
+		SetOriginID(_originReq).
 		SetStatus(flight.Status(req.Status))
 	flightRes, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return internal.ParseFlightEntToPb(flightRes), err
+}
+
+func (h *FlightHandler) UpdateFlight(ctx context.Context, req *pb.FlightUpdateInput) (*emptypb.Empty, error) {
+	_flightId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	res, err := h.client.Flight.Get(ctx, _flightId)
+	if err != nil {
+		return nil, err
+	}
+	if res.Status != "Scheduled" {
+		return nil, fmt.Errorf("flight already departed")
+	}
+	query := h.client.Flight.UpdateOneID(_flightId)
+	if req.Status != nil {
+		query.SetStatus(flight.Status(*req.Status))
+	}
+	if req.ArrivalTime != nil {
+		query.SetArrivalTime(req.ArrivalTime.AsTime())
+	}
+	if req.DepartureTime != nil {
+		query.SetDepartureTime(req.DepartureTime.AsTime())
+	}
+	if req.Name != nil {
+		query.SetName(*req.Name)
+	}
+	if req.DestinationId != nil {
+		_DestinationID, err := uuid.Parse(*req.DestinationId)
+		if err != nil {
+			return nil, err
+		}
+		query.SetDestinationID(_DestinationID)
+	}
+	if req.OriginId != nil {
+		_OriginID, err := uuid.Parse(*req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+		query.SetOriginID(_OriginID)
+	}
+	if req.AvailableSlots != nil {
+		query.SetAvailableSlots(int(*req.AvailableSlots))
+	}
+	err = query.Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
 
 // func (h *FlightHandler) GetSeat(context.Context, *pb.UUID) (*pb.Seat, error)

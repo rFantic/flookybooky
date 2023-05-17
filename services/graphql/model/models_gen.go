@@ -81,6 +81,17 @@ type FlightInput struct {
 	Status         string `json:"status"`
 }
 
+type FlightUpdateInput struct {
+	ID             string  `json:"id"`
+	Name           *string `json:"name,omitempty"`
+	OriginID       *string `json:"originId,omitempty"`
+	DestinationID  *string `json:"destinationId,omitempty"`
+	AvailableSlots *int    `json:"available_slots,omitempty"`
+	DepartureTime  *string `json:"departure_time,omitempty"`
+	ArrivalTime    *string `json:"arrival_time,omitempty"`
+	Status         *string `json:"status,omitempty"`
+}
+
 type LoginInfo struct {
 	TokenString string `json:"tokenString"`
 }
