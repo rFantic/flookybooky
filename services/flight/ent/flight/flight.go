@@ -26,6 +26,8 @@ const (
 	FieldDepartureTime = "departure_time"
 	// FieldArrivalTime holds the string denoting the arrival_time field in the database.
 	FieldArrivalTime = "arrival_time"
+	// FieldTotalSlots holds the string denoting the total_slots field in the database.
+	FieldTotalSlots = "total_slots"
 	// FieldAvailableSlots holds the string denoting the available_slots field in the database.
 	FieldAvailableSlots = "available_slots"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -62,6 +64,7 @@ var Columns = []string{
 	FieldDestinartionID,
 	FieldDepartureTime,
 	FieldArrivalTime,
+	FieldTotalSlots,
 	FieldAvailableSlots,
 	FieldStatus,
 	FieldCreatedAt,
@@ -141,6 +144,11 @@ func ByDepartureTime(opts ...sql.OrderTermOption) OrderOption {
 // ByArrivalTime orders the results by the arrival_time field.
 func ByArrivalTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldArrivalTime, opts...).ToFunc()
+}
+
+// ByTotalSlots orders the results by the total_slots field.
+func ByTotalSlots(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalSlots, opts...).ToFunc()
 }
 
 // ByAvailableSlots orders the results by the available_slots field.

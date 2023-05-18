@@ -29,6 +29,8 @@ type Flight struct {
 	DepartureTime time.Time `json:"departure_time,omitempty"`
 	// ArrivalTime holds the value of the "arrival_time" field.
 	ArrivalTime time.Time `json:"arrival_time,omitempty"`
+	// TotalSlots holds the value of the "total_slots" field.
+	TotalSlots int `json:"total_slots,omitempty"`
 	// AvailableSlots holds the value of the "available_slots" field.
 	AvailableSlots int `json:"available_slots,omitempty"`
 	// Status holds the value of the "status" field.
@@ -83,7 +85,7 @@ func (*Flight) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case flight.FieldAvailableSlots:
+		case flight.FieldTotalSlots, flight.FieldAvailableSlots:
 			values[i] = new(sql.NullInt64)
 		case flight.FieldName, flight.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -141,6 +143,12 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field arrival_time", values[i])
 			} else if value.Valid {
 				f.ArrivalTime = value.Time
+			}
+		case flight.FieldTotalSlots:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_slots", values[i])
+			} else if value.Valid {
+				f.TotalSlots = int(value.Int64)
 			}
 		case flight.FieldAvailableSlots:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -220,6 +228,9 @@ func (f *Flight) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("arrival_time=")
 	builder.WriteString(f.ArrivalTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("total_slots=")
+	builder.WriteString(fmt.Sprintf("%v", f.TotalSlots))
 	builder.WriteString(", ")
 	builder.WriteString("available_slots=")
 	builder.WriteString(fmt.Sprintf("%v", f.AvailableSlots))

@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 		Name           func(childComplexity int) int
 		Origin         func(childComplexity int) int
 		Status         func(childComplexity int) int
+		TotalSlots     func(childComplexity int) int
 	}
 
 	LoginInfo struct {
@@ -337,6 +338,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flight.Status(childComplexity), true
+
+	case "Flight.total_slots":
+		if e.complexity.Flight.TotalSlots == nil {
+			break
+		}
+
+		return e.complexity.Flight.TotalSlots(childComplexity), true
 
 	case "LoginInfo.tokenString":
 		if e.complexity.LoginInfo.TokenString == nil {
@@ -839,6 +847,7 @@ type Flight {
     name: String!
     origin: Airport!
     destination: Airport!
+    total_slots: Int!
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
@@ -849,6 +858,7 @@ input FlightInput{
     name: String!
     originId: String!
     destinationId: String!
+    total_slots: Int!
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
@@ -2151,6 +2161,50 @@ func (ec *executionContext) fieldContext_Flight_destination(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Flight_total_slots(ctx context.Context, field graphql.CollectedField, obj *model.Flight) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flight_total_slots(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalSlots, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flight_total_slots(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flight",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flight_available_slots(ctx context.Context, field graphql.CollectedField, obj *model.Flight) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flight_available_slots(ctx, field)
 	if err != nil {
@@ -2739,6 +2793,8 @@ func (ec *executionContext) fieldContext_Mutation_createFlight(ctx context.Conte
 				return ec.fieldContext_Flight_origin(ctx, field)
 			case "destination":
 				return ec.fieldContext_Flight_destination(ctx, field)
+			case "total_slots":
+				return ec.fieldContext_Flight_total_slots(ctx, field)
 			case "available_slots":
 				return ec.fieldContext_Flight_available_slots(ctx, field)
 			case "departure_time":
@@ -3243,6 +3299,8 @@ func (ec *executionContext) fieldContext_Query_flight(ctx context.Context, field
 				return ec.fieldContext_Flight_origin(ctx, field)
 			case "destination":
 				return ec.fieldContext_Flight_destination(ctx, field)
+			case "total_slots":
+				return ec.fieldContext_Flight_total_slots(ctx, field)
 			case "available_slots":
 				return ec.fieldContext_Flight_available_slots(ctx, field)
 			case "departure_time":
@@ -3800,6 +3858,8 @@ func (ec *executionContext) fieldContext_Ticket_flight(ctx context.Context, fiel
 				return ec.fieldContext_Flight_origin(ctx, field)
 			case "destination":
 				return ec.fieldContext_Flight_destination(ctx, field)
+			case "total_slots":
+				return ec.fieldContext_Flight_total_slots(ctx, field)
 			case "available_slots":
 				return ec.fieldContext_Flight_available_slots(ctx, field)
 			case "departure_time":
@@ -6335,7 +6395,7 @@ func (ec *executionContext) unmarshalInputFlightInput(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "originId", "destinationId", "available_slots", "departure_time", "arrival_time", "status"}
+	fieldsInOrder := [...]string{"name", "originId", "destinationId", "total_slots", "available_slots", "departure_time", "arrival_time", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6369,6 +6429,15 @@ func (ec *executionContext) unmarshalInputFlightInput(ctx context.Context, obj i
 				return it, err
 			}
 			it.DestinationID = data
+		case "total_slots":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("total_slots"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TotalSlots = data
 		case "available_slots":
 			var err error
 
@@ -7108,6 +7177,13 @@ func (ec *executionContext) _Flight(ctx context.Context, sel ast.SelectionSet, o
 				return innerFunc(ctx)
 
 			})
+		case "total_slots":
+
+			out.Values[i] = ec._Flight_total_slots(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "available_slots":
 
 			out.Values[i] = ec._Flight_available_slots(ctx, field, obj)

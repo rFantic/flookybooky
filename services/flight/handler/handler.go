@@ -124,7 +124,8 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.FlightInput) (*p
 		return nil, err
 	}
 	query := h.client.Flight.Create().
-		SetAvailableSlots(int(req.AvailableSlots)).
+		SetTotalSlots(int(*req.TotalSlots)).
+		SetAvailableSlots(int(*req.TotalSlots)).
 		SetDepartureTime(req.DepartureTime.AsTime()).
 		SetArrivalTime(req.ArrivalTime.AsTime()).
 		SetName(req.Name).
@@ -179,8 +180,8 @@ func (h *FlightHandler) UpdateFlight(ctx context.Context, req *pb.FlightUpdateIn
 		}
 		query.SetOriginID(_OriginID)
 	}
-	if req.AvailableSlots != nil {
-		query.SetAvailableSlots(int(*req.AvailableSlots))
+	if req.TotalSlots != nil {
+		query.SetTotalSlots(int(*req.TotalSlots))
 	}
 	err = query.Exec(ctx)
 	if err != nil {

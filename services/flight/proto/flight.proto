@@ -31,7 +31,7 @@ message FlightUpdateInput {
     optional string name = 2;
     optional string origin_id = 3;
     optional string destination_id = 4;
-    optional int64 available_slots = 5;
+    optional int64 total_slots = 5;
     optional google.protobuf.Timestamp departure_time = 6;
     optional google.protobuf.Timestamp arrival_time = 7;
     optional string status = 8;
@@ -41,7 +41,7 @@ message FlightInput {
     string name = 1;
     string origin_id = 2;
     string destination_id = 3;
-    int64 available_slots = 4;
+    optional int64 total_slots = 4;
     google.protobuf.Timestamp departure_time = 5;
     google.protobuf.Timestamp arrival_time = 6;
     string status = 7;

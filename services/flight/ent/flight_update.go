@@ -60,6 +60,19 @@ func (fu *FlightUpdate) SetArrivalTime(t time.Time) *FlightUpdate {
 	return fu
 }
 
+// SetTotalSlots sets the "total_slots" field.
+func (fu *FlightUpdate) SetTotalSlots(i int) *FlightUpdate {
+	fu.mutation.ResetTotalSlots()
+	fu.mutation.SetTotalSlots(i)
+	return fu
+}
+
+// AddTotalSlots adds i to the "total_slots" field.
+func (fu *FlightUpdate) AddTotalSlots(i int) *FlightUpdate {
+	fu.mutation.AddTotalSlots(i)
+	return fu
+}
+
 // SetAvailableSlots sets the "available_slots" field.
 func (fu *FlightUpdate) SetAvailableSlots(i int) *FlightUpdate {
 	fu.mutation.ResetAvailableSlots()
@@ -176,6 +189,12 @@ func (fu *FlightUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := fu.mutation.ArrivalTime(); ok {
 		_spec.SetField(flight.FieldArrivalTime, field.TypeTime, value)
 	}
+	if value, ok := fu.mutation.TotalSlots(); ok {
+		_spec.SetField(flight.FieldTotalSlots, field.TypeInt, value)
+	}
+	if value, ok := fu.mutation.AddedTotalSlots(); ok {
+		_spec.AddField(flight.FieldTotalSlots, field.TypeInt, value)
+	}
 	if value, ok := fu.mutation.AvailableSlots(); ok {
 		_spec.SetField(flight.FieldAvailableSlots, field.TypeInt, value)
 	}
@@ -290,6 +309,19 @@ func (fuo *FlightUpdateOne) SetDepartureTime(t time.Time) *FlightUpdateOne {
 // SetArrivalTime sets the "arrival_time" field.
 func (fuo *FlightUpdateOne) SetArrivalTime(t time.Time) *FlightUpdateOne {
 	fuo.mutation.SetArrivalTime(t)
+	return fuo
+}
+
+// SetTotalSlots sets the "total_slots" field.
+func (fuo *FlightUpdateOne) SetTotalSlots(i int) *FlightUpdateOne {
+	fuo.mutation.ResetTotalSlots()
+	fuo.mutation.SetTotalSlots(i)
+	return fuo
+}
+
+// AddTotalSlots adds i to the "total_slots" field.
+func (fuo *FlightUpdateOne) AddTotalSlots(i int) *FlightUpdateOne {
+	fuo.mutation.AddTotalSlots(i)
 	return fuo
 }
 
@@ -438,6 +470,12 @@ func (fuo *FlightUpdateOne) sqlSave(ctx context.Context) (_node *Flight, err err
 	}
 	if value, ok := fuo.mutation.ArrivalTime(); ok {
 		_spec.SetField(flight.FieldArrivalTime, field.TypeTime, value)
+	}
+	if value, ok := fuo.mutation.TotalSlots(); ok {
+		_spec.SetField(flight.FieldTotalSlots, field.TypeInt, value)
+	}
+	if value, ok := fuo.mutation.AddedTotalSlots(); ok {
+		_spec.AddField(flight.FieldTotalSlots, field.TypeInt, value)
 	}
 	if value, ok := fuo.mutation.AvailableSlots(); ok {
 		_spec.SetField(flight.FieldAvailableSlots, field.TypeInt, value)

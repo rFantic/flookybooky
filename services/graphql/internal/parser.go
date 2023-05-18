@@ -24,6 +24,9 @@ func ParseAirportPbToGraphql(in *pb.Airport) (out *model.Airport) {
 }
 
 func ParseAirportsPbToGraphql(in *pb.Airports) (out []*model.Airport) {
+	if in.Airports == nil {
+		return nil
+	}
 	out = make([]*model.Airport, len(in.Airports))
 	for i, a := range in.Airports {
 		out[i] = ParseAirportPbToGraphql(a)
@@ -49,7 +52,7 @@ func ParseUserPbToGraphql(in *pb.User) (out *model.User) {
 }
 
 func ParseUsersPbToGraphql(in *pb.Users) (out []*model.User) {
-	if in == nil {
+	if in.Users == nil {
 		return nil
 	}
 	out = make([]*model.User, len(in.Users))
@@ -75,6 +78,9 @@ func ParseCustomerPbToGraphql(in *pb.Customer) (out *model.Customer) {
 }
 
 func ParseCustomersPbToGraphql(in *pb.Customers) (out []*model.Customer) {
+	if in.Customers == nil {
+		return nil
+	}
 	out = make([]*model.Customer, len(in.Customers))
 	for i, a := range in.Customers {
 		out[i] = ParseCustomerPbToGraphql(a)
@@ -130,6 +136,9 @@ func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
 }
 
 func ParseFlightsPbToGraphql(in *pb.Flights) (out []*model.Flight) {
+	if in.Flights == nil {
+		return nil
+	}
 	out = make([]*model.Flight, len(in.Flights))
 	for i, a := range in.Flights {
 		out[i] = ParseFlightPbToGraphql(a)
@@ -165,7 +174,7 @@ func ParseTicketPbToGraphqlTo(in *pb.Ticket) (out *model.Ticket) {
 }
 
 func ParseTicketsPbToGraphqlTo(in *pb.Tickets) (out []*model.Ticket) {
-	if in == nil {
+	if in.Tickets == nil {
 		return nil
 	}
 	out = make([]*model.Ticket, len(in.Tickets))
@@ -235,7 +244,7 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 }
 
 func ParseBookingsPbToGraphql(in *pb.Bookings) (out []*model.Booking) {
-	if in == nil {
+	if in.Bookings == nil {
 		return nil
 	}
 	out = make([]*model.Booking, len(in.GetBookings()))
@@ -269,9 +278,6 @@ func ParsePasswordInputGraphqlToPb(in *model.PasswordUpdateInput) (out *pb.Passw
 }
 
 func ParsePaginationGraphqlToPb(in *model.Pagination) (out *pb.Pagination) {
-	if in == nil {
-		return nil
-	}
 	out = &pb.Pagination{}
 	copier.Copy(&out, in)
 	return out

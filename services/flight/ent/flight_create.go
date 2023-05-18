@@ -52,6 +52,12 @@ func (fc *FlightCreate) SetArrivalTime(t time.Time) *FlightCreate {
 	return fc
 }
 
+// SetTotalSlots sets the "total_slots" field.
+func (fc *FlightCreate) SetTotalSlots(i int) *FlightCreate {
+	fc.mutation.SetTotalSlots(i)
+	return fc
+}
+
 // SetAvailableSlots sets the "available_slots" field.
 func (fc *FlightCreate) SetAvailableSlots(i int) *FlightCreate {
 	fc.mutation.SetAvailableSlots(i)
@@ -170,6 +176,9 @@ func (fc *FlightCreate) check() error {
 	if _, ok := fc.mutation.ArrivalTime(); !ok {
 		return &ValidationError{Name: "arrival_time", err: errors.New(`ent: missing required field "Flight.arrival_time"`)}
 	}
+	if _, ok := fc.mutation.TotalSlots(); !ok {
+		return &ValidationError{Name: "total_slots", err: errors.New(`ent: missing required field "Flight.total_slots"`)}
+	}
 	if _, ok := fc.mutation.AvailableSlots(); !ok {
 		return &ValidationError{Name: "available_slots", err: errors.New(`ent: missing required field "Flight.available_slots"`)}
 	}
@@ -236,6 +245,10 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 	if value, ok := fc.mutation.ArrivalTime(); ok {
 		_spec.SetField(flight.FieldArrivalTime, field.TypeTime, value)
 		_node.ArrivalTime = value
+	}
+	if value, ok := fc.mutation.TotalSlots(); ok {
+		_spec.SetField(flight.FieldTotalSlots, field.TypeInt, value)
+		_node.TotalSlots = value
 	}
 	if value, ok := fc.mutation.AvailableSlots(); ok {
 		_spec.SetField(flight.FieldAvailableSlots, field.TypeInt, value)

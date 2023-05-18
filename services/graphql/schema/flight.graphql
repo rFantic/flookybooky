@@ -11,6 +11,7 @@ type Flight {
     name: String!
     origin: Airport!
     destination: Airport!
+    total_slots: Int!
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
@@ -21,6 +22,7 @@ input FlightInput{
     name: String!
     originId: String!
     destinationId: String!
+    total_slots: Int!
     available_slots: Int!
     departure_time: String!
     arrival_time: String!

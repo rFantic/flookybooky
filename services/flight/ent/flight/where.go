@@ -81,6 +81,11 @@ func ArrivalTime(v time.Time) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldArrivalTime, v))
 }
 
+// TotalSlots applies equality check predicate on the "total_slots" field. It's identical to TotalSlotsEQ.
+func TotalSlots(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldTotalSlots, v))
+}
+
 // AvailableSlots applies equality check predicate on the "available_slots" field. It's identical to AvailableSlotsEQ.
 func AvailableSlots(v int) predicate.Flight {
 	return predicate.Flight(sql.FieldEQ(FieldAvailableSlots, v))
@@ -274,6 +279,46 @@ func ArrivalTimeLT(v time.Time) predicate.Flight {
 // ArrivalTimeLTE applies the LTE predicate on the "arrival_time" field.
 func ArrivalTimeLTE(v time.Time) predicate.Flight {
 	return predicate.Flight(sql.FieldLTE(FieldArrivalTime, v))
+}
+
+// TotalSlotsEQ applies the EQ predicate on the "total_slots" field.
+func TotalSlotsEQ(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldEQ(FieldTotalSlots, v))
+}
+
+// TotalSlotsNEQ applies the NEQ predicate on the "total_slots" field.
+func TotalSlotsNEQ(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldNEQ(FieldTotalSlots, v))
+}
+
+// TotalSlotsIn applies the In predicate on the "total_slots" field.
+func TotalSlotsIn(vs ...int) predicate.Flight {
+	return predicate.Flight(sql.FieldIn(FieldTotalSlots, vs...))
+}
+
+// TotalSlotsNotIn applies the NotIn predicate on the "total_slots" field.
+func TotalSlotsNotIn(vs ...int) predicate.Flight {
+	return predicate.Flight(sql.FieldNotIn(FieldTotalSlots, vs...))
+}
+
+// TotalSlotsGT applies the GT predicate on the "total_slots" field.
+func TotalSlotsGT(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldGT(FieldTotalSlots, v))
+}
+
+// TotalSlotsGTE applies the GTE predicate on the "total_slots" field.
+func TotalSlotsGTE(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldGTE(FieldTotalSlots, v))
+}
+
+// TotalSlotsLT applies the LT predicate on the "total_slots" field.
+func TotalSlotsLT(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldLT(FieldTotalSlots, v))
+}
+
+// TotalSlotsLTE applies the LTE predicate on the "total_slots" field.
+func TotalSlotsLTE(v int) predicate.Flight {
+	return predicate.Flight(sql.FieldLTE(FieldTotalSlots, v))
 }
 
 // AvailableSlotsEQ applies the EQ predicate on the "available_slots" field.

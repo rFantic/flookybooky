@@ -72,6 +72,7 @@ type Flight struct {
 	Name           string   `json:"name"`
 	Origin         *Airport `json:"origin"`
 	Destination    *Airport `json:"destination"`
+	TotalSlots     int      `json:"total_slots"`
 	AvailableSlots int      `json:"available_slots"`
 	DepartureTime  string   `json:"departure_time"`
 	ArrivalTime    string   `json:"arrival_time"`
@@ -82,6 +83,7 @@ type FlightInput struct {
 	Name           string       `json:"name"`
 	OriginID       string       `json:"originId"`
 	DestinationID  string       `json:"destinationId"`
+	TotalSlots     int          `json:"total_slots"`
 	AvailableSlots int          `json:"available_slots"`
 	DepartureTime  string       `json:"departure_time"`
 	ArrivalTime    string       `json:"arrival_time"`
