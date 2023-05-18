@@ -49,6 +49,8 @@ func (h *CustomerHandler) GetCustomers(ctx context.Context, req *pb.Pagination) 
 		query.Order(options...)
 		if req.Limit != nil {
 			query.Limit(int(*req.Limit))
+		} else {
+			query.Limit(10)
 		}
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
