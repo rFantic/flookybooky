@@ -20,6 +20,20 @@ func ParseTicketEntToPb(in *ent.Ticket) (out *pb.Ticket) {
 	return out
 }
 
+func ParseTicketsEntToPb(in []*ent.Ticket) (out *pb.Tickets) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.Tickets{
+		Tickets: make([]*pb.Ticket, len(in)),
+	}
+	copier.Copy(&out, in)
+	for i, a := range in {
+		out.Tickets[i] = ParseTicketEntToPb(a)
+	}
+	return out
+}
+
 func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	if in == nil {
 		return nil

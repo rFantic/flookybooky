@@ -169,10 +169,10 @@ func ParseTicketsPbToGraphqlTo(in *pb.Tickets) (out []*model.Ticket) {
 		return nil
 	}
 	out = make([]*model.Ticket, len(in.Tickets))
+	copier.Copy(&out, in)
 	for i, a := range in.Tickets {
 		out[i] = ParseTicketPbToGraphqlTo(a)
 	}
-	copier.Copy(&out, in)
 	return out
 }
 

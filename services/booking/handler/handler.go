@@ -51,6 +51,16 @@ func (h *BookingHandler) GetBookings(ctx context.Context, req *emptypb.Empty) (*
 	return internal.ParseBookingsEntToPb(bookingsRes), nil
 }
 
+func (h *BookingHandler) GetTickets(ctx context.Context, req *emptypb.Empty) (*pb.Tickets, error) {
+	query := h.client.Ticket.Query()
+	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	ticketsRes, err := query.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return internal.ParseTicketsEntToPb(ticketsRes), nil
+}
+
 func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.BookingInput) (*pb.Booking, error) {
 	_customerId, err := uuid.Parse(req.CustomerId)
 	if err != nil {

@@ -1,3 +1,18 @@
-# view ticket
+query getTicket {
+  ticket {
+    id
+    status
+    flight {
+      id
+      name
+    }
+    passenger_license_id
+    passenger_name
+    passenger_email
+    seat_number
+    ticket_class
+  }
+}
+
 # update_ticket
 # find ticket
