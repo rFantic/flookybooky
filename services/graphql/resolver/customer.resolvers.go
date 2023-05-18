@@ -35,8 +35,5 @@ func (r *mutationResolver) UpdateCustomer(ctx context.Context, input model.Custo
 func (r *queryResolver) Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error) {
 	customersRes, err := r.client.CustomerClient.GetCustomers(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
-	if err != nil {
-		return nil, err
-	}
-	return internal.ParseCustomersPbToGraphql(customersRes), nil
+	return internal.ParseCustomersPbToGraphql(customersRes), err
 }
