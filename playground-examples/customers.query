@@ -1,10 +1,8 @@
 query get_customers {
-  customers {
+  customers (input:{
+    ascFields: ["name", "address"]
+  }) {
     id
-    name
-    address
-    email
-    license_id
   }
 }
 
@@ -18,7 +16,7 @@ mutation update_customers {
 mutation create_customers {
   createCustomer(
     input: {
-      name: "near nguyen", 
+      name: "anear nguyen", 
       address: "fake address", 
       license_id: "034098021748", 
       phone_number: "0123456789"

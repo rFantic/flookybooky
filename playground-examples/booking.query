@@ -1,3 +1,4 @@
+
 mutation createBookingForGuest {
   createBookingForGuest(
     input: {
@@ -17,7 +18,7 @@ mutation createBookingForGuest {
         seat_number: "A4"
         ticket_class: FirstClass
       }
-      status: "Scheduled"
+      status: Scheduled
     }) {
     id
     customer {
@@ -30,42 +31,44 @@ mutation createBookingForGuest {
 mutation createBooking {
   createBooking(
     input: {
-      customerId: "4fac60dd-ed74-4af0-a992-5f61bc39a4dd", 
-      goingFlightId: "18a3eb63-d4f3-4715-bc4c-40c56475c4f1",
-      status: "Scheduled"
+      customerId: "36ccf135-697a-4275-a563-d22ac15bdcac", 
+      goingTicket: {
+        status: Scheduled
+        flight_id: "bee9ce15-0dfd-46e9-8c2c-8c96c2eacd96"
+        passenger_license_id: "034098001265"
+        passenger_name: "near.nguyen"
+        passenger_email: "near@gmail.com"
+        seat_number: "A4"
+        ticket_class: FirstClass
+      }
+      status: Scheduled
     }) {
     id
-    going_flight{
-      id
-      name
-    }
-    return_flight{
-      id
-    }
     customer {
       id
     }
-    status
   }
 }
 
 query getBookings {
   booking {
     id
-    going_flight {
+    going_ticket {
       id
-      name
-    }
-    return_flight{
-      id
-      name
+      status
+      flight {
+        name
+      }
     }
     customer {
       id
+      name
+      address
+      license_id
+      phone_number
+      email
     }
-    status
   }
 }
-
 # set_status
 # find booking
