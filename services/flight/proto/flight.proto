@@ -51,23 +51,10 @@ message Flights {
     repeated Flight flights = 1;
 }
 
-// message Seat {
-//     string id = 1;
-//     string seat_number = 2;
-//     Flight flight = 3;
-// }
-
-// message Seats {
-//     repeated Seat seats = 1;
-// }
-
 service FlightService {
     rpc PostAirport (Airport) returns (Airport) {}
     rpc GetAirport (UUID) returns (Airport) {}
     rpc GetAirports (google.protobuf.Empty) returns (Airports) {}
-    // rpc PostSeat (Seat) returns (Seat) {}
-    // rpc GetSeat (UUID) returns (Seat) {}
-    // rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
     rpc PostFlight (FlightInput) returns (Flight) {}
     rpc GetFlight (UUID) returns (Flight) {}
     rpc GetFlights (google.protobuf.Empty) returns (Flights) {}

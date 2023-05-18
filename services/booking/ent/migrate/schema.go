@@ -12,37 +12,47 @@ var (
 	BookingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "customer_id", Type: field.TypeUUID},
-		{Name: "going_flight_id", Type: field.TypeUUID},
-		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Scheduled", "Departed"}},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "going_ticket_id", Type: field.TypeUUID},
+		{Name: "return_ticket_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// BookingsTable holds the schema information for the "bookings" table.
 	BookingsTable = &schema.Table{
 		Name:       "bookings",
 		Columns:    BookingsColumns,
 		PrimaryKey: []*schema.Column{BookingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "bookings_tickets_going",
+				Columns:    []*schema.Column{BookingsColumns[4]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "bookings_tickets_return",
+				Columns:    []*schema.Column{BookingsColumns[5]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
-		{Name: "seat_id", Type: field.TypeUUID},
-		{Name: "license_id", Type: field.TypeString},
-		{Name: "booking_id", Type: field.TypeUUID},
+		{Name: "flight_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Departed", "Scheduled"}},
+		{Name: "passenger_name", Type: field.TypeString},
+		{Name: "passenger_license_id", Type: field.TypeString},
+		{Name: "passenger_email", Type: field.TypeString},
+		{Name: "seat_number", Type: field.TypeString},
+		{Name: "class", Type: field.TypeEnum, Enums: []string{"FirstClass", "BusinessClass", "EconomyClass"}},
 	}
 	// TicketsTable holds the schema information for the "tickets" table.
 	TicketsTable = &schema.Table{
 		Name:       "tickets",
 		Columns:    TicketsColumns,
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "tickets_bookings_ticket",
-				Columns:    []*schema.Column{TicketsColumns[3]},
-				RefColumns: []*schema.Column{BookingsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -52,5 +62,6 @@ var (
 )
 
 func init() {
-	TicketsTable.ForeignKeys[0].RefTable = BookingsTable
+	BookingsTable.ForeignKeys[0].RefTable = TicketsTable
+	BookingsTable.ForeignKeys[1].RefTable = TicketsTable
 }

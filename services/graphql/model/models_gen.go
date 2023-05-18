@@ -21,17 +21,17 @@ type AirportInput struct {
 
 type Booking struct {
 	ID           string    `json:"id"`
-	GoingFlight  *Flight   `json:"going_flight"`
-	ReturnFlight *Flight   `json:"return_flight,omitempty"`
+	GoingTicket  *Ticket   `json:"going_ticket"`
+	ReturnTicket *Ticket   `json:"return_ticket,omitempty"`
 	Customer     *Customer `json:"customer"`
 	Status       string    `json:"status"`
 }
 
 type BookingInput struct {
-	CustomerID     string  `json:"customerId"`
-	GoingFlightID  string  `json:"goingFlightId"`
-	ReturnFlightID *string `json:"returnFlightId,omitempty"`
-	Status         string  `json:"status"`
+	CustomerID   string       `json:"customerId"`
+	GoingTicket  *TicketInput `json:"goingTicket"`
+	ReturnTicket *TicketInput `json:"returnTicket,omitempty"`
+	Status       string       `json:"status"`
 }
 
 type Customer struct {
@@ -72,24 +72,24 @@ type Flight struct {
 }
 
 type FlightInput struct {
-	Name           string `json:"name"`
-	OriginID       string `json:"originId"`
-	DestinationID  string `json:"destinationId"`
-	AvailableSlots int    `json:"available_slots"`
-	DepartureTime  string `json:"departure_time"`
-	ArrivalTime    string `json:"arrival_time"`
-	Status         string `json:"status"`
+	Name           string       `json:"name"`
+	OriginID       string       `json:"originId"`
+	DestinationID  string       `json:"destinationId"`
+	AvailableSlots int          `json:"available_slots"`
+	DepartureTime  string       `json:"departure_time"`
+	ArrivalTime    string       `json:"arrival_time"`
+	Status         FlightStatus `json:"status"`
 }
 
 type FlightUpdateInput struct {
-	ID             string  `json:"id"`
-	Name           *string `json:"name,omitempty"`
-	OriginID       *string `json:"originId,omitempty"`
-	DestinationID  *string `json:"destinationId,omitempty"`
-	AvailableSlots *int    `json:"available_slots,omitempty"`
-	DepartureTime  *string `json:"departure_time,omitempty"`
-	ArrivalTime    *string `json:"arrival_time,omitempty"`
-	Status         *string `json:"status,omitempty"`
+	ID             string        `json:"id"`
+	Name           *string       `json:"name,omitempty"`
+	OriginID       *string       `json:"originId,omitempty"`
+	DestinationID  *string       `json:"destinationId,omitempty"`
+	AvailableSlots *int          `json:"available_slots,omitempty"`
+	DepartureTime  *string       `json:"departure_time,omitempty"`
+	ArrivalTime    *string       `json:"arrival_time,omitempty"`
+	Status         *FlightStatus `json:"status,omitempty"`
 }
 
 type LoginInfo struct {
@@ -114,6 +114,27 @@ type PasswordUpdateInput struct {
 	NewPassword      string `json:"new_password"`
 }
 
+type Ticket struct {
+	ID                 string       `json:"id"`
+	Status             TicketStatus `json:"status"`
+	Flight             *Flight      `json:"flight"`
+	PassengerLicenseID string       `json:"passenger_license_id"`
+	PassengerName      string       `json:"passenger_name"`
+	PassengerEmail     string       `json:"passenger_email"`
+	SeatNumber         string       `json:"seat_number"`
+	TicketClass        TicketClass  `json:"ticket_class"`
+}
+
+type TicketInput struct {
+	Status             TicketStatus `json:"status"`
+	FlightID           string       `json:"flight_id"`
+	PassengerLicenseID string       `json:"passenger_license_id"`
+	PassengerName      string       `json:"passenger_name"`
+	PassengerEmail     string       `json:"passenger_email"`
+	SeatNumber         string       `json:"seat_number"`
+	TicketClass        TicketClass  `json:"ticket_class"`
+}
+
 type User struct {
 	ID       string    `json:"id"`
 	Username string    `json:"username"`
@@ -134,6 +155,53 @@ type UserUpdateInput struct {
 	ID    string  `json:"id"`
 	Email *string `json:"email,omitempty"`
 	Role  *string `json:"role,omitempty"`
+}
+
+type FlightStatus string
+
+const (
+	FlightStatusCanceled  FlightStatus = "Canceled"
+	FlightStatusDeparted  FlightStatus = "Departed"
+	FlightStatusLanded    FlightStatus = "Landed"
+	FlightStatusScheduled FlightStatus = "Scheduled"
+	FlightStatusDelayed   FlightStatus = "Delayed"
+)
+
+var AllFlightStatus = []FlightStatus{
+	FlightStatusCanceled,
+	FlightStatusDeparted,
+	FlightStatusLanded,
+	FlightStatusScheduled,
+	FlightStatusDelayed,
+}
+
+func (e FlightStatus) IsValid() bool {
+	switch e {
+	case FlightStatusCanceled, FlightStatusDeparted, FlightStatusLanded, FlightStatusScheduled, FlightStatusDelayed:
+		return true
+	}
+	return false
+}
+
+func (e FlightStatus) String() string {
+	return string(e)
+}
+
+func (e *FlightStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlightStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlightStatus", str)
+	}
+	return nil
+}
+
+func (e FlightStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type Role string
@@ -174,5 +242,91 @@ func (e *Role) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Role) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TicketClass string
+
+const (
+	TicketClassFirstClass    TicketClass = "FirstClass"
+	TicketClassBusinessClass TicketClass = "BusinessClass"
+	TicketClassEconomyClass  TicketClass = "EconomyClass"
+)
+
+var AllTicketClass = []TicketClass{
+	TicketClassFirstClass,
+	TicketClassBusinessClass,
+	TicketClassEconomyClass,
+}
+
+func (e TicketClass) IsValid() bool {
+	switch e {
+	case TicketClassFirstClass, TicketClassBusinessClass, TicketClassEconomyClass:
+		return true
+	}
+	return false
+}
+
+func (e TicketClass) String() string {
+	return string(e)
+}
+
+func (e *TicketClass) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TicketClass(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TicketClass", str)
+	}
+	return nil
+}
+
+func (e TicketClass) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TicketStatus string
+
+const (
+	TicketStatusCanceled  TicketStatus = "Canceled"
+	TicketStatusDeparted  TicketStatus = "Departed"
+	TicketStatusScheduled TicketStatus = "Scheduled"
+)
+
+var AllTicketStatus = []TicketStatus{
+	TicketStatusCanceled,
+	TicketStatusDeparted,
+	TicketStatusScheduled,
+}
+
+func (e TicketStatus) IsValid() bool {
+	switch e {
+	case TicketStatusCanceled, TicketStatusDeparted, TicketStatusScheduled:
+		return true
+	}
+	return false
+}
+
+func (e TicketStatus) String() string {
+	return string(e)
+}
+
+func (e *TicketStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TicketStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TicketStatus", str)
+	}
+	return nil
+}
+
+func (e TicketStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

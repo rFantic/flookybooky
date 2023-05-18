@@ -7,7 +7,6 @@ import (
 	"errors"
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/seat"
 	"fmt"
 	"time"
 
@@ -91,21 +90,6 @@ func (fc *FlightCreate) SetNillableID(u *uuid.UUID) *FlightCreate {
 		fc.SetID(*u)
 	}
 	return fc
-}
-
-// AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
-func (fc *FlightCreate) AddSeatIDs(ids ...uuid.UUID) *FlightCreate {
-	fc.mutation.AddSeatIDs(ids...)
-	return fc
-}
-
-// AddSeats adds the "seats" edges to the Seat entity.
-func (fc *FlightCreate) AddSeats(s ...*Seat) *FlightCreate {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return fc.AddSeatIDs(ids...)
 }
 
 // SetOrigin sets the "origin" edge to the Airport entity.
@@ -264,22 +248,6 @@ func (fc *FlightCreate) createSpec() (*Flight, *sqlgraph.CreateSpec) {
 	if value, ok := fc.mutation.CreatedAt(); ok {
 		_spec.SetField(flight.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
-	}
-	if nodes := fc.mutation.SeatsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := fc.mutation.OriginIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -12,7 +12,6 @@ import (
 
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/seat"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -30,8 +29,6 @@ type Client struct {
 	Airport *AirportClient
 	// Flight is the client for interacting with the Flight builders.
 	Flight *FlightClient
-	// Seat is the client for interacting with the Seat builders.
-	Seat *SeatClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -47,7 +44,6 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Airport = NewAirportClient(c.config)
 	c.Flight = NewFlightClient(c.config)
-	c.Seat = NewSeatClient(c.config)
 }
 
 type (
@@ -132,7 +128,6 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:  cfg,
 		Airport: NewAirportClient(cfg),
 		Flight:  NewFlightClient(cfg),
-		Seat:    NewSeatClient(cfg),
 	}, nil
 }
 
@@ -154,7 +149,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:  cfg,
 		Airport: NewAirportClient(cfg),
 		Flight:  NewFlightClient(cfg),
-		Seat:    NewSeatClient(cfg),
 	}, nil
 }
 
@@ -185,7 +179,6 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Airport.Use(hooks...)
 	c.Flight.Use(hooks...)
-	c.Seat.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
@@ -193,7 +186,6 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Airport.Intercept(interceptors...)
 	c.Flight.Intercept(interceptors...)
-	c.Seat.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -203,8 +195,6 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Airport.mutate(ctx, m)
 	case *FlightMutation:
 		return c.Flight.mutate(ctx, m)
-	case *SeatMutation:
-		return c.Seat.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -453,22 +443,6 @@ func (c *FlightClient) GetX(ctx context.Context, id uuid.UUID) *Flight {
 	return obj
 }
 
-// QuerySeats queries the seats edge of a Flight.
-func (c *FlightClient) QuerySeats(f *Flight) *SeatQuery {
-	query := (&SeatClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := f.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(flight.Table, flight.FieldID, id),
-			sqlgraph.To(seat.Table, seat.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, flight.SeatsTable, flight.SeatsColumn),
-		)
-		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryOrigin queries the origin edge of a Flight.
 func (c *FlightClient) QueryOrigin(f *Flight) *AirportQuery {
 	query := (&AirportClient{config: c.config}).Query()
@@ -526,146 +500,12 @@ func (c *FlightClient) mutate(ctx context.Context, m *FlightMutation) (Value, er
 	}
 }
 
-// SeatClient is a client for the Seat schema.
-type SeatClient struct {
-	config
-}
-
-// NewSeatClient returns a client for the Seat from the given config.
-func NewSeatClient(c config) *SeatClient {
-	return &SeatClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `seat.Hooks(f(g(h())))`.
-func (c *SeatClient) Use(hooks ...Hook) {
-	c.hooks.Seat = append(c.hooks.Seat, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `seat.Intercept(f(g(h())))`.
-func (c *SeatClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Seat = append(c.inters.Seat, interceptors...)
-}
-
-// Create returns a builder for creating a Seat entity.
-func (c *SeatClient) Create() *SeatCreate {
-	mutation := newSeatMutation(c.config, OpCreate)
-	return &SeatCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Seat entities.
-func (c *SeatClient) CreateBulk(builders ...*SeatCreate) *SeatCreateBulk {
-	return &SeatCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Seat.
-func (c *SeatClient) Update() *SeatUpdate {
-	mutation := newSeatMutation(c.config, OpUpdate)
-	return &SeatUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SeatClient) UpdateOne(s *Seat) *SeatUpdateOne {
-	mutation := newSeatMutation(c.config, OpUpdateOne, withSeat(s))
-	return &SeatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SeatClient) UpdateOneID(id uuid.UUID) *SeatUpdateOne {
-	mutation := newSeatMutation(c.config, OpUpdateOne, withSeatID(id))
-	return &SeatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Seat.
-func (c *SeatClient) Delete() *SeatDelete {
-	mutation := newSeatMutation(c.config, OpDelete)
-	return &SeatDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SeatClient) DeleteOne(s *Seat) *SeatDeleteOne {
-	return c.DeleteOneID(s.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SeatClient) DeleteOneID(id uuid.UUID) *SeatDeleteOne {
-	builder := c.Delete().Where(seat.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SeatDeleteOne{builder}
-}
-
-// Query returns a query builder for Seat.
-func (c *SeatClient) Query() *SeatQuery {
-	return &SeatQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSeat},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Seat entity by its id.
-func (c *SeatClient) Get(ctx context.Context, id uuid.UUID) (*Seat, error) {
-	return c.Query().Where(seat.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SeatClient) GetX(ctx context.Context, id uuid.UUID) *Seat {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryFlight queries the flight edge of a Seat.
-func (c *SeatClient) QueryFlight(s *Seat) *FlightQuery {
-	query := (&FlightClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := s.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(seat.Table, seat.FieldID, id),
-			sqlgraph.To(flight.Table, flight.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, seat.FlightTable, seat.FlightColumn),
-		)
-		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SeatClient) Hooks() []Hook {
-	return c.hooks.Seat
-}
-
-// Interceptors returns the client interceptors.
-func (c *SeatClient) Interceptors() []Interceptor {
-	return c.inters.Seat
-}
-
-func (c *SeatClient) mutate(ctx context.Context, m *SeatMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SeatCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SeatUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SeatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SeatDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Seat mutation op: %q", m.Op())
-	}
-}
-
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Airport, Flight, Seat []ent.Hook
+		Airport, Flight []ent.Hook
 	}
 	inters struct {
-		Airport, Flight, Seat []ent.Interceptor
+		Airport, Flight []ent.Interceptor
 	}
 )

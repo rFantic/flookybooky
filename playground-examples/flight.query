@@ -37,7 +37,6 @@ query getFlights {
   }
 }
 
-# update_flight
 # cancel_flight -> cancel_booking -> cancel_ticket
 # create_seats
 # find flight

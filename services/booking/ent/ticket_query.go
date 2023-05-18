@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/predicate"
 	"flookybooky/services/booking/ent/ticket"
@@ -19,11 +20,12 @@ import (
 // TicketQuery is the builder for querying Ticket entities.
 type TicketQuery struct {
 	config
-	ctx         *QueryContext
-	order       []ticket.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Ticket
-	withBooking *BookingQuery
+	ctx        *QueryContext
+	order      []ticket.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Ticket
+	withGoing  *BookingQuery
+	withReturn *BookingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,8 +62,8 @@ func (tq *TicketQuery) Order(o ...ticket.OrderOption) *TicketQuery {
 	return tq
 }
 
-// QueryBooking chains the current query on the "booking" edge.
-func (tq *TicketQuery) QueryBooking() *BookingQuery {
+// QueryGoing chains the current query on the "going" edge.
+func (tq *TicketQuery) QueryGoing() *BookingQuery {
 	query := (&BookingClient{config: tq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := tq.prepareQuery(ctx); err != nil {
@@ -74,7 +76,29 @@ func (tq *TicketQuery) QueryBooking() *BookingQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.BookingTable, ticket.BookingColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.GoingTable, ticket.GoingColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReturn chains the current query on the "return" edge.
+func (tq *TicketQuery) QueryReturn() *BookingQuery {
+	query := (&BookingClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(booking.Table, booking.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ReturnTable, ticket.ReturnColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,26 +293,38 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		return nil
 	}
 	return &TicketQuery{
-		config:      tq.config,
-		ctx:         tq.ctx.Clone(),
-		order:       append([]ticket.OrderOption{}, tq.order...),
-		inters:      append([]Interceptor{}, tq.inters...),
-		predicates:  append([]predicate.Ticket{}, tq.predicates...),
-		withBooking: tq.withBooking.Clone(),
+		config:     tq.config,
+		ctx:        tq.ctx.Clone(),
+		order:      append([]ticket.OrderOption{}, tq.order...),
+		inters:     append([]Interceptor{}, tq.inters...),
+		predicates: append([]predicate.Ticket{}, tq.predicates...),
+		withGoing:  tq.withGoing.Clone(),
+		withReturn: tq.withReturn.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
 	}
 }
 
-// WithBooking tells the query-builder to eager-load the nodes that are connected to
-// the "booking" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TicketQuery) WithBooking(opts ...func(*BookingQuery)) *TicketQuery {
+// WithGoing tells the query-builder to eager-load the nodes that are connected to
+// the "going" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithGoing(opts ...func(*BookingQuery)) *TicketQuery {
 	query := (&BookingClient{config: tq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tq.withBooking = query
+	tq.withGoing = query
+	return tq
+}
+
+// WithReturn tells the query-builder to eager-load the nodes that are connected to
+// the "return" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithReturn(opts ...func(*BookingQuery)) *TicketQuery {
+	query := (&BookingClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withReturn = query
 	return tq
 }
 
@@ -298,12 +334,12 @@ func (tq *TicketQuery) WithBooking(opts ...func(*BookingQuery)) *TicketQuery {
 // Example:
 //
 //	var v []struct {
-//		BookingID uuid.UUID `json:"booking_id,omitempty"`
+//		FlightID uuid.UUID `json:"flight_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		GroupBy(ticket.FieldBookingID).
+//		GroupBy(ticket.FieldFlightID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
@@ -321,11 +357,11 @@ func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
 // Example:
 //
 //	var v []struct {
-//		BookingID uuid.UUID `json:"booking_id,omitempty"`
+//		FlightID uuid.UUID `json:"flight_id,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		Select(ticket.FieldBookingID).
+//		Select(ticket.FieldFlightID).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) Select(fields ...string) *TicketSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
@@ -370,8 +406,9 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	var (
 		nodes       = []*Ticket{}
 		_spec       = tq.querySpec()
-		loadedTypes = [1]bool{
-			tq.withBooking != nil,
+		loadedTypes = [2]bool{
+			tq.withGoing != nil,
+			tq.withReturn != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -392,41 +429,83 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withBooking; query != nil {
-		if err := tq.loadBooking(ctx, query, nodes, nil,
-			func(n *Ticket, e *Booking) { n.Edges.Booking = e }); err != nil {
+	if query := tq.withGoing; query != nil {
+		if err := tq.loadGoing(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Going = []*Booking{} },
+			func(n *Ticket, e *Booking) { n.Edges.Going = append(n.Edges.Going, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withReturn; query != nil {
+		if err := tq.loadReturn(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Return = []*Booking{} },
+			func(n *Ticket, e *Booking) { n.Edges.Return = append(n.Edges.Return, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (tq *TicketQuery) loadBooking(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Ticket)
+func (tq *TicketQuery) loadGoing(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Ticket)
 	for i := range nodes {
-		fk := nodes[i].BookingID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(booking.FieldGoingTicketID)
 	}
-	query.Where(booking.IDIn(ids...))
+	query.Where(predicate.Booking(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.GoingColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.GoingTicketID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "booking_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "going_ticket_id" returned %v for node %v`, fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadReturn(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
 		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(booking.FieldReturnTicketID)
+	}
+	query.Where(predicate.Booking(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.ReturnColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ReturnTicketID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "return_ticket_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "return_ticket_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -455,9 +534,6 @@ func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != ticket.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if tq.withBooking != nil {
-			_spec.Node.AddColumnOnce(ticket.FieldBookingID)
 		}
 	}
 	if ps := tq.predicates; len(ps) > 0 {

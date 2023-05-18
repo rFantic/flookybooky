@@ -1,3 +1,11 @@
+enum FlightStatus{
+    Canceled
+    Departed
+    Landed
+    Scheduled
+    Delayed
+}
+
 type Flight {
     id: String!
     name: String!
@@ -16,7 +24,7 @@ input FlightInput{
     available_slots: Int!
     departure_time: String!
     arrival_time: String!
-    status: String!
+    status: FlightStatus!
 }
 
 input FlightUpdateInput{
@@ -27,7 +35,7 @@ input FlightUpdateInput{
     available_slots: Int
     departure_time: String
     arrival_time: String
-    status: String
+    status: FlightStatus
 }
 
 extend type Query {

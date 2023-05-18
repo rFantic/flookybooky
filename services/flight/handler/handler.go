@@ -106,12 +106,14 @@ func (h *FlightHandler) UpdateFlight(ctx context.Context, req *pb.FlightUpdateIn
 	if err != nil {
 		return nil, err
 	}
-	if res.Status != "Scheduled" {
-		return nil, fmt.Errorf("flight already departed")
-	}
 	query := h.client.Flight.UpdateOneID(_flightId)
 	if req.Status != nil {
-		query.SetStatus(flight.Status(*req.Status))
+		if *req.Status != "Scheduled" {
+			query.SetStatus(flight.Status(*req.Status))
+		}
+	}
+	if res.Status != "Scheduled" {
+		return nil, fmt.Errorf("flight already departed")
 	}
 	if req.ArrivalTime != nil {
 		query.SetArrivalTime(req.ArrivalTime.AsTime())

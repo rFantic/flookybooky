@@ -11,6 +11,3 @@ type Airport func(*sql.Selector)
 
 // Flight is the predicate function for flight builders.
 type Flight func(*sql.Selector)
-
-// Seat is the predicate function for seat builders.
-type Seat func(*sql.Selector)

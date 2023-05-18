@@ -1,15 +1,15 @@
 type Booking {
     id: String!
-    going_flight: Flight!
-    return_flight: Flight
+    going_ticket: Ticket!
+    return_ticket: Ticket
     customer: Customer!
     status: String!
 }
 
 input BookingInput{
     customerId: String!
-    goingFlightId: String!
-    returnFlightId: String
+    goingTicket: TicketInput!
+    returnTicket: TicketInput
     status: String!
 }
 

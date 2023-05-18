@@ -1,7 +1,6 @@
 syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "internal/proto/common.proto";
-import "services/flight/proto/flight.proto";
 import "services/customer/proto/customer.proto";
 package pb;
 option go_package = "./;pb";
@@ -9,8 +8,8 @@ option go_package = "./;pb";
 message Booking {
     string id = 1;
     Customer customer = 2;
-    Flight going_flight = 3;
-    Flight return_flight = 4;
+    Ticket going_ticket = 3;
+    Ticket return_ticket = 4;
     string status = 5;
 }
 
@@ -20,16 +19,30 @@ message Bookings {
 
 message BookingInput {
     string customer_id = 1;
-    string going_flight_id = 2;
-    optional string return_flight_id = 3;
+    TicketInput going_ticket = 2;
+    optional TicketInput return_ticket = 3;
     string status = 4;
 }
 
 message Ticket {
     string id = 1;
-    string booking_id = 2;
-    string seat_id = 3;
-    string license_id = 4;
+    string flight_id = 2;
+    string passenger_license_id = 3;
+    string passenger_name = 4;
+    string passenger_email = 5;
+    string seat_number = 6;
+    string class = 7;
+    string status = 8;
+}
+
+message TicketInput {
+    string flight_id = 2;
+    string passenger_license_id = 3;
+    string passenger_name = 4;
+    string passenger_email = 5;
+    string seat_number = 6;
+    string class = 7;
+    string status = 8;
 }
 
 message Tickets {
@@ -41,7 +54,6 @@ service BookingService {
     rpc GetBooking (UUID) returns (Booking) {}
     rpc GetBookings (google.protobuf.Empty) returns (Bookings) {}
 
-    rpc PostTicket (Ticket) returns (Ticket) {}
     rpc GetTicket (UUID) returns (Ticket) {}
     rpc GetTickets (google.protobuf.Empty) returns (Tickets) {}
 }

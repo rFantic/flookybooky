@@ -8,7 +8,6 @@ import (
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/predicate"
-	"flookybooky/services/flight/ent/seat"
 	"fmt"
 	"sync"
 	"time"
@@ -29,7 +28,6 @@ const (
 	// Node types.
 	TypeAirport = "Airport"
 	TypeFlight  = "Flight"
-	TypeSeat    = "Seat"
 )
 
 // AirportMutation represents an operation that mutates the Airport nodes in the graph.
@@ -608,9 +606,6 @@ type FlightMutation struct {
 	status             *flight.Status
 	created_at         *time.Time
 	clearedFields      map[string]struct{}
-	seats              map[uuid.UUID]struct{}
-	removedseats       map[uuid.UUID]struct{}
-	clearedseats       bool
 	origin             *uuid.UUID
 	clearedorigin      bool
 	destination        *uuid.UUID
@@ -1032,60 +1027,6 @@ func (m *FlightMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddSeatIDs adds the "seats" edge to the Seat entity by ids.
-func (m *FlightMutation) AddSeatIDs(ids ...uuid.UUID) {
-	if m.seats == nil {
-		m.seats = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.seats[ids[i]] = struct{}{}
-	}
-}
-
-// ClearSeats clears the "seats" edge to the Seat entity.
-func (m *FlightMutation) ClearSeats() {
-	m.clearedseats = true
-}
-
-// SeatsCleared reports if the "seats" edge to the Seat entity was cleared.
-func (m *FlightMutation) SeatsCleared() bool {
-	return m.clearedseats
-}
-
-// RemoveSeatIDs removes the "seats" edge to the Seat entity by IDs.
-func (m *FlightMutation) RemoveSeatIDs(ids ...uuid.UUID) {
-	if m.removedseats == nil {
-		m.removedseats = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.seats, ids[i])
-		m.removedseats[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedSeats returns the removed IDs of the "seats" edge to the Seat entity.
-func (m *FlightMutation) RemovedSeatsIDs() (ids []uuid.UUID) {
-	for id := range m.removedseats {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// SeatsIDs returns the "seats" edge IDs in the mutation.
-func (m *FlightMutation) SeatsIDs() (ids []uuid.UUID) {
-	for id := range m.seats {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetSeats resets all changes to the "seats" edge.
-func (m *FlightMutation) ResetSeats() {
-	m.seats = nil
-	m.clearedseats = false
-	m.removedseats = nil
-}
-
 // ClearOrigin clears the "origin" edge to the Airport entity.
 func (m *FlightMutation) ClearOrigin() {
 	m.clearedorigin = true
@@ -1418,10 +1359,7 @@ func (m *FlightMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *FlightMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.seats != nil {
-		edges = append(edges, flight.EdgeSeats)
-	}
+	edges := make([]string, 0, 2)
 	if m.origin != nil {
 		edges = append(edges, flight.EdgeOrigin)
 	}
@@ -1435,12 +1373,6 @@ func (m *FlightMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *FlightMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case flight.EdgeSeats:
-		ids := make([]ent.Value, 0, len(m.seats))
-		for id := range m.seats {
-			ids = append(ids, id)
-		}
-		return ids
 	case flight.EdgeOrigin:
 		if id := m.origin; id != nil {
 			return []ent.Value{*id}
@@ -1455,33 +1387,19 @@ func (m *FlightMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *FlightMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.removedseats != nil {
-		edges = append(edges, flight.EdgeSeats)
-	}
+	edges := make([]string, 0, 2)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *FlightMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case flight.EdgeSeats:
-		ids := make([]ent.Value, 0, len(m.removedseats))
-		for id := range m.removedseats {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *FlightMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.clearedseats {
-		edges = append(edges, flight.EdgeSeats)
-	}
+	edges := make([]string, 0, 2)
 	if m.clearedorigin {
 		edges = append(edges, flight.EdgeOrigin)
 	}
@@ -1495,8 +1413,6 @@ func (m *FlightMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *FlightMutation) EdgeCleared(name string) bool {
 	switch name {
-	case flight.EdgeSeats:
-		return m.clearedseats
 	case flight.EdgeOrigin:
 		return m.clearedorigin
 	case flight.EdgeDestination:
@@ -1523,9 +1439,6 @@ func (m *FlightMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *FlightMutation) ResetEdge(name string) error {
 	switch name {
-	case flight.EdgeSeats:
-		m.ResetSeats()
-		return nil
 	case flight.EdgeOrigin:
 		m.ResetOrigin()
 		return nil
@@ -1534,403 +1447,4 @@ func (m *FlightMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Flight edge %s", name)
-}
-
-// SeatMutation represents an operation that mutates the Seat nodes in the graph.
-type SeatMutation struct {
-	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	seat_number   *string
-	clearedFields map[string]struct{}
-	flight        *uuid.UUID
-	clearedflight bool
-	done          bool
-	oldValue      func(context.Context) (*Seat, error)
-	predicates    []predicate.Seat
-}
-
-var _ ent.Mutation = (*SeatMutation)(nil)
-
-// seatOption allows management of the mutation configuration using functional options.
-type seatOption func(*SeatMutation)
-
-// newSeatMutation creates new mutation for the Seat entity.
-func newSeatMutation(c config, op Op, opts ...seatOption) *SeatMutation {
-	m := &SeatMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeSeat,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withSeatID sets the ID field of the mutation.
-func withSeatID(id uuid.UUID) seatOption {
-	return func(m *SeatMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *Seat
-		)
-		m.oldValue = func(ctx context.Context) (*Seat, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().Seat.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withSeat sets the old Seat of the mutation.
-func withSeat(node *Seat) seatOption {
-	return func(m *SeatMutation) {
-		m.oldValue = func(context.Context) (*Seat, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m SeatMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m SeatMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Seat entities.
-func (m *SeatMutation) SetID(id uuid.UUID) {
-	m.id = &id
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *SeatMutation) ID() (id uuid.UUID, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *SeatMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []uuid.UUID{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Seat.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// SetSeatNumber sets the "seat_number" field.
-func (m *SeatMutation) SetSeatNumber(s string) {
-	m.seat_number = &s
-}
-
-// SeatNumber returns the value of the "seat_number" field in the mutation.
-func (m *SeatMutation) SeatNumber() (r string, exists bool) {
-	v := m.seat_number
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSeatNumber returns the old "seat_number" field's value of the Seat entity.
-// If the Seat object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SeatMutation) OldSeatNumber(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSeatNumber is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSeatNumber requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSeatNumber: %w", err)
-	}
-	return oldValue.SeatNumber, nil
-}
-
-// ResetSeatNumber resets all changes to the "seat_number" field.
-func (m *SeatMutation) ResetSeatNumber() {
-	m.seat_number = nil
-}
-
-// SetFlightID sets the "flight" edge to the Flight entity by id.
-func (m *SeatMutation) SetFlightID(id uuid.UUID) {
-	m.flight = &id
-}
-
-// ClearFlight clears the "flight" edge to the Flight entity.
-func (m *SeatMutation) ClearFlight() {
-	m.clearedflight = true
-}
-
-// FlightCleared reports if the "flight" edge to the Flight entity was cleared.
-func (m *SeatMutation) FlightCleared() bool {
-	return m.clearedflight
-}
-
-// FlightID returns the "flight" edge ID in the mutation.
-func (m *SeatMutation) FlightID() (id uuid.UUID, exists bool) {
-	if m.flight != nil {
-		return *m.flight, true
-	}
-	return
-}
-
-// FlightIDs returns the "flight" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// FlightID instead. It exists only for internal usage by the builders.
-func (m *SeatMutation) FlightIDs() (ids []uuid.UUID) {
-	if id := m.flight; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetFlight resets all changes to the "flight" edge.
-func (m *SeatMutation) ResetFlight() {
-	m.flight = nil
-	m.clearedflight = false
-}
-
-// Where appends a list predicates to the SeatMutation builder.
-func (m *SeatMutation) Where(ps ...predicate.Seat) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// WhereP appends storage-level predicates to the SeatMutation builder. Using this method,
-// users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *SeatMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.Seat, len(ps))
-	for i := range ps {
-		p[i] = ps[i]
-	}
-	m.Where(p...)
-}
-
-// Op returns the operation name.
-func (m *SeatMutation) Op() Op {
-	return m.op
-}
-
-// SetOp allows setting the mutation operation.
-func (m *SeatMutation) SetOp(op Op) {
-	m.op = op
-}
-
-// Type returns the node type of this mutation (Seat).
-func (m *SeatMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *SeatMutation) Fields() []string {
-	fields := make([]string, 0, 1)
-	if m.seat_number != nil {
-		fields = append(fields, seat.FieldSeatNumber)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *SeatMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case seat.FieldSeatNumber:
-		return m.SeatNumber()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *SeatMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case seat.FieldSeatNumber:
-		return m.OldSeatNumber(ctx)
-	}
-	return nil, fmt.Errorf("unknown Seat field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SeatMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case seat.FieldSeatNumber:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSeatNumber(v)
-		return nil
-	}
-	return fmt.Errorf("unknown Seat field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *SeatMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *SeatMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SeatMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown Seat numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *SeatMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *SeatMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *SeatMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Seat nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *SeatMutation) ResetField(name string) error {
-	switch name {
-	case seat.FieldSeatNumber:
-		m.ResetSeatNumber()
-		return nil
-	}
-	return fmt.Errorf("unknown Seat field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *SeatMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.flight != nil {
-		edges = append(edges, seat.EdgeFlight)
-	}
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *SeatMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case seat.EdgeFlight:
-		if id := m.flight; id != nil {
-			return []ent.Value{*id}
-		}
-	}
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *SeatMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *SeatMutation) RemovedIDs(name string) []ent.Value {
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *SeatMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedflight {
-		edges = append(edges, seat.EdgeFlight)
-	}
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *SeatMutation) EdgeCleared(name string) bool {
-	switch name {
-	case seat.EdgeFlight:
-		return m.clearedflight
-	}
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *SeatMutation) ClearEdge(name string) error {
-	switch name {
-	case seat.EdgeFlight:
-		m.ClearFlight()
-		return nil
-	}
-	return fmt.Errorf("unknown Seat unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *SeatMutation) ResetEdge(name string) error {
-	switch name {
-	case seat.EdgeFlight:
-		m.ResetFlight()
-		return nil
-	}
-	return fmt.Errorf("unknown Seat edge %s", name)
 }

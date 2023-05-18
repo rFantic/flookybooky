@@ -137,16 +137,57 @@ func ParseFlightsPbToGraphql(in *pb.Flights) (out []*model.Flight) {
 	return out
 }
 
+func ParseTicketInputGraphqlToPb(in *model.TicketInput) (out *pb.TicketInput) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.TicketInput{
+		FlightId:           in.FlightID,
+		PassengerLicenseId: in.PassengerLicenseID,
+		Class:              in.TicketClass.String(),
+	}
+	copier.Copy(&out, in)
+	return out
+}
+
+func ParseTicketPbToGraphqlTo(in *pb.Ticket) (out *model.Ticket) {
+	if in == nil {
+		return nil
+	}
+	out = &model.Ticket{
+		PassengerLicenseID: in.PassengerLicenseId,
+		ID:                 in.Id,
+		TicketClass:        model.TicketClass(in.Class),
+	}
+	copier.Copy(&out, in)
+	out.Flight = &model.Flight{ID: in.FlightId}
+	return out
+}
+
+func ParseTicketsPbToGraphqlTo(in *pb.Tickets) (out []*model.Ticket) {
+	if in == nil {
+		return nil
+	}
+	out = make([]*model.Ticket, len(in.Tickets))
+	for i, a := range in.Tickets {
+		out[i] = ParseTicketPbToGraphqlTo(a)
+	}
+	copier.Copy(&out, in)
+	return out
+}
+
 func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput) {
 	if in == nil {
 		return nil
 	}
 	out = &pb.BookingInput{
-		CustomerId:    in.CustomerID,
-		GoingFlightId: in.GoingFlightID,
+		CustomerId: in.CustomerID,
 	}
-	if in.ReturnFlightID != nil {
-		out.ReturnFlightId = in.ReturnFlightID
+	if in.GoingTicket != nil {
+		out.GoingTicket = ParseTicketInputGraphqlToPb(in.GoingTicket)
+	}
+	if in.ReturnTicket != nil {
+		out.GoingTicket = ParseTicketInputGraphqlToPb(in.ReturnTicket)
 	}
 	copier.Copy(&out, in)
 	return out
@@ -159,6 +200,7 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 	out = &model.Booking{
 		ID: in.GetId(),
 	}
+	copier.Copy(&out, in)
 	if in.Customer != nil {
 		out.Customer = &model.Customer{
 			ID:        in.Customer.GetId(),
@@ -166,17 +208,11 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 		}
 		copier.Copy(&out.Customer, in.Customer)
 	}
-	if in.GoingFlight != nil {
-		out.GoingFlight = &model.Flight{
-			ID: in.GoingFlight.Id,
-		}
-		copier.Copy(&out.GoingFlight, in.GoingFlight)
+	if in.GoingTicket != nil {
+		out.GoingTicket = ParseTicketPbToGraphqlTo(in.GoingTicket)
 	}
-	if in.ReturnFlight != nil {
-		out.ReturnFlight = &model.Flight{
-			ID: in.ReturnFlight.Id,
-		}
-		copier.Copy(&out.ReturnFlight, in.ReturnFlight)
+	if in.ReturnTicket != nil {
+		out.ReturnTicket = ParseTicketPbToGraphqlTo(in.ReturnTicket)
 	}
 	return out
 }
@@ -186,30 +222,9 @@ func ParseBookingsPbToGraphql(in *pb.Bookings) (out []*model.Booking) {
 		return nil
 	}
 	out = make([]*model.Booking, len(in.GetBookings()))
+	copier.Copy(&out, in)
 	for i, a := range in.Bookings {
-		out[i] = &model.Booking{
-			ID: a.Id,
-		}
-		copier.Copy(&out[i], a)
-		if a.Customer != nil {
-			out[i].Customer = &model.Customer{
-				ID:        a.Customer.Id,
-				LicenseID: a.Customer.LicenseId,
-			}
-			copier.Copy(&out[i].Customer, a.Customer)
-		}
-		if a.GoingFlight != nil {
-			out[i].GoingFlight = &model.Flight{
-				ID: a.GoingFlight.Id,
-			}
-			copier.Copy(&out[i].GoingFlight, a.GoingFlight)
-		}
-		if a.ReturnFlight != nil {
-			out[i].ReturnFlight = &model.Flight{
-				ID: a.ReturnFlight.Id,
-			}
-			copier.Copy(&out[i].ReturnFlight, a.ReturnFlight)
-		}
+		out[i] = ParseBookingPbToGraphql(a)
 	}
 	return out
 }
@@ -261,7 +276,9 @@ func ParseFlightUpdateInputGraphqlToPb(in *model.FlightUpdateInput) (out *pb.Fli
 	if in == nil {
 		return nil, fmt.Errorf("nil flight input")
 	}
-	out = &pb.FlightUpdateInput{}
+	out = &pb.FlightUpdateInput{
+		Id: in.ID,
+	}
 	if in.DepartureTime != nil {
 		_departureTime, err := time.Parse("2006-01-02", *in.DepartureTime)
 		if err != nil {

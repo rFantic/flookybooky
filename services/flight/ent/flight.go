@@ -43,30 +43,19 @@ type Flight struct {
 
 // FlightEdges holds the relations/edges for other nodes in the graph.
 type FlightEdges struct {
-	// Seats holds the value of the seats edge.
-	Seats []*Seat `json:"seats,omitempty"`
 	// Origin holds the value of the origin edge.
 	Origin *Airport `json:"origin,omitempty"`
 	// Destination holds the value of the destination edge.
 	Destination *Airport `json:"destination,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
-}
-
-// SeatsOrErr returns the Seats value or an error if the edge
-// was not loaded in eager-loading.
-func (e FlightEdges) SeatsOrErr() ([]*Seat, error) {
-	if e.loadedTypes[0] {
-		return e.Seats, nil
-	}
-	return nil, &NotLoadedError{edge: "seats"}
+	loadedTypes [2]bool
 }
 
 // OriginOrErr returns the Origin value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e FlightEdges) OriginOrErr() (*Airport, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		if e.Origin == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: airport.Label}
@@ -79,7 +68,7 @@ func (e FlightEdges) OriginOrErr() (*Airport, error) {
 // DestinationOrErr returns the Destination value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e FlightEdges) DestinationOrErr() (*Airport, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		if e.Destination == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: airport.Label}
@@ -182,11 +171,6 @@ func (f *Flight) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (f *Flight) Value(name string) (ent.Value, error) {
 	return f.selectValues.Get(name)
-}
-
-// QuerySeats queries the "seats" edge of the Flight entity.
-func (f *Flight) QuerySeats() *SeatQuery {
-	return NewFlightClient(f.config).QuerySeats(f)
 }
 
 // QueryOrigin queries the "origin" edge of the Flight entity.

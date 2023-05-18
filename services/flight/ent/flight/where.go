@@ -376,29 +376,6 @@ func CreatedAtLTE(v time.Time) predicate.Flight {
 	return predicate.Flight(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasSeats applies the HasEdge predicate on the "seats" edge.
-func HasSeats() predicate.Flight {
-	return predicate.Flight(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SeatsTable, SeatsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSeatsWith applies the HasEdge predicate on the "seats" edge with a given conditions (other predicates).
-func HasSeatsWith(preds ...predicate.Seat) predicate.Flight {
-	return predicate.Flight(func(s *sql.Selector) {
-		step := newSeatsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasOrigin applies the HasEdge predicate on the "origin" edge.
 func HasOrigin() predicate.Flight {
 	return predicate.Flight(func(s *sql.Selector) {

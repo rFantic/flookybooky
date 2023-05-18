@@ -3,6 +3,8 @@
 package ticket
 
 import (
+	"fmt"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -13,31 +15,52 @@ const (
 	Label = "ticket"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldBookingID holds the string denoting the booking_id field in the database.
-	FieldBookingID = "booking_id"
-	// FieldSeatID holds the string denoting the seat_id field in the database.
-	FieldSeatID = "seat_id"
-	// FieldLicenseID holds the string denoting the license_id field in the database.
-	FieldLicenseID = "license_id"
-	// EdgeBooking holds the string denoting the booking edge name in mutations.
-	EdgeBooking = "booking"
+	// FieldFlightID holds the string denoting the flight_id field in the database.
+	FieldFlightID = "flight_id"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldPassengerName holds the string denoting the passenger_name field in the database.
+	FieldPassengerName = "passenger_name"
+	// FieldPassengerLicenseID holds the string denoting the passenger_license_id field in the database.
+	FieldPassengerLicenseID = "passenger_license_id"
+	// FieldPassengerEmail holds the string denoting the passenger_email field in the database.
+	FieldPassengerEmail = "passenger_email"
+	// FieldSeatNumber holds the string denoting the seat_number field in the database.
+	FieldSeatNumber = "seat_number"
+	// FieldClass holds the string denoting the class field in the database.
+	FieldClass = "class"
+	// EdgeGoing holds the string denoting the going edge name in mutations.
+	EdgeGoing = "going"
+	// EdgeReturn holds the string denoting the return edge name in mutations.
+	EdgeReturn = "return"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
-	// BookingTable is the table that holds the booking relation/edge.
-	BookingTable = "tickets"
-	// BookingInverseTable is the table name for the Booking entity.
+	// GoingTable is the table that holds the going relation/edge.
+	GoingTable = "bookings"
+	// GoingInverseTable is the table name for the Booking entity.
 	// It exists in this package in order to avoid circular dependency with the "booking" package.
-	BookingInverseTable = "bookings"
-	// BookingColumn is the table column denoting the booking relation/edge.
-	BookingColumn = "booking_id"
+	GoingInverseTable = "bookings"
+	// GoingColumn is the table column denoting the going relation/edge.
+	GoingColumn = "going_ticket_id"
+	// ReturnTable is the table that holds the return relation/edge.
+	ReturnTable = "bookings"
+	// ReturnInverseTable is the table name for the Booking entity.
+	// It exists in this package in order to avoid circular dependency with the "booking" package.
+	ReturnInverseTable = "bookings"
+	// ReturnColumn is the table column denoting the return relation/edge.
+	ReturnColumn = "return_ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
 var Columns = []string{
 	FieldID,
-	FieldBookingID,
-	FieldSeatID,
-	FieldLicenseID,
+	FieldFlightID,
+	FieldStatus,
+	FieldPassengerName,
+	FieldPassengerLicenseID,
+	FieldPassengerEmail,
+	FieldSeatNumber,
+	FieldClass,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -55,6 +78,54 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+// Status defines the type for the "status" enum field.
+type Status string
+
+// Status values.
+const (
+	StatusCanceled  Status = "Canceled"
+	StatusDeparted  Status = "Departed"
+	StatusScheduled Status = "Scheduled"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusCanceled, StatusDeparted, StatusScheduled:
+		return nil
+	default:
+		return fmt.Errorf("ticket: invalid enum value for status field: %q", s)
+	}
+}
+
+// Class defines the type for the "class" enum field.
+type Class string
+
+// Class values.
+const (
+	ClassFirstClass    Class = "FirstClass"
+	ClassBusinessClass Class = "BusinessClass"
+	ClassEconomyClass  Class = "EconomyClass"
+)
+
+func (c Class) String() string {
+	return string(c)
+}
+
+// ClassValidator is a validator for the "class" field enum values. It is called by the builders before save.
+func ClassValidator(c Class) error {
+	switch c {
+	case ClassFirstClass, ClassBusinessClass, ClassEconomyClass:
+		return nil
+	default:
+		return fmt.Errorf("ticket: invalid enum value for class field: %q", c)
+	}
+}
+
 // OrderOption defines the ordering options for the Ticket queries.
 type OrderOption func(*sql.Selector)
 
@@ -63,31 +134,79 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByBookingID orders the results by the booking_id field.
-func ByBookingID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBookingID, opts...).ToFunc()
+// ByFlightID orders the results by the flight_id field.
+func ByFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFlightID, opts...).ToFunc()
 }
 
-// BySeatID orders the results by the seat_id field.
-func BySeatID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSeatID, opts...).ToFunc()
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
-// ByLicenseID orders the results by the license_id field.
-func ByLicenseID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLicenseID, opts...).ToFunc()
+// ByPassengerName orders the results by the passenger_name field.
+func ByPassengerName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPassengerName, opts...).ToFunc()
 }
 
-// ByBookingField orders the results by booking field.
-func ByBookingField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByPassengerLicenseID orders the results by the passenger_license_id field.
+func ByPassengerLicenseID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPassengerLicenseID, opts...).ToFunc()
+}
+
+// ByPassengerEmail orders the results by the passenger_email field.
+func ByPassengerEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPassengerEmail, opts...).ToFunc()
+}
+
+// BySeatNumber orders the results by the seat_number field.
+func BySeatNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSeatNumber, opts...).ToFunc()
+}
+
+// ByClass orders the results by the class field.
+func ByClass(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClass, opts...).ToFunc()
+}
+
+// ByGoingCount orders the results by going count.
+func ByGoingCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newBookingStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newGoingStep(), opts...)
 	}
 }
-func newBookingStep() *sqlgraph.Step {
+
+// ByGoing orders the results by going terms.
+func ByGoing(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGoingStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReturnCount orders the results by return count.
+func ByReturnCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReturnStep(), opts...)
+	}
+}
+
+// ByReturn orders the results by return terms.
+func ByReturn(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReturnStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newGoingStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(BookingInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, BookingTable, BookingColumn),
+		sqlgraph.To(GoingInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, GoingTable, GoingColumn),
+	)
+}
+func newReturnStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReturnInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReturnTable, ReturnColumn),
 	)
 }

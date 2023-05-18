@@ -7,6 +7,19 @@ import (
 	"github.com/jinzhu/copier"
 )
 
+func ParseTicketEntToPb(in *ent.Ticket) (out *pb.Ticket) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.Ticket{
+		Id:                 in.ID.String(),
+		FlightId:           in.FlightID.String(),
+		PassengerLicenseId: in.PassengerLicenseID,
+	}
+	copier.Copy(&out, in)
+	return out
+}
+
 func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	if in == nil {
 		return nil
@@ -18,12 +31,12 @@ func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	out.Customer = &pb.Customer{
 		Id: in.CustomerID.String(),
 	}
-	out.GoingFlight = &pb.Flight{
-		Id: in.GoingFlightID.String(),
+	out.GoingTicket = &pb.Ticket{
+		Id: in.GoingTicketID.String(),
 	}
-	if in.ReturnFlightID != nil {
-		out.ReturnFlight = &pb.Flight{
-			Id: in.ReturnFlightID.String(),
+	if in.ReturnTicketID != nil {
+		out.ReturnTicket = &pb.Ticket{
+			Id: in.ReturnTicketID.String(),
 		}
 	}
 	return out

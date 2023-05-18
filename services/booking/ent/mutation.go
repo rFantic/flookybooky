@@ -33,21 +33,20 @@ const (
 // BookingMutation represents an operation that mutates the Booking nodes in the graph.
 type BookingMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *uuid.UUID
-	customer_id      *uuid.UUID
-	going_flight_id  *uuid.UUID
-	return_flight_id *uuid.UUID
-	status           *booking.Status
-	created_at       *time.Time
-	clearedFields    map[string]struct{}
-	ticket           map[uuid.UUID]struct{}
-	removedticket    map[uuid.UUID]struct{}
-	clearedticket    bool
-	done             bool
-	oldValue         func(context.Context) (*Booking, error)
-	predicates       []predicate.Booking
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	customer_id          *uuid.UUID
+	status               *booking.Status
+	created_at           *time.Time
+	clearedFields        map[string]struct{}
+	going_ticket         *uuid.UUID
+	clearedgoing_ticket  bool
+	return_ticket        *uuid.UUID
+	clearedreturn_ticket bool
+	done                 bool
+	oldValue             func(context.Context) (*Booking, error)
+	predicates           []predicate.Booking
 }
 
 var _ ent.Mutation = (*BookingMutation)(nil)
@@ -190,89 +189,89 @@ func (m *BookingMutation) ResetCustomerID() {
 	m.customer_id = nil
 }
 
-// SetGoingFlightID sets the "going_flight_id" field.
-func (m *BookingMutation) SetGoingFlightID(u uuid.UUID) {
-	m.going_flight_id = &u
+// SetGoingTicketID sets the "going_ticket_id" field.
+func (m *BookingMutation) SetGoingTicketID(u uuid.UUID) {
+	m.going_ticket = &u
 }
 
-// GoingFlightID returns the value of the "going_flight_id" field in the mutation.
-func (m *BookingMutation) GoingFlightID() (r uuid.UUID, exists bool) {
-	v := m.going_flight_id
+// GoingTicketID returns the value of the "going_ticket_id" field in the mutation.
+func (m *BookingMutation) GoingTicketID() (r uuid.UUID, exists bool) {
+	v := m.going_ticket
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldGoingFlightID returns the old "going_flight_id" field's value of the Booking entity.
+// OldGoingTicketID returns the old "going_ticket_id" field's value of the Booking entity.
 // If the Booking object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BookingMutation) OldGoingFlightID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *BookingMutation) OldGoingTicketID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldGoingFlightID is only allowed on UpdateOne operations")
+		return v, errors.New("OldGoingTicketID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldGoingFlightID requires an ID field in the mutation")
+		return v, errors.New("OldGoingTicketID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldGoingFlightID: %w", err)
+		return v, fmt.Errorf("querying old value for OldGoingTicketID: %w", err)
 	}
-	return oldValue.GoingFlightID, nil
+	return oldValue.GoingTicketID, nil
 }
 
-// ResetGoingFlightID resets all changes to the "going_flight_id" field.
-func (m *BookingMutation) ResetGoingFlightID() {
-	m.going_flight_id = nil
+// ResetGoingTicketID resets all changes to the "going_ticket_id" field.
+func (m *BookingMutation) ResetGoingTicketID() {
+	m.going_ticket = nil
 }
 
-// SetReturnFlightID sets the "return_flight_id" field.
-func (m *BookingMutation) SetReturnFlightID(u uuid.UUID) {
-	m.return_flight_id = &u
+// SetReturnTicketID sets the "return_ticket_id" field.
+func (m *BookingMutation) SetReturnTicketID(u uuid.UUID) {
+	m.return_ticket = &u
 }
 
-// ReturnFlightID returns the value of the "return_flight_id" field in the mutation.
-func (m *BookingMutation) ReturnFlightID() (r uuid.UUID, exists bool) {
-	v := m.return_flight_id
+// ReturnTicketID returns the value of the "return_ticket_id" field in the mutation.
+func (m *BookingMutation) ReturnTicketID() (r uuid.UUID, exists bool) {
+	v := m.return_ticket
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldReturnFlightID returns the old "return_flight_id" field's value of the Booking entity.
+// OldReturnTicketID returns the old "return_ticket_id" field's value of the Booking entity.
 // If the Booking object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BookingMutation) OldReturnFlightID(ctx context.Context) (v *uuid.UUID, err error) {
+func (m *BookingMutation) OldReturnTicketID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldReturnFlightID is only allowed on UpdateOne operations")
+		return v, errors.New("OldReturnTicketID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldReturnFlightID requires an ID field in the mutation")
+		return v, errors.New("OldReturnTicketID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldReturnFlightID: %w", err)
+		return v, fmt.Errorf("querying old value for OldReturnTicketID: %w", err)
 	}
-	return oldValue.ReturnFlightID, nil
+	return oldValue.ReturnTicketID, nil
 }
 
-// ClearReturnFlightID clears the value of the "return_flight_id" field.
-func (m *BookingMutation) ClearReturnFlightID() {
-	m.return_flight_id = nil
-	m.clearedFields[booking.FieldReturnFlightID] = struct{}{}
+// ClearReturnTicketID clears the value of the "return_ticket_id" field.
+func (m *BookingMutation) ClearReturnTicketID() {
+	m.return_ticket = nil
+	m.clearedFields[booking.FieldReturnTicketID] = struct{}{}
 }
 
-// ReturnFlightIDCleared returns if the "return_flight_id" field was cleared in this mutation.
-func (m *BookingMutation) ReturnFlightIDCleared() bool {
-	_, ok := m.clearedFields[booking.FieldReturnFlightID]
+// ReturnTicketIDCleared returns if the "return_ticket_id" field was cleared in this mutation.
+func (m *BookingMutation) ReturnTicketIDCleared() bool {
+	_, ok := m.clearedFields[booking.FieldReturnTicketID]
 	return ok
 }
 
-// ResetReturnFlightID resets all changes to the "return_flight_id" field.
-func (m *BookingMutation) ResetReturnFlightID() {
-	m.return_flight_id = nil
-	delete(m.clearedFields, booking.FieldReturnFlightID)
+// ResetReturnTicketID resets all changes to the "return_ticket_id" field.
+func (m *BookingMutation) ResetReturnTicketID() {
+	m.return_ticket = nil
+	delete(m.clearedFields, booking.FieldReturnTicketID)
 }
 
 // SetStatus sets the "status" field.
@@ -347,58 +346,56 @@ func (m *BookingMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddTicketIDs adds the "ticket" edge to the Ticket entity by ids.
-func (m *BookingMutation) AddTicketIDs(ids ...uuid.UUID) {
-	if m.ticket == nil {
-		m.ticket = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.ticket[ids[i]] = struct{}{}
-	}
+// ClearGoingTicket clears the "going_ticket" edge to the Ticket entity.
+func (m *BookingMutation) ClearGoingTicket() {
+	m.clearedgoing_ticket = true
 }
 
-// ClearTicket clears the "ticket" edge to the Ticket entity.
-func (m *BookingMutation) ClearTicket() {
-	m.clearedticket = true
+// GoingTicketCleared reports if the "going_ticket" edge to the Ticket entity was cleared.
+func (m *BookingMutation) GoingTicketCleared() bool {
+	return m.clearedgoing_ticket
 }
 
-// TicketCleared reports if the "ticket" edge to the Ticket entity was cleared.
-func (m *BookingMutation) TicketCleared() bool {
-	return m.clearedticket
-}
-
-// RemoveTicketIDs removes the "ticket" edge to the Ticket entity by IDs.
-func (m *BookingMutation) RemoveTicketIDs(ids ...uuid.UUID) {
-	if m.removedticket == nil {
-		m.removedticket = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.ticket, ids[i])
-		m.removedticket[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedTicket returns the removed IDs of the "ticket" edge to the Ticket entity.
-func (m *BookingMutation) RemovedTicketIDs() (ids []uuid.UUID) {
-	for id := range m.removedticket {
-		ids = append(ids, id)
+// GoingTicketIDs returns the "going_ticket" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GoingTicketID instead. It exists only for internal usage by the builders.
+func (m *BookingMutation) GoingTicketIDs() (ids []uuid.UUID) {
+	if id := m.going_ticket; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
 
-// TicketIDs returns the "ticket" edge IDs in the mutation.
-func (m *BookingMutation) TicketIDs() (ids []uuid.UUID) {
-	for id := range m.ticket {
-		ids = append(ids, id)
+// ResetGoingTicket resets all changes to the "going_ticket" edge.
+func (m *BookingMutation) ResetGoingTicket() {
+	m.going_ticket = nil
+	m.clearedgoing_ticket = false
+}
+
+// ClearReturnTicket clears the "return_ticket" edge to the Ticket entity.
+func (m *BookingMutation) ClearReturnTicket() {
+	m.clearedreturn_ticket = true
+}
+
+// ReturnTicketCleared reports if the "return_ticket" edge to the Ticket entity was cleared.
+func (m *BookingMutation) ReturnTicketCleared() bool {
+	return m.ReturnTicketIDCleared() || m.clearedreturn_ticket
+}
+
+// ReturnTicketIDs returns the "return_ticket" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ReturnTicketID instead. It exists only for internal usage by the builders.
+func (m *BookingMutation) ReturnTicketIDs() (ids []uuid.UUID) {
+	if id := m.return_ticket; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetTicket resets all changes to the "ticket" edge.
-func (m *BookingMutation) ResetTicket() {
-	m.ticket = nil
-	m.clearedticket = false
-	m.removedticket = nil
+// ResetReturnTicket resets all changes to the "return_ticket" edge.
+func (m *BookingMutation) ResetReturnTicket() {
+	m.return_ticket = nil
+	m.clearedreturn_ticket = false
 }
 
 // Where appends a list predicates to the BookingMutation builder.
@@ -439,11 +436,11 @@ func (m *BookingMutation) Fields() []string {
 	if m.customer_id != nil {
 		fields = append(fields, booking.FieldCustomerID)
 	}
-	if m.going_flight_id != nil {
-		fields = append(fields, booking.FieldGoingFlightID)
+	if m.going_ticket != nil {
+		fields = append(fields, booking.FieldGoingTicketID)
 	}
-	if m.return_flight_id != nil {
-		fields = append(fields, booking.FieldReturnFlightID)
+	if m.return_ticket != nil {
+		fields = append(fields, booking.FieldReturnTicketID)
 	}
 	if m.status != nil {
 		fields = append(fields, booking.FieldStatus)
@@ -461,10 +458,10 @@ func (m *BookingMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case booking.FieldCustomerID:
 		return m.CustomerID()
-	case booking.FieldGoingFlightID:
-		return m.GoingFlightID()
-	case booking.FieldReturnFlightID:
-		return m.ReturnFlightID()
+	case booking.FieldGoingTicketID:
+		return m.GoingTicketID()
+	case booking.FieldReturnTicketID:
+		return m.ReturnTicketID()
 	case booking.FieldStatus:
 		return m.Status()
 	case booking.FieldCreatedAt:
@@ -480,10 +477,10 @@ func (m *BookingMutation) OldField(ctx context.Context, name string) (ent.Value,
 	switch name {
 	case booking.FieldCustomerID:
 		return m.OldCustomerID(ctx)
-	case booking.FieldGoingFlightID:
-		return m.OldGoingFlightID(ctx)
-	case booking.FieldReturnFlightID:
-		return m.OldReturnFlightID(ctx)
+	case booking.FieldGoingTicketID:
+		return m.OldGoingTicketID(ctx)
+	case booking.FieldReturnTicketID:
+		return m.OldReturnTicketID(ctx)
 	case booking.FieldStatus:
 		return m.OldStatus(ctx)
 	case booking.FieldCreatedAt:
@@ -504,19 +501,19 @@ func (m *BookingMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCustomerID(v)
 		return nil
-	case booking.FieldGoingFlightID:
+	case booking.FieldGoingTicketID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetGoingFlightID(v)
+		m.SetGoingTicketID(v)
 		return nil
-	case booking.FieldReturnFlightID:
+	case booking.FieldReturnTicketID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetReturnFlightID(v)
+		m.SetReturnTicketID(v)
 		return nil
 	case booking.FieldStatus:
 		v, ok := value.(booking.Status)
@@ -562,8 +559,8 @@ func (m *BookingMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *BookingMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(booking.FieldReturnFlightID) {
-		fields = append(fields, booking.FieldReturnFlightID)
+	if m.FieldCleared(booking.FieldReturnTicketID) {
+		fields = append(fields, booking.FieldReturnTicketID)
 	}
 	return fields
 }
@@ -579,8 +576,8 @@ func (m *BookingMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *BookingMutation) ClearField(name string) error {
 	switch name {
-	case booking.FieldReturnFlightID:
-		m.ClearReturnFlightID()
+	case booking.FieldReturnTicketID:
+		m.ClearReturnTicketID()
 		return nil
 	}
 	return fmt.Errorf("unknown Booking nullable field %s", name)
@@ -593,11 +590,11 @@ func (m *BookingMutation) ResetField(name string) error {
 	case booking.FieldCustomerID:
 		m.ResetCustomerID()
 		return nil
-	case booking.FieldGoingFlightID:
-		m.ResetGoingFlightID()
+	case booking.FieldGoingTicketID:
+		m.ResetGoingTicketID()
 		return nil
-	case booking.FieldReturnFlightID:
-		m.ResetReturnFlightID()
+	case booking.FieldReturnTicketID:
+		m.ResetReturnTicketID()
 		return nil
 	case booking.FieldStatus:
 		m.ResetStatus()
@@ -611,9 +608,12 @@ func (m *BookingMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *BookingMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.ticket != nil {
-		edges = append(edges, booking.EdgeTicket)
+	edges := make([]string, 0, 2)
+	if m.going_ticket != nil {
+		edges = append(edges, booking.EdgeGoingTicket)
+	}
+	if m.return_ticket != nil {
+		edges = append(edges, booking.EdgeReturnTicket)
 	}
 	return edges
 }
@@ -622,44 +622,38 @@ func (m *BookingMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *BookingMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case booking.EdgeTicket:
-		ids := make([]ent.Value, 0, len(m.ticket))
-		for id := range m.ticket {
-			ids = append(ids, id)
+	case booking.EdgeGoingTicket:
+		if id := m.going_ticket; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
+	case booking.EdgeReturnTicket:
+		if id := m.return_ticket; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *BookingMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedticket != nil {
-		edges = append(edges, booking.EdgeTicket)
-	}
+	edges := make([]string, 0, 2)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *BookingMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case booking.EdgeTicket:
-		ids := make([]ent.Value, 0, len(m.removedticket))
-		for id := range m.removedticket {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *BookingMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedticket {
-		edges = append(edges, booking.EdgeTicket)
+	edges := make([]string, 0, 2)
+	if m.clearedgoing_ticket {
+		edges = append(edges, booking.EdgeGoingTicket)
+	}
+	if m.clearedreturn_ticket {
+		edges = append(edges, booking.EdgeReturnTicket)
 	}
 	return edges
 }
@@ -668,8 +662,10 @@ func (m *BookingMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *BookingMutation) EdgeCleared(name string) bool {
 	switch name {
-	case booking.EdgeTicket:
-		return m.clearedticket
+	case booking.EdgeGoingTicket:
+		return m.clearedgoing_ticket
+	case booking.EdgeReturnTicket:
+		return m.clearedreturn_ticket
 	}
 	return false
 }
@@ -678,6 +674,12 @@ func (m *BookingMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *BookingMutation) ClearEdge(name string) error {
 	switch name {
+	case booking.EdgeGoingTicket:
+		m.ClearGoingTicket()
+		return nil
+	case booking.EdgeReturnTicket:
+		m.ClearReturnTicket()
+		return nil
 	}
 	return fmt.Errorf("unknown Booking unique edge %s", name)
 }
@@ -686,8 +688,11 @@ func (m *BookingMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *BookingMutation) ResetEdge(name string) error {
 	switch name {
-	case booking.EdgeTicket:
-		m.ResetTicket()
+	case booking.EdgeGoingTicket:
+		m.ResetGoingTicket()
+		return nil
+	case booking.EdgeReturnTicket:
+		m.ResetReturnTicket()
 		return nil
 	}
 	return fmt.Errorf("unknown Booking edge %s", name)
@@ -696,17 +701,26 @@ func (m *BookingMutation) ResetEdge(name string) error {
 // TicketMutation represents an operation that mutates the Ticket nodes in the graph.
 type TicketMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	seat_id        *uuid.UUID
-	license_id     *string
-	clearedFields  map[string]struct{}
-	booking        *uuid.UUID
-	clearedbooking bool
-	done           bool
-	oldValue       func(context.Context) (*Ticket, error)
-	predicates     []predicate.Ticket
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	flight_id            *uuid.UUID
+	status               *ticket.Status
+	passenger_name       *string
+	passenger_license_id *string
+	passenger_email      *string
+	seat_number          *string
+	class                *ticket.Class
+	clearedFields        map[string]struct{}
+	going                map[uuid.UUID]struct{}
+	removedgoing         map[uuid.UUID]struct{}
+	clearedgoing         bool
+	_return              map[uuid.UUID]struct{}
+	removed_return       map[uuid.UUID]struct{}
+	cleared_return       bool
+	done                 bool
+	oldValue             func(context.Context) (*Ticket, error)
+	predicates           []predicate.Ticket
 }
 
 var _ ent.Mutation = (*TicketMutation)(nil)
@@ -813,138 +827,364 @@ func (m *TicketMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	}
 }
 
-// SetBookingID sets the "booking_id" field.
-func (m *TicketMutation) SetBookingID(u uuid.UUID) {
-	m.booking = &u
+// SetFlightID sets the "flight_id" field.
+func (m *TicketMutation) SetFlightID(u uuid.UUID) {
+	m.flight_id = &u
 }
 
-// BookingID returns the value of the "booking_id" field in the mutation.
-func (m *TicketMutation) BookingID() (r uuid.UUID, exists bool) {
-	v := m.booking
+// FlightID returns the value of the "flight_id" field in the mutation.
+func (m *TicketMutation) FlightID() (r uuid.UUID, exists bool) {
+	v := m.flight_id
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldBookingID returns the old "booking_id" field's value of the Ticket entity.
+// OldFlightID returns the old "flight_id" field's value of the Ticket entity.
 // If the Ticket object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketMutation) OldBookingID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *TicketMutation) OldFlightID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldBookingID is only allowed on UpdateOne operations")
+		return v, errors.New("OldFlightID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldBookingID requires an ID field in the mutation")
+		return v, errors.New("OldFlightID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldBookingID: %w", err)
+		return v, fmt.Errorf("querying old value for OldFlightID: %w", err)
 	}
-	return oldValue.BookingID, nil
+	return oldValue.FlightID, nil
 }
 
-// ResetBookingID resets all changes to the "booking_id" field.
-func (m *TicketMutation) ResetBookingID() {
-	m.booking = nil
+// ResetFlightID resets all changes to the "flight_id" field.
+func (m *TicketMutation) ResetFlightID() {
+	m.flight_id = nil
 }
 
-// SetSeatID sets the "seat_id" field.
-func (m *TicketMutation) SetSeatID(u uuid.UUID) {
-	m.seat_id = &u
+// SetStatus sets the "status" field.
+func (m *TicketMutation) SetStatus(t ticket.Status) {
+	m.status = &t
 }
 
-// SeatID returns the value of the "seat_id" field in the mutation.
-func (m *TicketMutation) SeatID() (r uuid.UUID, exists bool) {
-	v := m.seat_id
+// Status returns the value of the "status" field in the mutation.
+func (m *TicketMutation) Status() (r ticket.Status, exists bool) {
+	v := m.status
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSeatID returns the old "seat_id" field's value of the Ticket entity.
+// OldStatus returns the old "status" field's value of the Ticket entity.
 // If the Ticket object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketMutation) OldSeatID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *TicketMutation) OldStatus(ctx context.Context) (v ticket.Status, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSeatID is only allowed on UpdateOne operations")
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSeatID requires an ID field in the mutation")
+		return v, errors.New("OldStatus requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSeatID: %w", err)
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
 	}
-	return oldValue.SeatID, nil
+	return oldValue.Status, nil
 }
 
-// ResetSeatID resets all changes to the "seat_id" field.
-func (m *TicketMutation) ResetSeatID() {
-	m.seat_id = nil
+// ResetStatus resets all changes to the "status" field.
+func (m *TicketMutation) ResetStatus() {
+	m.status = nil
 }
 
-// SetLicenseID sets the "license_id" field.
-func (m *TicketMutation) SetLicenseID(s string) {
-	m.license_id = &s
+// SetPassengerName sets the "passenger_name" field.
+func (m *TicketMutation) SetPassengerName(s string) {
+	m.passenger_name = &s
 }
 
-// LicenseID returns the value of the "license_id" field in the mutation.
-func (m *TicketMutation) LicenseID() (r string, exists bool) {
-	v := m.license_id
+// PassengerName returns the value of the "passenger_name" field in the mutation.
+func (m *TicketMutation) PassengerName() (r string, exists bool) {
+	v := m.passenger_name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldLicenseID returns the old "license_id" field's value of the Ticket entity.
+// OldPassengerName returns the old "passenger_name" field's value of the Ticket entity.
 // If the Ticket object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketMutation) OldLicenseID(ctx context.Context) (v string, err error) {
+func (m *TicketMutation) OldPassengerName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLicenseID is only allowed on UpdateOne operations")
+		return v, errors.New("OldPassengerName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLicenseID requires an ID field in the mutation")
+		return v, errors.New("OldPassengerName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLicenseID: %w", err)
+		return v, fmt.Errorf("querying old value for OldPassengerName: %w", err)
 	}
-	return oldValue.LicenseID, nil
+	return oldValue.PassengerName, nil
 }
 
-// ResetLicenseID resets all changes to the "license_id" field.
-func (m *TicketMutation) ResetLicenseID() {
-	m.license_id = nil
+// ResetPassengerName resets all changes to the "passenger_name" field.
+func (m *TicketMutation) ResetPassengerName() {
+	m.passenger_name = nil
 }
 
-// ClearBooking clears the "booking" edge to the Booking entity.
-func (m *TicketMutation) ClearBooking() {
-	m.clearedbooking = true
+// SetPassengerLicenseID sets the "passenger_license_id" field.
+func (m *TicketMutation) SetPassengerLicenseID(s string) {
+	m.passenger_license_id = &s
 }
 
-// BookingCleared reports if the "booking" edge to the Booking entity was cleared.
-func (m *TicketMutation) BookingCleared() bool {
-	return m.clearedbooking
+// PassengerLicenseID returns the value of the "passenger_license_id" field in the mutation.
+func (m *TicketMutation) PassengerLicenseID() (r string, exists bool) {
+	v := m.passenger_license_id
+	if v == nil {
+		return
+	}
+	return *v, true
 }
 
-// BookingIDs returns the "booking" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// BookingID instead. It exists only for internal usage by the builders.
-func (m *TicketMutation) BookingIDs() (ids []uuid.UUID) {
-	if id := m.booking; id != nil {
-		ids = append(ids, *id)
+// OldPassengerLicenseID returns the old "passenger_license_id" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldPassengerLicenseID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPassengerLicenseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPassengerLicenseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPassengerLicenseID: %w", err)
+	}
+	return oldValue.PassengerLicenseID, nil
+}
+
+// ResetPassengerLicenseID resets all changes to the "passenger_license_id" field.
+func (m *TicketMutation) ResetPassengerLicenseID() {
+	m.passenger_license_id = nil
+}
+
+// SetPassengerEmail sets the "passenger_email" field.
+func (m *TicketMutation) SetPassengerEmail(s string) {
+	m.passenger_email = &s
+}
+
+// PassengerEmail returns the value of the "passenger_email" field in the mutation.
+func (m *TicketMutation) PassengerEmail() (r string, exists bool) {
+	v := m.passenger_email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPassengerEmail returns the old "passenger_email" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldPassengerEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPassengerEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPassengerEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPassengerEmail: %w", err)
+	}
+	return oldValue.PassengerEmail, nil
+}
+
+// ResetPassengerEmail resets all changes to the "passenger_email" field.
+func (m *TicketMutation) ResetPassengerEmail() {
+	m.passenger_email = nil
+}
+
+// SetSeatNumber sets the "seat_number" field.
+func (m *TicketMutation) SetSeatNumber(s string) {
+	m.seat_number = &s
+}
+
+// SeatNumber returns the value of the "seat_number" field in the mutation.
+func (m *TicketMutation) SeatNumber() (r string, exists bool) {
+	v := m.seat_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeatNumber returns the old "seat_number" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldSeatNumber(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSeatNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSeatNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeatNumber: %w", err)
+	}
+	return oldValue.SeatNumber, nil
+}
+
+// ResetSeatNumber resets all changes to the "seat_number" field.
+func (m *TicketMutation) ResetSeatNumber() {
+	m.seat_number = nil
+}
+
+// SetClass sets the "class" field.
+func (m *TicketMutation) SetClass(t ticket.Class) {
+	m.class = &t
+}
+
+// Class returns the value of the "class" field in the mutation.
+func (m *TicketMutation) Class() (r ticket.Class, exists bool) {
+	v := m.class
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClass returns the old "class" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldClass(ctx context.Context) (v ticket.Class, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClass is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClass requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClass: %w", err)
+	}
+	return oldValue.Class, nil
+}
+
+// ResetClass resets all changes to the "class" field.
+func (m *TicketMutation) ResetClass() {
+	m.class = nil
+}
+
+// AddGoingIDs adds the "going" edge to the Booking entity by ids.
+func (m *TicketMutation) AddGoingIDs(ids ...uuid.UUID) {
+	if m.going == nil {
+		m.going = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.going[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGoing clears the "going" edge to the Booking entity.
+func (m *TicketMutation) ClearGoing() {
+	m.clearedgoing = true
+}
+
+// GoingCleared reports if the "going" edge to the Booking entity was cleared.
+func (m *TicketMutation) GoingCleared() bool {
+	return m.clearedgoing
+}
+
+// RemoveGoingIDs removes the "going" edge to the Booking entity by IDs.
+func (m *TicketMutation) RemoveGoingIDs(ids ...uuid.UUID) {
+	if m.removedgoing == nil {
+		m.removedgoing = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.going, ids[i])
+		m.removedgoing[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGoing returns the removed IDs of the "going" edge to the Booking entity.
+func (m *TicketMutation) RemovedGoingIDs() (ids []uuid.UUID) {
+	for id := range m.removedgoing {
+		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetBooking resets all changes to the "booking" edge.
-func (m *TicketMutation) ResetBooking() {
-	m.booking = nil
-	m.clearedbooking = false
+// GoingIDs returns the "going" edge IDs in the mutation.
+func (m *TicketMutation) GoingIDs() (ids []uuid.UUID) {
+	for id := range m.going {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGoing resets all changes to the "going" edge.
+func (m *TicketMutation) ResetGoing() {
+	m.going = nil
+	m.clearedgoing = false
+	m.removedgoing = nil
+}
+
+// AddReturnIDs adds the "return" edge to the Booking entity by ids.
+func (m *TicketMutation) AddReturnIDs(ids ...uuid.UUID) {
+	if m._return == nil {
+		m._return = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m._return[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReturn clears the "return" edge to the Booking entity.
+func (m *TicketMutation) ClearReturn() {
+	m.cleared_return = true
+}
+
+// ReturnCleared reports if the "return" edge to the Booking entity was cleared.
+func (m *TicketMutation) ReturnCleared() bool {
+	return m.cleared_return
+}
+
+// RemoveReturnIDs removes the "return" edge to the Booking entity by IDs.
+func (m *TicketMutation) RemoveReturnIDs(ids ...uuid.UUID) {
+	if m.removed_return == nil {
+		m.removed_return = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m._return, ids[i])
+		m.removed_return[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReturn returns the removed IDs of the "return" edge to the Booking entity.
+func (m *TicketMutation) RemovedReturnIDs() (ids []uuid.UUID) {
+	for id := range m.removed_return {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReturnIDs returns the "return" edge IDs in the mutation.
+func (m *TicketMutation) ReturnIDs() (ids []uuid.UUID) {
+	for id := range m._return {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReturn resets all changes to the "return" edge.
+func (m *TicketMutation) ResetReturn() {
+	m._return = nil
+	m.cleared_return = false
+	m.removed_return = nil
 }
 
 // Where appends a list predicates to the TicketMutation builder.
@@ -981,15 +1221,27 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 3)
-	if m.booking != nil {
-		fields = append(fields, ticket.FieldBookingID)
+	fields := make([]string, 0, 7)
+	if m.flight_id != nil {
+		fields = append(fields, ticket.FieldFlightID)
 	}
-	if m.seat_id != nil {
-		fields = append(fields, ticket.FieldSeatID)
+	if m.status != nil {
+		fields = append(fields, ticket.FieldStatus)
 	}
-	if m.license_id != nil {
-		fields = append(fields, ticket.FieldLicenseID)
+	if m.passenger_name != nil {
+		fields = append(fields, ticket.FieldPassengerName)
+	}
+	if m.passenger_license_id != nil {
+		fields = append(fields, ticket.FieldPassengerLicenseID)
+	}
+	if m.passenger_email != nil {
+		fields = append(fields, ticket.FieldPassengerEmail)
+	}
+	if m.seat_number != nil {
+		fields = append(fields, ticket.FieldSeatNumber)
+	}
+	if m.class != nil {
+		fields = append(fields, ticket.FieldClass)
 	}
 	return fields
 }
@@ -999,12 +1251,20 @@ func (m *TicketMutation) Fields() []string {
 // schema.
 func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case ticket.FieldBookingID:
-		return m.BookingID()
-	case ticket.FieldSeatID:
-		return m.SeatID()
-	case ticket.FieldLicenseID:
-		return m.LicenseID()
+	case ticket.FieldFlightID:
+		return m.FlightID()
+	case ticket.FieldStatus:
+		return m.Status()
+	case ticket.FieldPassengerName:
+		return m.PassengerName()
+	case ticket.FieldPassengerLicenseID:
+		return m.PassengerLicenseID()
+	case ticket.FieldPassengerEmail:
+		return m.PassengerEmail()
+	case ticket.FieldSeatNumber:
+		return m.SeatNumber()
+	case ticket.FieldClass:
+		return m.Class()
 	}
 	return nil, false
 }
@@ -1014,12 +1274,20 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case ticket.FieldBookingID:
-		return m.OldBookingID(ctx)
-	case ticket.FieldSeatID:
-		return m.OldSeatID(ctx)
-	case ticket.FieldLicenseID:
-		return m.OldLicenseID(ctx)
+	case ticket.FieldFlightID:
+		return m.OldFlightID(ctx)
+	case ticket.FieldStatus:
+		return m.OldStatus(ctx)
+	case ticket.FieldPassengerName:
+		return m.OldPassengerName(ctx)
+	case ticket.FieldPassengerLicenseID:
+		return m.OldPassengerLicenseID(ctx)
+	case ticket.FieldPassengerEmail:
+		return m.OldPassengerEmail(ctx)
+	case ticket.FieldSeatNumber:
+		return m.OldSeatNumber(ctx)
+	case ticket.FieldClass:
+		return m.OldClass(ctx)
 	}
 	return nil, fmt.Errorf("unknown Ticket field %s", name)
 }
@@ -1029,26 +1297,54 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 // type.
 func (m *TicketMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case ticket.FieldBookingID:
+	case ticket.FieldFlightID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetBookingID(v)
+		m.SetFlightID(v)
 		return nil
-	case ticket.FieldSeatID:
-		v, ok := value.(uuid.UUID)
+	case ticket.FieldStatus:
+		v, ok := value.(ticket.Status)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSeatID(v)
+		m.SetStatus(v)
 		return nil
-	case ticket.FieldLicenseID:
+	case ticket.FieldPassengerName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetLicenseID(v)
+		m.SetPassengerName(v)
+		return nil
+	case ticket.FieldPassengerLicenseID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPassengerLicenseID(v)
+		return nil
+	case ticket.FieldPassengerEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPassengerEmail(v)
+		return nil
+	case ticket.FieldSeatNumber:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeatNumber(v)
+		return nil
+	case ticket.FieldClass:
+		v, ok := value.(ticket.Class)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClass(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket field %s", name)
@@ -1099,14 +1395,26 @@ func (m *TicketMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *TicketMutation) ResetField(name string) error {
 	switch name {
-	case ticket.FieldBookingID:
-		m.ResetBookingID()
+	case ticket.FieldFlightID:
+		m.ResetFlightID()
 		return nil
-	case ticket.FieldSeatID:
-		m.ResetSeatID()
+	case ticket.FieldStatus:
+		m.ResetStatus()
 		return nil
-	case ticket.FieldLicenseID:
-		m.ResetLicenseID()
+	case ticket.FieldPassengerName:
+		m.ResetPassengerName()
+		return nil
+	case ticket.FieldPassengerLicenseID:
+		m.ResetPassengerLicenseID()
+		return nil
+	case ticket.FieldPassengerEmail:
+		m.ResetPassengerEmail()
+		return nil
+	case ticket.FieldSeatNumber:
+		m.ResetSeatNumber()
+		return nil
+	case ticket.FieldClass:
+		m.ResetClass()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket field %s", name)
@@ -1114,9 +1422,12 @@ func (m *TicketMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TicketMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.booking != nil {
-		edges = append(edges, ticket.EdgeBooking)
+	edges := make([]string, 0, 2)
+	if m.going != nil {
+		edges = append(edges, ticket.EdgeGoing)
+	}
+	if m._return != nil {
+		edges = append(edges, ticket.EdgeReturn)
 	}
 	return edges
 }
@@ -1125,31 +1436,62 @@ func (m *TicketMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *TicketMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case ticket.EdgeBooking:
-		if id := m.booking; id != nil {
-			return []ent.Value{*id}
+	case ticket.EdgeGoing:
+		ids := make([]ent.Value, 0, len(m.going))
+		for id := range m.going {
+			ids = append(ids, id)
 		}
+		return ids
+	case ticket.EdgeReturn:
+		ids := make([]ent.Value, 0, len(m._return))
+		for id := range m._return {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TicketMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedgoing != nil {
+		edges = append(edges, ticket.EdgeGoing)
+	}
+	if m.removed_return != nil {
+		edges = append(edges, ticket.EdgeReturn)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *TicketMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case ticket.EdgeGoing:
+		ids := make([]ent.Value, 0, len(m.removedgoing))
+		for id := range m.removedgoing {
+			ids = append(ids, id)
+		}
+		return ids
+	case ticket.EdgeReturn:
+		ids := make([]ent.Value, 0, len(m.removed_return))
+		for id := range m.removed_return {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TicketMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedbooking {
-		edges = append(edges, ticket.EdgeBooking)
+	edges := make([]string, 0, 2)
+	if m.clearedgoing {
+		edges = append(edges, ticket.EdgeGoing)
+	}
+	if m.cleared_return {
+		edges = append(edges, ticket.EdgeReturn)
 	}
 	return edges
 }
@@ -1158,8 +1500,10 @@ func (m *TicketMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *TicketMutation) EdgeCleared(name string) bool {
 	switch name {
-	case ticket.EdgeBooking:
-		return m.clearedbooking
+	case ticket.EdgeGoing:
+		return m.clearedgoing
+	case ticket.EdgeReturn:
+		return m.cleared_return
 	}
 	return false
 }
@@ -1168,9 +1512,6 @@ func (m *TicketMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *TicketMutation) ClearEdge(name string) error {
 	switch name {
-	case ticket.EdgeBooking:
-		m.ClearBooking()
-		return nil
 	}
 	return fmt.Errorf("unknown Ticket unique edge %s", name)
 }
@@ -1179,8 +1520,11 @@ func (m *TicketMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TicketMutation) ResetEdge(name string) error {
 	switch name {
-	case ticket.EdgeBooking:
-		m.ResetBooking()
+	case ticket.EdgeGoing:
+		m.ResetGoing()
+		return nil
+	case ticket.EdgeReturn:
+		m.ResetReturn()
 		return nil
 	}
 	return fmt.Errorf("unknown Ticket edge %s", name)

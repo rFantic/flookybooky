@@ -14,30 +14,22 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// GoingFlight is the resolver for the going_flight field.
-func (r *bookingResolver) GoingFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
-	var out *model.Flight
-	if obj.GoingFlight != nil {
-		flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.GoingFlight.ID})
-		if err != nil {
-			return nil, err
-		}
-		out = internal.ParseFlightPbToGraphql(flightRes)
+// GoingTicket is the resolver for the going_ticket field.
+func (r *bookingResolver) GoingTicket(ctx context.Context, obj *model.Booking) (*model.Ticket, error) {
+	if obj.GoingTicket == nil {
+		return nil, nil
 	}
-	return out, nil
+	ticketRes, err := r.client.BookingClient.GetTicket(ctx, &pb.UUID{Id: obj.GoingTicket.ID})
+	return internal.ParseTicketPbToGraphqlTo(ticketRes), err
 }
 
-// ReturnFlight is the resolver for the return_flight field.
-func (r *bookingResolver) ReturnFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
-	var out *model.Flight
-	if obj.ReturnFlight != nil {
-		flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.ReturnFlight.ID})
-		if err != nil {
-			return nil, err
-		}
-		out = internal.ParseFlightPbToGraphql(flightRes)
+// ReturnTicket is the resolver for the return_ticket field.
+func (r *bookingResolver) ReturnTicket(ctx context.Context, obj *model.Booking) (*model.Ticket, error) {
+	if obj.ReturnTicket == nil {
+		return nil, nil
 	}
-	return out, nil
+	ticketRes, err := r.client.BookingClient.GetTicket(ctx, &pb.UUID{Id: obj.ReturnTicket.ID})
+	return internal.ParseTicketPbToGraphqlTo(ticketRes), err
 }
 
 // Customer is the resolver for the customer field.
@@ -61,15 +53,17 @@ func (r *mutationResolver) CreateBooking(ctx context.Context, input model.Bookin
 	if err != nil {
 		return nil, err
 	}
-	_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-		Id: input.GoingFlightID,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if input.ReturnFlightID != nil {
+	if input.GoingTicket != nil {
 		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-			Id: *input.ReturnFlightID,
+			Id: input.GoingTicket.FlightID,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if input.ReturnTicket != nil {
+		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
+			Id: input.ReturnTicket.FlightID,
 		})
 		if err != nil {
 			return nil, err

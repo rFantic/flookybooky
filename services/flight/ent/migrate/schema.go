@@ -52,36 +52,14 @@ var (
 			},
 		},
 	}
-	// SeatsColumns holds the columns for the "seats" table.
-	SeatsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "seat_number", Type: field.TypeString},
-		{Name: "flight_seats", Type: field.TypeUUID, Nullable: true},
-	}
-	// SeatsTable holds the schema information for the "seats" table.
-	SeatsTable = &schema.Table{
-		Name:       "seats",
-		Columns:    SeatsColumns,
-		PrimaryKey: []*schema.Column{SeatsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "seats_flights_seats",
-				Columns:    []*schema.Column{SeatsColumns[2]},
-				RefColumns: []*schema.Column{FlightsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AirportsTable,
 		FlightsTable,
-		SeatsTable,
 	}
 )
 
 func init() {
 	FlightsTable.ForeignKeys[0].RefTable = AirportsTable
 	FlightsTable.ForeignKeys[1].RefTable = AirportsTable
-	SeatsTable.ForeignKeys[0].RefTable = FlightsTable
 }

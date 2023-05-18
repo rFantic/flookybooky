@@ -16,15 +16,24 @@ type Ticket struct {
 func (Ticket) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.UUID("booking_id", uuid.UUID{}),
-		field.UUID("seat_id", uuid.UUID{}),
-		field.String("license_id"),
+		field.UUID("flight_id", uuid.UUID{}),
+		field.Enum("status").Values(
+			"Canceled", "Departed", "Scheduled",
+		),
+		field.String("passenger_name"),
+		field.String("passenger_license_id"),
+		field.String("passenger_email"),
+		field.String("seat_number"),
+		field.Enum("class").Values(
+			"FirstClass", "BusinessClass", "EconomyClass",
+		),
 	}
 }
 
 // Edges of the Ticket.
 func (Ticket) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("booking", Booking.Type).Ref("ticket").Unique().Required().Field("booking_id"),
+		edge.To("going", Booking.Type),
+		edge.To("return", Booking.Type),
 	}
 }

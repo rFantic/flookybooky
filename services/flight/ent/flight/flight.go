@@ -32,21 +32,12 @@ const (
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// EdgeSeats holds the string denoting the seats edge name in mutations.
-	EdgeSeats = "seats"
 	// EdgeOrigin holds the string denoting the origin edge name in mutations.
 	EdgeOrigin = "origin"
 	// EdgeDestination holds the string denoting the destination edge name in mutations.
 	EdgeDestination = "destination"
 	// Table holds the table name of the flight in the database.
 	Table = "flights"
-	// SeatsTable is the table that holds the seats relation/edge.
-	SeatsTable = "seats"
-	// SeatsInverseTable is the table name for the Seat entity.
-	// It exists in this package in order to avoid circular dependency with the "seat" package.
-	SeatsInverseTable = "seats"
-	// SeatsColumn is the table column denoting the seats relation/edge.
-	SeatsColumn = "flight_seats"
 	// OriginTable is the table that holds the origin relation/edge.
 	OriginTable = "flights"
 	// OriginInverseTable is the table name for the Airport entity.
@@ -167,20 +158,6 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// BySeatsCount orders the results by seats count.
-func BySeatsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSeatsStep(), opts...)
-	}
-}
-
-// BySeats orders the results by seats terms.
-func BySeats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSeatsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByOriginField orders the results by origin field.
 func ByOriginField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -193,13 +170,6 @@ func ByDestinationField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newDestinationStep(), sql.OrderByField(field, opts...))
 	}
-}
-func newSeatsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SeatsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SeatsTable, SeatsColumn),
-	)
 }
 func newOriginStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

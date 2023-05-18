@@ -4,6 +4,7 @@ package ent
 
 import (
 	"flookybooky/services/booking/ent/booking"
+	"flookybooky/services/booking/ent/ticket"
 	"fmt"
 	"strings"
 	"time"
@@ -20,10 +21,10 @@ type Booking struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// CustomerID holds the value of the "customer_id" field.
 	CustomerID uuid.UUID `json:"customer_id,omitempty"`
-	// GoingFlightID holds the value of the "going_flight_id" field.
-	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
-	// ReturnFlightID holds the value of the "return_flight_id" field.
-	ReturnFlightID *uuid.UUID `json:"return_flight_id,omitempty"`
+	// GoingTicketID holds the value of the "going_ticket_id" field.
+	GoingTicketID uuid.UUID `json:"going_ticket_id,omitempty"`
+	// ReturnTicketID holds the value of the "return_ticket_id" field.
+	ReturnTicketID *uuid.UUID `json:"return_ticket_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status booking.Status `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -36,20 +37,39 @@ type Booking struct {
 
 // BookingEdges holds the relations/edges for other nodes in the graph.
 type BookingEdges struct {
-	// Ticket holds the value of the ticket edge.
-	Ticket []*Ticket `json:"ticket,omitempty"`
+	// GoingTicket holds the value of the going_ticket edge.
+	GoingTicket *Ticket `json:"going_ticket,omitempty"`
+	// ReturnTicket holds the value of the return_ticket edge.
+	ReturnTicket *Ticket `json:"return_ticket,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
-// TicketOrErr returns the Ticket value or an error if the edge
-// was not loaded in eager-loading.
-func (e BookingEdges) TicketOrErr() ([]*Ticket, error) {
+// GoingTicketOrErr returns the GoingTicket value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BookingEdges) GoingTicketOrErr() (*Ticket, error) {
 	if e.loadedTypes[0] {
-		return e.Ticket, nil
+		if e.GoingTicket == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: ticket.Label}
+		}
+		return e.GoingTicket, nil
 	}
-	return nil, &NotLoadedError{edge: "ticket"}
+	return nil, &NotLoadedError{edge: "going_ticket"}
+}
+
+// ReturnTicketOrErr returns the ReturnTicket value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e BookingEdges) ReturnTicketOrErr() (*Ticket, error) {
+	if e.loadedTypes[1] {
+		if e.ReturnTicket == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: ticket.Label}
+		}
+		return e.ReturnTicket, nil
+	}
+	return nil, &NotLoadedError{edge: "return_ticket"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -57,13 +77,13 @@ func (*Booking) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case booking.FieldReturnFlightID:
+		case booking.FieldReturnTicketID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case booking.FieldStatus:
 			values[i] = new(sql.NullString)
 		case booking.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingFlightID:
+		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingTicketID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -92,18 +112,18 @@ func (b *Booking) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				b.CustomerID = *value
 			}
-		case booking.FieldGoingFlightID:
+		case booking.FieldGoingTicketID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field going_flight_id", values[i])
+				return fmt.Errorf("unexpected type %T for field going_ticket_id", values[i])
 			} else if value != nil {
-				b.GoingFlightID = *value
+				b.GoingTicketID = *value
 			}
-		case booking.FieldReturnFlightID:
+		case booking.FieldReturnTicketID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
+				return fmt.Errorf("unexpected type %T for field return_ticket_id", values[i])
 			} else if value.Valid {
-				b.ReturnFlightID = new(uuid.UUID)
-				*b.ReturnFlightID = *value.S.(*uuid.UUID)
+				b.ReturnTicketID = new(uuid.UUID)
+				*b.ReturnTicketID = *value.S.(*uuid.UUID)
 			}
 		case booking.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -130,9 +150,14 @@ func (b *Booking) Value(name string) (ent.Value, error) {
 	return b.selectValues.Get(name)
 }
 
-// QueryTicket queries the "ticket" edge of the Booking entity.
-func (b *Booking) QueryTicket() *TicketQuery {
-	return NewBookingClient(b.config).QueryTicket(b)
+// QueryGoingTicket queries the "going_ticket" edge of the Booking entity.
+func (b *Booking) QueryGoingTicket() *TicketQuery {
+	return NewBookingClient(b.config).QueryGoingTicket(b)
+}
+
+// QueryReturnTicket queries the "return_ticket" edge of the Booking entity.
+func (b *Booking) QueryReturnTicket() *TicketQuery {
+	return NewBookingClient(b.config).QueryReturnTicket(b)
 }
 
 // Update returns a builder for updating this Booking.
@@ -161,11 +186,11 @@ func (b *Booking) String() string {
 	builder.WriteString("customer_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.CustomerID))
 	builder.WriteString(", ")
-	builder.WriteString("going_flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", b.GoingFlightID))
+	builder.WriteString("going_ticket_id=")
+	builder.WriteString(fmt.Sprintf("%v", b.GoingTicketID))
 	builder.WriteString(", ")
-	if v := b.ReturnFlightID; v != nil {
-		builder.WriteString("return_flight_id=")
+	if v := b.ReturnTicketID; v != nil {
+		builder.WriteString("return_ticket_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

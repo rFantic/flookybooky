@@ -16,8 +16,6 @@ type Tx struct {
 	Airport *AirportClient
 	// Flight is the client for interacting with the Flight builders.
 	Flight *FlightClient
-	// Seat is the client for interacting with the Seat builders.
-	Seat *SeatClient
 
 	// lazily loaded.
 	client     *Client
@@ -151,7 +149,6 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Airport = NewAirportClient(tx.config)
 	tx.Flight = NewFlightClient(tx.config)
-	tx.Seat = NewSeatClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

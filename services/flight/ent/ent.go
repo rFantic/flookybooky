@@ -7,7 +7,6 @@ import (
 	"errors"
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
-	"flookybooky/services/flight/ent/seat"
 	"fmt"
 	"reflect"
 	"sync"
@@ -77,7 +76,6 @@ func checkColumn(table, column string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			airport.Table: airport.ValidColumn,
 			flight.Table:  flight.ValidColumn,
-			seat.Table:    seat.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

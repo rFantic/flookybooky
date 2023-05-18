@@ -26,9 +26,6 @@ type FlightServiceClient interface {
 	PostAirport(ctx context.Context, in *Airport, opts ...grpc.CallOption) (*Airport, error)
 	GetAirport(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Airport, error)
 	GetAirports(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Airports, error)
-	// rpc PostSeat (Seat) returns (Seat) {}
-	// rpc GetSeat (UUID) returns (Seat) {}
-	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
 	PostFlight(ctx context.Context, in *FlightInput, opts ...grpc.CallOption) (*Flight, error)
 	GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error)
 	GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error)
@@ -113,9 +110,6 @@ type FlightServiceServer interface {
 	PostAirport(context.Context, *Airport) (*Airport, error)
 	GetAirport(context.Context, *UUID) (*Airport, error)
 	GetAirports(context.Context, *emptypb.Empty) (*Airports, error)
-	// rpc PostSeat (Seat) returns (Seat) {}
-	// rpc GetSeat (UUID) returns (Seat) {}
-	// rpc GetSeats (google.protobuf.Empty) returns (Seats) {}
 	PostFlight(context.Context, *FlightInput) (*Flight, error)
 	GetFlight(context.Context, *UUID) (*Flight, error)
 	GetFlights(context.Context, *emptypb.Empty) (*Flights, error)

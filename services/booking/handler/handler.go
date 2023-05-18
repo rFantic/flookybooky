@@ -5,6 +5,7 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/booking/ent"
 	"flookybooky/services/booking/ent/booking"
+	"flookybooky/services/booking/ent/ticket"
 	"flookybooky/services/booking/internal"
 
 	"github.com/google/uuid"
@@ -31,6 +32,15 @@ func (h *BookingHandler) GetBooking(ctx context.Context, req *pb.UUID) (*pb.Book
 	return internal.ParseBookingEntToPb(bookingRes), err
 }
 
+func (h *BookingHandler) GetTicket(ctx context.Context, req *pb.UUID) (*pb.Ticket, error) {
+	_uuid, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	ticketRes, err := h.client.Ticket.Get(ctx, _uuid)
+	return internal.ParseTicketEntToPb(ticketRes), err
+}
+
 func (h *BookingHandler) GetBookings(ctx context.Context, req *emptypb.Empty) (*pb.Bookings, error) {
 	query := h.client.Booking.Query()
 	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
@@ -46,25 +56,53 @@ func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.BookingInput) 
 	if err != nil {
 		return nil, err
 	}
-	_goingFlightId, err := uuid.Parse(req.GoingFlightId)
-	if err != nil {
-		return nil, err
-	}
 	query := h.client.Booking.Create().
 		SetCustomerID(_customerId).
-		SetGoingFlightID(_goingFlightId).
 		SetStatus(booking.Status(req.Status))
 
-	if req.ReturnFlightId != nil {
-		_returnFlightId, err := uuid.Parse(*req.ReturnFlightId)
+	if req.GoingTicket != nil {
+		goingTicketRes, err := h.PostTicket(ctx, req.GoingTicket)
 		if err != nil {
 			return nil, err
 		}
-		query.SetReturnFlightID(_returnFlightId)
+		_goingTicketId, err := uuid.Parse(goingTicketRes.Id)
+		if err != nil {
+			return nil, err
+		}
+		query.SetGoingTicketID(_goingTicketId)
 	}
+
+	if req.ReturnTicket != nil {
+		returnTicketRes, err := h.PostTicket(ctx, req.ReturnTicket)
+		if err != nil {
+			return nil, err
+		}
+		_returnTicketId, err := uuid.Parse(returnTicketRes.Id)
+		if err != nil {
+			return nil, err
+		}
+		query.SetReturnTicketID(_returnTicketId)
+	}
+
 	bookingRes, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return internal.ParseBookingEntToPb(bookingRes), err
+}
+
+func (h *BookingHandler) PostTicket(ctx context.Context, req *pb.TicketInput) (*pb.Ticket, error) {
+	_flight_id, err := uuid.Parse(req.FlightId)
+	if err != nil {
+		return nil, err
+	}
+	ticketRes, err := h.client.Ticket.Create().SetFlightID(_flight_id).
+		SetPassengerEmail(req.PassengerEmail).
+		SetPassengerLicenseID(req.PassengerLicenseId).
+		SetPassengerName(req.PassengerName).
+		SetClass(ticket.Class(req.Class)).
+		SetSeatNumber(req.SeatNumber).
+		SetStatus(ticket.Status(req.Status)).Save(ctx)
+	return internal.ParseTicketEntToPb(ticketRes), err
+
 }

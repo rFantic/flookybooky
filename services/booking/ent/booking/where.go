@@ -61,14 +61,14 @@ func CustomerID(v uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldEQ(FieldCustomerID, v))
 }
 
-// GoingFlightID applies equality check predicate on the "going_flight_id" field. It's identical to GoingFlightIDEQ.
-func GoingFlightID(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldGoingFlightID, v))
+// GoingTicketID applies equality check predicate on the "going_ticket_id" field. It's identical to GoingTicketIDEQ.
+func GoingTicketID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldGoingTicketID, v))
 }
 
-// ReturnFlightID applies equality check predicate on the "return_flight_id" field. It's identical to ReturnFlightIDEQ.
-func ReturnFlightID(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldReturnFlightID, v))
+// ReturnTicketID applies equality check predicate on the "return_ticket_id" field. It's identical to ReturnTicketIDEQ.
+func ReturnTicketID(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldReturnTicketID, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -116,94 +116,54 @@ func CustomerIDLTE(v uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldLTE(FieldCustomerID, v))
 }
 
-// GoingFlightIDEQ applies the EQ predicate on the "going_flight_id" field.
-func GoingFlightIDEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldGoingFlightID, v))
+// GoingTicketIDEQ applies the EQ predicate on the "going_ticket_id" field.
+func GoingTicketIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldGoingTicketID, v))
 }
 
-// GoingFlightIDNEQ applies the NEQ predicate on the "going_flight_id" field.
-func GoingFlightIDNEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNEQ(FieldGoingFlightID, v))
+// GoingTicketIDNEQ applies the NEQ predicate on the "going_ticket_id" field.
+func GoingTicketIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldGoingTicketID, v))
 }
 
-// GoingFlightIDIn applies the In predicate on the "going_flight_id" field.
-func GoingFlightIDIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldIn(FieldGoingFlightID, vs...))
+// GoingTicketIDIn applies the In predicate on the "going_ticket_id" field.
+func GoingTicketIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldGoingTicketID, vs...))
 }
 
-// GoingFlightIDNotIn applies the NotIn predicate on the "going_flight_id" field.
-func GoingFlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNotIn(FieldGoingFlightID, vs...))
+// GoingTicketIDNotIn applies the NotIn predicate on the "going_ticket_id" field.
+func GoingTicketIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldGoingTicketID, vs...))
 }
 
-// GoingFlightIDGT applies the GT predicate on the "going_flight_id" field.
-func GoingFlightIDGT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGT(FieldGoingFlightID, v))
+// ReturnTicketIDEQ applies the EQ predicate on the "return_ticket_id" field.
+func ReturnTicketIDEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldEQ(FieldReturnTicketID, v))
 }
 
-// GoingFlightIDGTE applies the GTE predicate on the "going_flight_id" field.
-func GoingFlightIDGTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGTE(FieldGoingFlightID, v))
+// ReturnTicketIDNEQ applies the NEQ predicate on the "return_ticket_id" field.
+func ReturnTicketIDNEQ(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNEQ(FieldReturnTicketID, v))
 }
 
-// GoingFlightIDLT applies the LT predicate on the "going_flight_id" field.
-func GoingFlightIDLT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLT(FieldGoingFlightID, v))
+// ReturnTicketIDIn applies the In predicate on the "return_ticket_id" field.
+func ReturnTicketIDIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldIn(FieldReturnTicketID, vs...))
 }
 
-// GoingFlightIDLTE applies the LTE predicate on the "going_flight_id" field.
-func GoingFlightIDLTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLTE(FieldGoingFlightID, v))
+// ReturnTicketIDNotIn applies the NotIn predicate on the "return_ticket_id" field.
+func ReturnTicketIDNotIn(vs ...uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldNotIn(FieldReturnTicketID, vs...))
 }
 
-// ReturnFlightIDEQ applies the EQ predicate on the "return_flight_id" field.
-func ReturnFlightIDEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldEQ(FieldReturnFlightID, v))
+// ReturnTicketIDIsNil applies the IsNil predicate on the "return_ticket_id" field.
+func ReturnTicketIDIsNil() predicate.Booking {
+	return predicate.Booking(sql.FieldIsNull(FieldReturnTicketID))
 }
 
-// ReturnFlightIDNEQ applies the NEQ predicate on the "return_flight_id" field.
-func ReturnFlightIDNEQ(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNEQ(FieldReturnFlightID, v))
-}
-
-// ReturnFlightIDIn applies the In predicate on the "return_flight_id" field.
-func ReturnFlightIDIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldIn(FieldReturnFlightID, vs...))
-}
-
-// ReturnFlightIDNotIn applies the NotIn predicate on the "return_flight_id" field.
-func ReturnFlightIDNotIn(vs ...uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldNotIn(FieldReturnFlightID, vs...))
-}
-
-// ReturnFlightIDGT applies the GT predicate on the "return_flight_id" field.
-func ReturnFlightIDGT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGT(FieldReturnFlightID, v))
-}
-
-// ReturnFlightIDGTE applies the GTE predicate on the "return_flight_id" field.
-func ReturnFlightIDGTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldGTE(FieldReturnFlightID, v))
-}
-
-// ReturnFlightIDLT applies the LT predicate on the "return_flight_id" field.
-func ReturnFlightIDLT(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLT(FieldReturnFlightID, v))
-}
-
-// ReturnFlightIDLTE applies the LTE predicate on the "return_flight_id" field.
-func ReturnFlightIDLTE(v uuid.UUID) predicate.Booking {
-	return predicate.Booking(sql.FieldLTE(FieldReturnFlightID, v))
-}
-
-// ReturnFlightIDIsNil applies the IsNil predicate on the "return_flight_id" field.
-func ReturnFlightIDIsNil() predicate.Booking {
-	return predicate.Booking(sql.FieldIsNull(FieldReturnFlightID))
-}
-
-// ReturnFlightIDNotNil applies the NotNil predicate on the "return_flight_id" field.
-func ReturnFlightIDNotNil() predicate.Booking {
-	return predicate.Booking(sql.FieldNotNull(FieldReturnFlightID))
+// ReturnTicketIDNotNil applies the NotNil predicate on the "return_ticket_id" field.
+func ReturnTicketIDNotNil() predicate.Booking {
+	return predicate.Booking(sql.FieldNotNull(FieldReturnTicketID))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -266,21 +226,44 @@ func CreatedAtLTE(v time.Time) predicate.Booking {
 	return predicate.Booking(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasTicket applies the HasEdge predicate on the "ticket" edge.
-func HasTicket() predicate.Booking {
+// HasGoingTicket applies the HasEdge predicate on the "going_ticket" edge.
+func HasGoingTicket() predicate.Booking {
 	return predicate.Booking(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TicketTable, TicketColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, GoingTicketTable, GoingTicketColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTicketWith applies the HasEdge predicate on the "ticket" edge with a given conditions (other predicates).
-func HasTicketWith(preds ...predicate.Ticket) predicate.Booking {
+// HasGoingTicketWith applies the HasEdge predicate on the "going_ticket" edge with a given conditions (other predicates).
+func HasGoingTicketWith(preds ...predicate.Ticket) predicate.Booking {
 	return predicate.Booking(func(s *sql.Selector) {
-		step := newTicketStep()
+		step := newGoingTicketStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReturnTicket applies the HasEdge predicate on the "return_ticket" edge.
+func HasReturnTicket() predicate.Booking {
+	return predicate.Booking(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ReturnTicketTable, ReturnTicketColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReturnTicketWith applies the HasEdge predicate on the "return_ticket" edge with a given conditions (other predicates).
+func HasReturnTicketWith(preds ...predicate.Ticket) predicate.Booking {
+	return predicate.Booking(func(s *sql.Selector) {
+		step := newReturnTicketStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

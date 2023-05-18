@@ -1,0 +1,36 @@
+enum TicketStatus {
+    Canceled
+    Departed
+    Scheduled
+}
+
+enum TicketClass {
+    FirstClass
+    BusinessClass
+    EconomyClass
+}
+
+type Ticket {
+    id: String!
+    status: TicketStatus!
+    flight: Flight!
+    passenger_license_id: String!
+    passenger_name: String!
+    passenger_email: String!
+    seat_number: String!
+    ticket_class: TicketClass!
+}
+
+input TicketInput{
+    status: TicketStatus!
+    flight_id: String!
+    passenger_license_id: String!
+    passenger_name: String!
+    passenger_email: String!
+    seat_number: String!
+    ticket_class: TicketClass!
+}
+
+extend type Query {
+    ticket: [Ticket!]!
+}

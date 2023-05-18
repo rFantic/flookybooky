@@ -6,7 +6,6 @@ import (
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/schema"
-	"flookybooky/services/flight/ent/seat"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,10 +31,4 @@ func init() {
 	flightDescID := flightFields[0].Descriptor()
 	// flight.DefaultID holds the default value on creation for the id field.
 	flight.DefaultID = flightDescID.Default.(func() uuid.UUID)
-	seatFields := schema.Seat{}.Fields()
-	_ = seatFields
-	// seatDescID is the schema descriptor for id field.
-	seatDescID := seatFields[0].Descriptor()
-	// seat.DefaultID holds the default value on creation for the id field.
-	seat.DefaultID = seatDescID.Default.(func() uuid.UUID)
 }

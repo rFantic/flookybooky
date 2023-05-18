@@ -32,7 +32,6 @@ func (Flight) Fields() []ent.Field {
 // Edges of the Flight.
 func (Flight) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("seats", Seat.Type),
 		edge.From("origin", Airport.Type).Ref("origin").Unique().Field("origin_id").Required(),
 		edge.From("destination", Airport.Type).Ref("destination").Unique().Field("destinartion_id").Required(),
 	}

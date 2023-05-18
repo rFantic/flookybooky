@@ -55,161 +55,409 @@ func IDLTE(id uuid.UUID) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldID, id))
 }
 
-// BookingID applies equality check predicate on the "booking_id" field. It's identical to BookingIDEQ.
-func BookingID(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldBookingID, v))
+// FlightID applies equality check predicate on the "flight_id" field. It's identical to FlightIDEQ.
+func FlightID(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldFlightID, v))
 }
 
-// SeatID applies equality check predicate on the "seat_id" field. It's identical to SeatIDEQ.
-func SeatID(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldSeatID, v))
+// PassengerName applies equality check predicate on the "passenger_name" field. It's identical to PassengerNameEQ.
+func PassengerName(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerName, v))
 }
 
-// LicenseID applies equality check predicate on the "license_id" field. It's identical to LicenseIDEQ.
-func LicenseID(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldLicenseID, v))
+// PassengerLicenseID applies equality check predicate on the "passenger_license_id" field. It's identical to PassengerLicenseIDEQ.
+func PassengerLicenseID(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerLicenseID, v))
 }
 
-// BookingIDEQ applies the EQ predicate on the "booking_id" field.
-func BookingIDEQ(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldBookingID, v))
+// PassengerEmail applies equality check predicate on the "passenger_email" field. It's identical to PassengerEmailEQ.
+func PassengerEmail(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerEmail, v))
 }
 
-// BookingIDNEQ applies the NEQ predicate on the "booking_id" field.
-func BookingIDNEQ(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNEQ(FieldBookingID, v))
+// SeatNumber applies equality check predicate on the "seat_number" field. It's identical to SeatNumberEQ.
+func SeatNumber(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSeatNumber, v))
 }
 
-// BookingIDIn applies the In predicate on the "booking_id" field.
-func BookingIDIn(vs ...uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldIn(FieldBookingID, vs...))
+// FlightIDEQ applies the EQ predicate on the "flight_id" field.
+func FlightIDEQ(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldFlightID, v))
 }
 
-// BookingIDNotIn applies the NotIn predicate on the "booking_id" field.
-func BookingIDNotIn(vs ...uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNotIn(FieldBookingID, vs...))
+// FlightIDNEQ applies the NEQ predicate on the "flight_id" field.
+func FlightIDNEQ(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldFlightID, v))
 }
 
-// SeatIDEQ applies the EQ predicate on the "seat_id" field.
-func SeatIDEQ(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldSeatID, v))
+// FlightIDIn applies the In predicate on the "flight_id" field.
+func FlightIDIn(vs ...uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldFlightID, vs...))
 }
 
-// SeatIDNEQ applies the NEQ predicate on the "seat_id" field.
-func SeatIDNEQ(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNEQ(FieldSeatID, v))
+// FlightIDNotIn applies the NotIn predicate on the "flight_id" field.
+func FlightIDNotIn(vs ...uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldFlightID, vs...))
 }
 
-// SeatIDIn applies the In predicate on the "seat_id" field.
-func SeatIDIn(vs ...uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldIn(FieldSeatID, vs...))
+// FlightIDGT applies the GT predicate on the "flight_id" field.
+func FlightIDGT(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldFlightID, v))
 }
 
-// SeatIDNotIn applies the NotIn predicate on the "seat_id" field.
-func SeatIDNotIn(vs ...uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNotIn(FieldSeatID, vs...))
+// FlightIDGTE applies the GTE predicate on the "flight_id" field.
+func FlightIDGTE(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldFlightID, v))
 }
 
-// SeatIDGT applies the GT predicate on the "seat_id" field.
-func SeatIDGT(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGT(FieldSeatID, v))
+// FlightIDLT applies the LT predicate on the "flight_id" field.
+func FlightIDLT(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldFlightID, v))
 }
 
-// SeatIDGTE applies the GTE predicate on the "seat_id" field.
-func SeatIDGTE(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGTE(FieldSeatID, v))
+// FlightIDLTE applies the LTE predicate on the "flight_id" field.
+func FlightIDLTE(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldFlightID, v))
 }
 
-// SeatIDLT applies the LT predicate on the "seat_id" field.
-func SeatIDLT(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLT(FieldSeatID, v))
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v Status) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldStatus, v))
 }
 
-// SeatIDLTE applies the LTE predicate on the "seat_id" field.
-func SeatIDLTE(v uuid.UUID) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLTE(FieldSeatID, v))
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v Status) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldStatus, v))
 }
 
-// LicenseIDEQ applies the EQ predicate on the "license_id" field.
-func LicenseIDEQ(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEQ(FieldLicenseID, v))
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...Status) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldStatus, vs...))
 }
 
-// LicenseIDNEQ applies the NEQ predicate on the "license_id" field.
-func LicenseIDNEQ(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNEQ(FieldLicenseID, v))
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...Status) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldStatus, vs...))
 }
 
-// LicenseIDIn applies the In predicate on the "license_id" field.
-func LicenseIDIn(vs ...string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldIn(FieldLicenseID, vs...))
+// PassengerNameEQ applies the EQ predicate on the "passenger_name" field.
+func PassengerNameEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerName, v))
 }
 
-// LicenseIDNotIn applies the NotIn predicate on the "license_id" field.
-func LicenseIDNotIn(vs ...string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldNotIn(FieldLicenseID, vs...))
+// PassengerNameNEQ applies the NEQ predicate on the "passenger_name" field.
+func PassengerNameNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldPassengerName, v))
 }
 
-// LicenseIDGT applies the GT predicate on the "license_id" field.
-func LicenseIDGT(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGT(FieldLicenseID, v))
+// PassengerNameIn applies the In predicate on the "passenger_name" field.
+func PassengerNameIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldPassengerName, vs...))
 }
 
-// LicenseIDGTE applies the GTE predicate on the "license_id" field.
-func LicenseIDGTE(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldGTE(FieldLicenseID, v))
+// PassengerNameNotIn applies the NotIn predicate on the "passenger_name" field.
+func PassengerNameNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldPassengerName, vs...))
 }
 
-// LicenseIDLT applies the LT predicate on the "license_id" field.
-func LicenseIDLT(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLT(FieldLicenseID, v))
+// PassengerNameGT applies the GT predicate on the "passenger_name" field.
+func PassengerNameGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldPassengerName, v))
 }
 
-// LicenseIDLTE applies the LTE predicate on the "license_id" field.
-func LicenseIDLTE(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldLTE(FieldLicenseID, v))
+// PassengerNameGTE applies the GTE predicate on the "passenger_name" field.
+func PassengerNameGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldPassengerName, v))
 }
 
-// LicenseIDContains applies the Contains predicate on the "license_id" field.
-func LicenseIDContains(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldContains(FieldLicenseID, v))
+// PassengerNameLT applies the LT predicate on the "passenger_name" field.
+func PassengerNameLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldPassengerName, v))
 }
 
-// LicenseIDHasPrefix applies the HasPrefix predicate on the "license_id" field.
-func LicenseIDHasPrefix(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldHasPrefix(FieldLicenseID, v))
+// PassengerNameLTE applies the LTE predicate on the "passenger_name" field.
+func PassengerNameLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldPassengerName, v))
 }
 
-// LicenseIDHasSuffix applies the HasSuffix predicate on the "license_id" field.
-func LicenseIDHasSuffix(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldHasSuffix(FieldLicenseID, v))
+// PassengerNameContains applies the Contains predicate on the "passenger_name" field.
+func PassengerNameContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldPassengerName, v))
 }
 
-// LicenseIDEqualFold applies the EqualFold predicate on the "license_id" field.
-func LicenseIDEqualFold(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldEqualFold(FieldLicenseID, v))
+// PassengerNameHasPrefix applies the HasPrefix predicate on the "passenger_name" field.
+func PassengerNameHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldPassengerName, v))
 }
 
-// LicenseIDContainsFold applies the ContainsFold predicate on the "license_id" field.
-func LicenseIDContainsFold(v string) predicate.Ticket {
-	return predicate.Ticket(sql.FieldContainsFold(FieldLicenseID, v))
+// PassengerNameHasSuffix applies the HasSuffix predicate on the "passenger_name" field.
+func PassengerNameHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldPassengerName, v))
 }
 
-// HasBooking applies the HasEdge predicate on the "booking" edge.
-func HasBooking() predicate.Ticket {
+// PassengerNameEqualFold applies the EqualFold predicate on the "passenger_name" field.
+func PassengerNameEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldPassengerName, v))
+}
+
+// PassengerNameContainsFold applies the ContainsFold predicate on the "passenger_name" field.
+func PassengerNameContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldPassengerName, v))
+}
+
+// PassengerLicenseIDEQ applies the EQ predicate on the "passenger_license_id" field.
+func PassengerLicenseIDEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDNEQ applies the NEQ predicate on the "passenger_license_id" field.
+func PassengerLicenseIDNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDIn applies the In predicate on the "passenger_license_id" field.
+func PassengerLicenseIDIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldPassengerLicenseID, vs...))
+}
+
+// PassengerLicenseIDNotIn applies the NotIn predicate on the "passenger_license_id" field.
+func PassengerLicenseIDNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldPassengerLicenseID, vs...))
+}
+
+// PassengerLicenseIDGT applies the GT predicate on the "passenger_license_id" field.
+func PassengerLicenseIDGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDGTE applies the GTE predicate on the "passenger_license_id" field.
+func PassengerLicenseIDGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDLT applies the LT predicate on the "passenger_license_id" field.
+func PassengerLicenseIDLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDLTE applies the LTE predicate on the "passenger_license_id" field.
+func PassengerLicenseIDLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDContains applies the Contains predicate on the "passenger_license_id" field.
+func PassengerLicenseIDContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDHasPrefix applies the HasPrefix predicate on the "passenger_license_id" field.
+func PassengerLicenseIDHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDHasSuffix applies the HasSuffix predicate on the "passenger_license_id" field.
+func PassengerLicenseIDHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDEqualFold applies the EqualFold predicate on the "passenger_license_id" field.
+func PassengerLicenseIDEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldPassengerLicenseID, v))
+}
+
+// PassengerLicenseIDContainsFold applies the ContainsFold predicate on the "passenger_license_id" field.
+func PassengerLicenseIDContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldPassengerLicenseID, v))
+}
+
+// PassengerEmailEQ applies the EQ predicate on the "passenger_email" field.
+func PassengerEmailEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPassengerEmail, v))
+}
+
+// PassengerEmailNEQ applies the NEQ predicate on the "passenger_email" field.
+func PassengerEmailNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldPassengerEmail, v))
+}
+
+// PassengerEmailIn applies the In predicate on the "passenger_email" field.
+func PassengerEmailIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldPassengerEmail, vs...))
+}
+
+// PassengerEmailNotIn applies the NotIn predicate on the "passenger_email" field.
+func PassengerEmailNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldPassengerEmail, vs...))
+}
+
+// PassengerEmailGT applies the GT predicate on the "passenger_email" field.
+func PassengerEmailGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldPassengerEmail, v))
+}
+
+// PassengerEmailGTE applies the GTE predicate on the "passenger_email" field.
+func PassengerEmailGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldPassengerEmail, v))
+}
+
+// PassengerEmailLT applies the LT predicate on the "passenger_email" field.
+func PassengerEmailLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldPassengerEmail, v))
+}
+
+// PassengerEmailLTE applies the LTE predicate on the "passenger_email" field.
+func PassengerEmailLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldPassengerEmail, v))
+}
+
+// PassengerEmailContains applies the Contains predicate on the "passenger_email" field.
+func PassengerEmailContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldPassengerEmail, v))
+}
+
+// PassengerEmailHasPrefix applies the HasPrefix predicate on the "passenger_email" field.
+func PassengerEmailHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldPassengerEmail, v))
+}
+
+// PassengerEmailHasSuffix applies the HasSuffix predicate on the "passenger_email" field.
+func PassengerEmailHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldPassengerEmail, v))
+}
+
+// PassengerEmailEqualFold applies the EqualFold predicate on the "passenger_email" field.
+func PassengerEmailEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldPassengerEmail, v))
+}
+
+// PassengerEmailContainsFold applies the ContainsFold predicate on the "passenger_email" field.
+func PassengerEmailContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldPassengerEmail, v))
+}
+
+// SeatNumberEQ applies the EQ predicate on the "seat_number" field.
+func SeatNumberEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSeatNumber, v))
+}
+
+// SeatNumberNEQ applies the NEQ predicate on the "seat_number" field.
+func SeatNumberNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSeatNumber, v))
+}
+
+// SeatNumberIn applies the In predicate on the "seat_number" field.
+func SeatNumberIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSeatNumber, vs...))
+}
+
+// SeatNumberNotIn applies the NotIn predicate on the "seat_number" field.
+func SeatNumberNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSeatNumber, vs...))
+}
+
+// SeatNumberGT applies the GT predicate on the "seat_number" field.
+func SeatNumberGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSeatNumber, v))
+}
+
+// SeatNumberGTE applies the GTE predicate on the "seat_number" field.
+func SeatNumberGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSeatNumber, v))
+}
+
+// SeatNumberLT applies the LT predicate on the "seat_number" field.
+func SeatNumberLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSeatNumber, v))
+}
+
+// SeatNumberLTE applies the LTE predicate on the "seat_number" field.
+func SeatNumberLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSeatNumber, v))
+}
+
+// SeatNumberContains applies the Contains predicate on the "seat_number" field.
+func SeatNumberContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldSeatNumber, v))
+}
+
+// SeatNumberHasPrefix applies the HasPrefix predicate on the "seat_number" field.
+func SeatNumberHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldSeatNumber, v))
+}
+
+// SeatNumberHasSuffix applies the HasSuffix predicate on the "seat_number" field.
+func SeatNumberHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldSeatNumber, v))
+}
+
+// SeatNumberEqualFold applies the EqualFold predicate on the "seat_number" field.
+func SeatNumberEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldSeatNumber, v))
+}
+
+// SeatNumberContainsFold applies the ContainsFold predicate on the "seat_number" field.
+func SeatNumberContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldSeatNumber, v))
+}
+
+// ClassEQ applies the EQ predicate on the "class" field.
+func ClassEQ(v Class) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldClass, v))
+}
+
+// ClassNEQ applies the NEQ predicate on the "class" field.
+func ClassNEQ(v Class) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldClass, v))
+}
+
+// ClassIn applies the In predicate on the "class" field.
+func ClassIn(vs ...Class) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldClass, vs...))
+}
+
+// ClassNotIn applies the NotIn predicate on the "class" field.
+func ClassNotIn(vs ...Class) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldClass, vs...))
+}
+
+// HasGoing applies the HasEdge predicate on the "going" edge.
+func HasGoing() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, BookingTable, BookingColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, GoingTable, GoingColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasBookingWith applies the HasEdge predicate on the "booking" edge with a given conditions (other predicates).
-func HasBookingWith(preds ...predicate.Booking) predicate.Ticket {
+// HasGoingWith applies the HasEdge predicate on the "going" edge with a given conditions (other predicates).
+func HasGoingWith(preds ...predicate.Booking) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
-		step := newBookingStep()
+		step := newGoingStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReturn applies the HasEdge predicate on the "return" edge.
+func HasReturn() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReturnTable, ReturnColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReturnWith applies the HasEdge predicate on the "return" edge with a given conditions (other predicates).
+func HasReturnWith(preds ...predicate.Booking) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newReturnStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

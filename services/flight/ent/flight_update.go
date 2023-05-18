@@ -8,7 +8,6 @@ import (
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/ent/predicate"
-	"flookybooky/services/flight/ent/seat"
 	"fmt"
 	"time"
 
@@ -80,21 +79,6 @@ func (fu *FlightUpdate) SetStatus(f flight.Status) *FlightUpdate {
 	return fu
 }
 
-// AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
-func (fu *FlightUpdate) AddSeatIDs(ids ...uuid.UUID) *FlightUpdate {
-	fu.mutation.AddSeatIDs(ids...)
-	return fu
-}
-
-// AddSeats adds the "seats" edges to the Seat entity.
-func (fu *FlightUpdate) AddSeats(s ...*Seat) *FlightUpdate {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return fu.AddSeatIDs(ids...)
-}
-
 // SetOrigin sets the "origin" edge to the Airport entity.
 func (fu *FlightUpdate) SetOrigin(a *Airport) *FlightUpdate {
 	return fu.SetOriginID(a.ID)
@@ -114,27 +98,6 @@ func (fu *FlightUpdate) SetDestination(a *Airport) *FlightUpdate {
 // Mutation returns the FlightMutation object of the builder.
 func (fu *FlightUpdate) Mutation() *FlightMutation {
 	return fu.mutation
-}
-
-// ClearSeats clears all "seats" edges to the Seat entity.
-func (fu *FlightUpdate) ClearSeats() *FlightUpdate {
-	fu.mutation.ClearSeats()
-	return fu
-}
-
-// RemoveSeatIDs removes the "seats" edge to Seat entities by IDs.
-func (fu *FlightUpdate) RemoveSeatIDs(ids ...uuid.UUID) *FlightUpdate {
-	fu.mutation.RemoveSeatIDs(ids...)
-	return fu
-}
-
-// RemoveSeats removes "seats" edges to Seat entities.
-func (fu *FlightUpdate) RemoveSeats(s ...*Seat) *FlightUpdate {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return fu.RemoveSeatIDs(ids...)
 }
 
 // ClearOrigin clears the "origin" edge to the Airport entity.
@@ -221,51 +184,6 @@ func (fu *FlightUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := fu.mutation.Status(); ok {
 		_spec.SetField(flight.FieldStatus, field.TypeEnum, value)
-	}
-	if fu.mutation.SeatsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := fu.mutation.RemovedSeatsIDs(); len(nodes) > 0 && !fu.mutation.SeatsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := fu.mutation.SeatsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if fu.mutation.OriginCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -394,21 +312,6 @@ func (fuo *FlightUpdateOne) SetStatus(f flight.Status) *FlightUpdateOne {
 	return fuo
 }
 
-// AddSeatIDs adds the "seats" edge to the Seat entity by IDs.
-func (fuo *FlightUpdateOne) AddSeatIDs(ids ...uuid.UUID) *FlightUpdateOne {
-	fuo.mutation.AddSeatIDs(ids...)
-	return fuo
-}
-
-// AddSeats adds the "seats" edges to the Seat entity.
-func (fuo *FlightUpdateOne) AddSeats(s ...*Seat) *FlightUpdateOne {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return fuo.AddSeatIDs(ids...)
-}
-
 // SetOrigin sets the "origin" edge to the Airport entity.
 func (fuo *FlightUpdateOne) SetOrigin(a *Airport) *FlightUpdateOne {
 	return fuo.SetOriginID(a.ID)
@@ -428,27 +331,6 @@ func (fuo *FlightUpdateOne) SetDestination(a *Airport) *FlightUpdateOne {
 // Mutation returns the FlightMutation object of the builder.
 func (fuo *FlightUpdateOne) Mutation() *FlightMutation {
 	return fuo.mutation
-}
-
-// ClearSeats clears all "seats" edges to the Seat entity.
-func (fuo *FlightUpdateOne) ClearSeats() *FlightUpdateOne {
-	fuo.mutation.ClearSeats()
-	return fuo
-}
-
-// RemoveSeatIDs removes the "seats" edge to Seat entities by IDs.
-func (fuo *FlightUpdateOne) RemoveSeatIDs(ids ...uuid.UUID) *FlightUpdateOne {
-	fuo.mutation.RemoveSeatIDs(ids...)
-	return fuo
-}
-
-// RemoveSeats removes "seats" edges to Seat entities.
-func (fuo *FlightUpdateOne) RemoveSeats(s ...*Seat) *FlightUpdateOne {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return fuo.RemoveSeatIDs(ids...)
 }
 
 // ClearOrigin clears the "origin" edge to the Airport entity.
@@ -565,51 +447,6 @@ func (fuo *FlightUpdateOne) sqlSave(ctx context.Context) (_node *Flight, err err
 	}
 	if value, ok := fuo.mutation.Status(); ok {
 		_spec.SetField(flight.FieldStatus, field.TypeEnum, value)
-	}
-	if fuo.mutation.SeatsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := fuo.mutation.RemovedSeatsIDs(); len(nodes) > 0 && !fuo.mutation.SeatsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := fuo.mutation.SeatsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   flight.SeatsTable,
-			Columns: []string{flight.SeatsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(seat.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if fuo.mutation.OriginCleared() {
 		edge := &sqlgraph.EdgeSpec{
