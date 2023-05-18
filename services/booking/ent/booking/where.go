@@ -136,6 +136,26 @@ func GoingTicketIDNotIn(vs ...uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldNotIn(FieldGoingTicketID, vs...))
 }
 
+// GoingTicketIDGT applies the GT predicate on the "going_ticket_id" field.
+func GoingTicketIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldGoingTicketID, v))
+}
+
+// GoingTicketIDGTE applies the GTE predicate on the "going_ticket_id" field.
+func GoingTicketIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldGoingTicketID, v))
+}
+
+// GoingTicketIDLT applies the LT predicate on the "going_ticket_id" field.
+func GoingTicketIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldGoingTicketID, v))
+}
+
+// GoingTicketIDLTE applies the LTE predicate on the "going_ticket_id" field.
+func GoingTicketIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldGoingTicketID, v))
+}
+
 // ReturnTicketIDEQ applies the EQ predicate on the "return_ticket_id" field.
 func ReturnTicketIDEQ(v uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldEQ(FieldReturnTicketID, v))
@@ -154,6 +174,26 @@ func ReturnTicketIDIn(vs ...uuid.UUID) predicate.Booking {
 // ReturnTicketIDNotIn applies the NotIn predicate on the "return_ticket_id" field.
 func ReturnTicketIDNotIn(vs ...uuid.UUID) predicate.Booking {
 	return predicate.Booking(sql.FieldNotIn(FieldReturnTicketID, vs...))
+}
+
+// ReturnTicketIDGT applies the GT predicate on the "return_ticket_id" field.
+func ReturnTicketIDGT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGT(FieldReturnTicketID, v))
+}
+
+// ReturnTicketIDGTE applies the GTE predicate on the "return_ticket_id" field.
+func ReturnTicketIDGTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldGTE(FieldReturnTicketID, v))
+}
+
+// ReturnTicketIDLT applies the LT predicate on the "return_ticket_id" field.
+func ReturnTicketIDLT(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLT(FieldReturnTicketID, v))
+}
+
+// ReturnTicketIDLTE applies the LTE predicate on the "return_ticket_id" field.
+func ReturnTicketIDLTE(v uuid.UUID) predicate.Booking {
+	return predicate.Booking(sql.FieldLTE(FieldReturnTicketID, v))
 }
 
 // ReturnTicketIDIsNil applies the IsNil predicate on the "return_ticket_id" field.
@@ -226,44 +266,21 @@ func CreatedAtLTE(v time.Time) predicate.Booking {
 	return predicate.Booking(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasGoingTicket applies the HasEdge predicate on the "going_ticket" edge.
-func HasGoingTicket() predicate.Booking {
+// HasTicket applies the HasEdge predicate on the "ticket" edge.
+func HasTicket() predicate.Booking {
 	return predicate.Booking(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, GoingTicketTable, GoingTicketColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, TicketTable, TicketPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasGoingTicketWith applies the HasEdge predicate on the "going_ticket" edge with a given conditions (other predicates).
-func HasGoingTicketWith(preds ...predicate.Ticket) predicate.Booking {
+// HasTicketWith applies the HasEdge predicate on the "ticket" edge with a given conditions (other predicates).
+func HasTicketWith(preds ...predicate.Ticket) predicate.Booking {
 	return predicate.Booking(func(s *sql.Selector) {
-		step := newGoingTicketStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasReturnTicket applies the HasEdge predicate on the "return_ticket" edge.
-func HasReturnTicket() predicate.Booking {
-	return predicate.Booking(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ReturnTicketTable, ReturnTicketColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasReturnTicketWith applies the HasEdge predicate on the "return_ticket" edge with a given conditions (other predicates).
-func HasReturnTicketWith(preds ...predicate.Ticket) predicate.Booking {
-	return predicate.Booking(func(s *sql.Selector) {
-		step := newReturnTicketStep()
+		step := newTicketStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

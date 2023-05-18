@@ -293,31 +293,15 @@ func (c *BookingClient) GetX(ctx context.Context, id uuid.UUID) *Booking {
 	return obj
 }
 
-// QueryGoingTicket queries the going_ticket edge of a Booking.
-func (c *BookingClient) QueryGoingTicket(b *Booking) *TicketQuery {
+// QueryTicket queries the ticket edge of a Booking.
+func (c *BookingClient) QueryTicket(b *Booking) *TicketQuery {
 	query := (&TicketClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := b.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(booking.Table, booking.FieldID, id),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, booking.GoingTicketTable, booking.GoingTicketColumn),
-		)
-		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReturnTicket queries the return_ticket edge of a Booking.
-func (c *BookingClient) QueryReturnTicket(b *Booking) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := b.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(booking.Table, booking.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, booking.ReturnTicketTable, booking.ReturnTicketColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, booking.TicketTable, booking.TicketPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(b.driver.Dialect(), step)
 		return fromV, nil
@@ -443,31 +427,15 @@ func (c *TicketClient) GetX(ctx context.Context, id uuid.UUID) *Ticket {
 	return obj
 }
 
-// QueryGoing queries the going edge of a Ticket.
-func (c *TicketClient) QueryGoing(t *Ticket) *BookingQuery {
+// QueryBooking queries the booking edge of a Ticket.
+func (c *TicketClient) QueryBooking(t *Ticket) *BookingQuery {
 	query := (&BookingClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.GoingTable, ticket.GoingColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReturn queries the return edge of a Ticket.
-func (c *TicketClient) QueryReturn(t *Ticket) *BookingQuery {
-	query := (&BookingClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ReturnTable, ticket.ReturnColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, ticket.BookingTable, ticket.BookingPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil

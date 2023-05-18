@@ -26,26 +26,15 @@ const (
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// EdgeGoingTicket holds the string denoting the going_ticket edge name in mutations.
-	EdgeGoingTicket = "going_ticket"
-	// EdgeReturnTicket holds the string denoting the return_ticket edge name in mutations.
-	EdgeReturnTicket = "return_ticket"
+	// EdgeTicket holds the string denoting the ticket edge name in mutations.
+	EdgeTicket = "ticket"
 	// Table holds the table name of the booking in the database.
 	Table = "bookings"
-	// GoingTicketTable is the table that holds the going_ticket relation/edge.
-	GoingTicketTable = "bookings"
-	// GoingTicketInverseTable is the table name for the Ticket entity.
+	// TicketTable is the table that holds the ticket relation/edge. The primary key declared below.
+	TicketTable = "booking_ticket"
+	// TicketInverseTable is the table name for the Ticket entity.
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	GoingTicketInverseTable = "tickets"
-	// GoingTicketColumn is the table column denoting the going_ticket relation/edge.
-	GoingTicketColumn = "going_ticket_id"
-	// ReturnTicketTable is the table that holds the return_ticket relation/edge.
-	ReturnTicketTable = "bookings"
-	// ReturnTicketInverseTable is the table name for the Ticket entity.
-	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	ReturnTicketInverseTable = "tickets"
-	// ReturnTicketColumn is the table column denoting the return_ticket relation/edge.
-	ReturnTicketColumn = "return_ticket_id"
+	TicketInverseTable = "tickets"
 )
 
 // Columns holds all SQL columns for booking fields.
@@ -57,6 +46,12 @@ var Columns = []string{
 	FieldStatus,
 	FieldCreatedAt,
 }
+
+var (
+	// TicketPrimaryKey and TicketColumn2 are the table columns denoting the
+	// primary key for the ticket relation (M2M).
+	TicketPrimaryKey = []string{"booking_id", "ticket_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -132,30 +127,23 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByGoingTicketField orders the results by going_ticket field.
-func ByGoingTicketField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByTicketCount orders the results by ticket count.
+func ByTicketCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newGoingTicketStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newTicketStep(), opts...)
 	}
 }
 
-// ByReturnTicketField orders the results by return_ticket field.
-func ByReturnTicketField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByTicket orders the results by ticket terms.
+func ByTicket(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReturnTicketStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newTicketStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newGoingTicketStep() *sqlgraph.Step {
+func newTicketStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(GoingTicketInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, GoingTicketTable, GoingTicketColumn),
-	)
-}
-func newReturnTicketStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReturnTicketInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ReturnTicketTable, ReturnTicketColumn),
+		sqlgraph.To(TicketInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, TicketTable, TicketPrimaryKey...),
 	)
 }

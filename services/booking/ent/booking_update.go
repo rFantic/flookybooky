@@ -67,14 +67,19 @@ func (bu *BookingUpdate) SetStatus(b booking.Status) *BookingUpdate {
 	return bu
 }
 
-// SetGoingTicket sets the "going_ticket" edge to the Ticket entity.
-func (bu *BookingUpdate) SetGoingTicket(t *Ticket) *BookingUpdate {
-	return bu.SetGoingTicketID(t.ID)
+// AddTicketIDs adds the "ticket" edge to the Ticket entity by IDs.
+func (bu *BookingUpdate) AddTicketIDs(ids ...uuid.UUID) *BookingUpdate {
+	bu.mutation.AddTicketIDs(ids...)
+	return bu
 }
 
-// SetReturnTicket sets the "return_ticket" edge to the Ticket entity.
-func (bu *BookingUpdate) SetReturnTicket(t *Ticket) *BookingUpdate {
-	return bu.SetReturnTicketID(t.ID)
+// AddTicket adds the "ticket" edges to the Ticket entity.
+func (bu *BookingUpdate) AddTicket(t ...*Ticket) *BookingUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bu.AddTicketIDs(ids...)
 }
 
 // Mutation returns the BookingMutation object of the builder.
@@ -82,16 +87,25 @@ func (bu *BookingUpdate) Mutation() *BookingMutation {
 	return bu.mutation
 }
 
-// ClearGoingTicket clears the "going_ticket" edge to the Ticket entity.
-func (bu *BookingUpdate) ClearGoingTicket() *BookingUpdate {
-	bu.mutation.ClearGoingTicket()
+// ClearTicket clears all "ticket" edges to the Ticket entity.
+func (bu *BookingUpdate) ClearTicket() *BookingUpdate {
+	bu.mutation.ClearTicket()
 	return bu
 }
 
-// ClearReturnTicket clears the "return_ticket" edge to the Ticket entity.
-func (bu *BookingUpdate) ClearReturnTicket() *BookingUpdate {
-	bu.mutation.ClearReturnTicket()
+// RemoveTicketIDs removes the "ticket" edge to Ticket entities by IDs.
+func (bu *BookingUpdate) RemoveTicketIDs(ids ...uuid.UUID) *BookingUpdate {
+	bu.mutation.RemoveTicketIDs(ids...)
 	return bu
+}
+
+// RemoveTicket removes "ticket" edges to Ticket entities.
+func (bu *BookingUpdate) RemoveTicket(t ...*Ticket) *BookingUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return bu.RemoveTicketIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -128,9 +142,6 @@ func (bu *BookingUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Booking.status": %w`, err)}
 		}
 	}
-	if _, ok := bu.mutation.GoingTicketID(); bu.mutation.GoingTicketCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Booking.going_ticket"`)
-	}
 	return nil
 }
 
@@ -149,15 +160,24 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bu.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
+	if value, ok := bu.mutation.GoingTicketID(); ok {
+		_spec.SetField(booking.FieldGoingTicketID, field.TypeUUID, value)
+	}
+	if value, ok := bu.mutation.ReturnTicketID(); ok {
+		_spec.SetField(booking.FieldReturnTicketID, field.TypeUUID, value)
+	}
+	if bu.mutation.ReturnTicketIDCleared() {
+		_spec.ClearField(booking.FieldReturnTicketID, field.TypeUUID)
+	}
 	if value, ok := bu.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
-	if bu.mutation.GoingTicketCleared() {
+	if bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.GoingTicketTable,
-			Columns: []string{booking.GoingTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -165,12 +185,12 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bu.mutation.GoingTicketIDs(); len(nodes) > 0 {
+	if nodes := bu.mutation.RemovedTicketIDs(); len(nodes) > 0 && !bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.GoingTicketTable,
-			Columns: []string{booking.GoingTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -179,27 +199,14 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if bu.mutation.ReturnTicketCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.ReturnTicketTable,
-			Columns: []string{booking.ReturnTicketColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
-			},
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := bu.mutation.ReturnTicketIDs(); len(nodes) > 0 {
+	if nodes := bu.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.ReturnTicketTable,
-			Columns: []string{booking.ReturnTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -268,14 +275,19 @@ func (buo *BookingUpdateOne) SetStatus(b booking.Status) *BookingUpdateOne {
 	return buo
 }
 
-// SetGoingTicket sets the "going_ticket" edge to the Ticket entity.
-func (buo *BookingUpdateOne) SetGoingTicket(t *Ticket) *BookingUpdateOne {
-	return buo.SetGoingTicketID(t.ID)
+// AddTicketIDs adds the "ticket" edge to the Ticket entity by IDs.
+func (buo *BookingUpdateOne) AddTicketIDs(ids ...uuid.UUID) *BookingUpdateOne {
+	buo.mutation.AddTicketIDs(ids...)
+	return buo
 }
 
-// SetReturnTicket sets the "return_ticket" edge to the Ticket entity.
-func (buo *BookingUpdateOne) SetReturnTicket(t *Ticket) *BookingUpdateOne {
-	return buo.SetReturnTicketID(t.ID)
+// AddTicket adds the "ticket" edges to the Ticket entity.
+func (buo *BookingUpdateOne) AddTicket(t ...*Ticket) *BookingUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return buo.AddTicketIDs(ids...)
 }
 
 // Mutation returns the BookingMutation object of the builder.
@@ -283,16 +295,25 @@ func (buo *BookingUpdateOne) Mutation() *BookingMutation {
 	return buo.mutation
 }
 
-// ClearGoingTicket clears the "going_ticket" edge to the Ticket entity.
-func (buo *BookingUpdateOne) ClearGoingTicket() *BookingUpdateOne {
-	buo.mutation.ClearGoingTicket()
+// ClearTicket clears all "ticket" edges to the Ticket entity.
+func (buo *BookingUpdateOne) ClearTicket() *BookingUpdateOne {
+	buo.mutation.ClearTicket()
 	return buo
 }
 
-// ClearReturnTicket clears the "return_ticket" edge to the Ticket entity.
-func (buo *BookingUpdateOne) ClearReturnTicket() *BookingUpdateOne {
-	buo.mutation.ClearReturnTicket()
+// RemoveTicketIDs removes the "ticket" edge to Ticket entities by IDs.
+func (buo *BookingUpdateOne) RemoveTicketIDs(ids ...uuid.UUID) *BookingUpdateOne {
+	buo.mutation.RemoveTicketIDs(ids...)
 	return buo
+}
+
+// RemoveTicket removes "ticket" edges to Ticket entities.
+func (buo *BookingUpdateOne) RemoveTicket(t ...*Ticket) *BookingUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return buo.RemoveTicketIDs(ids...)
 }
 
 // Where appends a list predicates to the BookingUpdate builder.
@@ -342,9 +363,6 @@ func (buo *BookingUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Booking.status": %w`, err)}
 		}
 	}
-	if _, ok := buo.mutation.GoingTicketID(); buo.mutation.GoingTicketCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Booking.going_ticket"`)
-	}
 	return nil
 }
 
@@ -380,15 +398,24 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	if value, ok := buo.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
+	if value, ok := buo.mutation.GoingTicketID(); ok {
+		_spec.SetField(booking.FieldGoingTicketID, field.TypeUUID, value)
+	}
+	if value, ok := buo.mutation.ReturnTicketID(); ok {
+		_spec.SetField(booking.FieldReturnTicketID, field.TypeUUID, value)
+	}
+	if buo.mutation.ReturnTicketIDCleared() {
+		_spec.ClearField(booking.FieldReturnTicketID, field.TypeUUID)
+	}
 	if value, ok := buo.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
-	if buo.mutation.GoingTicketCleared() {
+	if buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.GoingTicketTable,
-			Columns: []string{booking.GoingTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -396,12 +423,12 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := buo.mutation.GoingTicketIDs(); len(nodes) > 0 {
+	if nodes := buo.mutation.RemovedTicketIDs(); len(nodes) > 0 && !buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.GoingTicketTable,
-			Columns: []string{booking.GoingTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -410,27 +437,14 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if buo.mutation.ReturnTicketCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.ReturnTicketTable,
-			Columns: []string{booking.ReturnTicketColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
-			},
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := buo.mutation.ReturnTicketIDs(); len(nodes) > 0 {
+	if nodes := buo.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   booking.ReturnTicketTable,
-			Columns: []string{booking.ReturnTicketColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   booking.TicketTable,
+			Columns: booking.TicketPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),

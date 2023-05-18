@@ -12,23 +12,26 @@ enum TicketClass {
 
 type Ticket {
     id: String!
-    status: TicketStatus!
-    flight: Flight!
+    booking: Booking!
+    going_flight: Flight!
+    return_fligt: Flight!
     passenger_license_id: String!
     passenger_name: String!
     passenger_email: String!
     seat_number: String!
     ticket_class: TicketClass!
+    status: TicketStatus!
 }
 
 input TicketInput{
-    status: TicketStatus!
-    flight_id: String!
+    going_flight_id: String!
+    return_flight_id: String!
     passenger_license_id: String!
     passenger_name: String!
     passenger_email: String!
     seat_number: String!
     ticket_class: TicketClass!
+    status: TicketStatus!
 }
 
 extend type Query {

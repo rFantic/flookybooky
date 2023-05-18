@@ -15,8 +15,10 @@ const (
 	Label = "ticket"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldFlightID holds the string denoting the flight_id field in the database.
-	FieldFlightID = "flight_id"
+	// FieldGoingFlightID holds the string denoting the going_flight_id field in the database.
+	FieldGoingFlightID = "going_flight_id"
+	// FieldReturnFlightID holds the string denoting the return_flight_id field in the database.
+	FieldReturnFlightID = "return_flight_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldPassengerName holds the string denoting the passenger_name field in the database.
@@ -29,32 +31,22 @@ const (
 	FieldSeatNumber = "seat_number"
 	// FieldClass holds the string denoting the class field in the database.
 	FieldClass = "class"
-	// EdgeGoing holds the string denoting the going edge name in mutations.
-	EdgeGoing = "going"
-	// EdgeReturn holds the string denoting the return edge name in mutations.
-	EdgeReturn = "return"
+	// EdgeBooking holds the string denoting the booking edge name in mutations.
+	EdgeBooking = "booking"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
-	// GoingTable is the table that holds the going relation/edge.
-	GoingTable = "bookings"
-	// GoingInverseTable is the table name for the Booking entity.
+	// BookingTable is the table that holds the booking relation/edge. The primary key declared below.
+	BookingTable = "booking_ticket"
+	// BookingInverseTable is the table name for the Booking entity.
 	// It exists in this package in order to avoid circular dependency with the "booking" package.
-	GoingInverseTable = "bookings"
-	// GoingColumn is the table column denoting the going relation/edge.
-	GoingColumn = "going_ticket_id"
-	// ReturnTable is the table that holds the return relation/edge.
-	ReturnTable = "bookings"
-	// ReturnInverseTable is the table name for the Booking entity.
-	// It exists in this package in order to avoid circular dependency with the "booking" package.
-	ReturnInverseTable = "bookings"
-	// ReturnColumn is the table column denoting the return relation/edge.
-	ReturnColumn = "return_ticket_id"
+	BookingInverseTable = "bookings"
 )
 
 // Columns holds all SQL columns for ticket fields.
 var Columns = []string{
 	FieldID,
-	FieldFlightID,
+	FieldGoingFlightID,
+	FieldReturnFlightID,
 	FieldStatus,
 	FieldPassengerName,
 	FieldPassengerLicenseID,
@@ -62,6 +54,12 @@ var Columns = []string{
 	FieldSeatNumber,
 	FieldClass,
 }
+
+var (
+	// BookingPrimaryKey and BookingColumn2 are the table columns denoting the
+	// primary key for the booking relation (M2M).
+	BookingPrimaryKey = []string{"booking_id", "ticket_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -134,9 +132,14 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByFlightID orders the results by the flight_id field.
-func ByFlightID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFlightID, opts...).ToFunc()
+// ByGoingFlightID orders the results by the going_flight_id field.
+func ByGoingFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGoingFlightID, opts...).ToFunc()
+}
+
+// ByReturnFlightID orders the results by the return_flight_id field.
+func ByReturnFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReturnFlightID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -169,44 +172,23 @@ func ByClass(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClass, opts...).ToFunc()
 }
 
-// ByGoingCount orders the results by going count.
-func ByGoingCount(opts ...sql.OrderTermOption) OrderOption {
+// ByBookingCount orders the results by booking count.
+func ByBookingCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newGoingStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newBookingStep(), opts...)
 	}
 }
 
-// ByGoing orders the results by going terms.
-func ByGoing(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByBooking orders the results by booking terms.
+func ByBooking(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newGoingStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newBookingStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByReturnCount orders the results by return count.
-func ByReturnCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newReturnStep(), opts...)
-	}
-}
-
-// ByReturn orders the results by return terms.
-func ByReturn(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReturnStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newGoingStep() *sqlgraph.Step {
+func newBookingStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(GoingInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, GoingTable, GoingColumn),
-	)
-}
-func newReturnStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReturnInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ReturnTable, ReturnColumn),
+		sqlgraph.To(BookingInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, BookingTable, BookingPrimaryKey...),
 	)
 }

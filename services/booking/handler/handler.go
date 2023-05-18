@@ -157,7 +157,8 @@ func (h *BookingHandler) PostTicket(ctx context.Context, req *pb.TicketInput) (*
 	if err != nil {
 		return nil, err
 	}
-	ticketRes, err := h.client.Ticket.Create().SetFlightID(_flight_id).
+	ticketRes, err := h.client.Ticket.Create().
+		SetFlightID(_flight_id).
 		SetPassengerEmail(req.PassengerEmail).
 		SetPassengerLicenseID(req.PassengerLicenseId).
 		SetPassengerName(req.PassengerName).

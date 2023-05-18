@@ -20,12 +20,11 @@ import (
 // TicketQuery is the builder for querying Ticket entities.
 type TicketQuery struct {
 	config
-	ctx        *QueryContext
-	order      []ticket.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Ticket
-	withGoing  *BookingQuery
-	withReturn *BookingQuery
+	ctx         *QueryContext
+	order       []ticket.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Ticket
+	withBooking *BookingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +61,8 @@ func (tq *TicketQuery) Order(o ...ticket.OrderOption) *TicketQuery {
 	return tq
 }
 
-// QueryGoing chains the current query on the "going" edge.
-func (tq *TicketQuery) QueryGoing() *BookingQuery {
+// QueryBooking chains the current query on the "booking" edge.
+func (tq *TicketQuery) QueryBooking() *BookingQuery {
 	query := (&BookingClient{config: tq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := tq.prepareQuery(ctx); err != nil {
@@ -76,29 +75,7 @@ func (tq *TicketQuery) QueryGoing() *BookingQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.GoingTable, ticket.GoingColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryReturn chains the current query on the "return" edge.
-func (tq *TicketQuery) QueryReturn() *BookingQuery {
-	query := (&BookingClient{config: tq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := tq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
-			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ReturnTable, ticket.ReturnColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, ticket.BookingTable, ticket.BookingPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,38 +270,26 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		return nil
 	}
 	return &TicketQuery{
-		config:     tq.config,
-		ctx:        tq.ctx.Clone(),
-		order:      append([]ticket.OrderOption{}, tq.order...),
-		inters:     append([]Interceptor{}, tq.inters...),
-		predicates: append([]predicate.Ticket{}, tq.predicates...),
-		withGoing:  tq.withGoing.Clone(),
-		withReturn: tq.withReturn.Clone(),
+		config:      tq.config,
+		ctx:         tq.ctx.Clone(),
+		order:       append([]ticket.OrderOption{}, tq.order...),
+		inters:      append([]Interceptor{}, tq.inters...),
+		predicates:  append([]predicate.Ticket{}, tq.predicates...),
+		withBooking: tq.withBooking.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
 	}
 }
 
-// WithGoing tells the query-builder to eager-load the nodes that are connected to
-// the "going" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TicketQuery) WithGoing(opts ...func(*BookingQuery)) *TicketQuery {
+// WithBooking tells the query-builder to eager-load the nodes that are connected to
+// the "booking" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithBooking(opts ...func(*BookingQuery)) *TicketQuery {
 	query := (&BookingClient{config: tq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tq.withGoing = query
-	return tq
-}
-
-// WithReturn tells the query-builder to eager-load the nodes that are connected to
-// the "return" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TicketQuery) WithReturn(opts ...func(*BookingQuery)) *TicketQuery {
-	query := (&BookingClient{config: tq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	tq.withReturn = query
+	tq.withBooking = query
 	return tq
 }
 
@@ -334,12 +299,12 @@ func (tq *TicketQuery) WithReturn(opts ...func(*BookingQuery)) *TicketQuery {
 // Example:
 //
 //	var v []struct {
-//		FlightID uuid.UUID `json:"flight_id,omitempty"`
+//		GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		GroupBy(ticket.FieldFlightID).
+//		GroupBy(ticket.FieldGoingFlightID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
@@ -357,11 +322,11 @@ func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
 // Example:
 //
 //	var v []struct {
-//		FlightID uuid.UUID `json:"flight_id,omitempty"`
+//		GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		Select(ticket.FieldFlightID).
+//		Select(ticket.FieldGoingFlightID).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) Select(fields ...string) *TicketSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
@@ -406,9 +371,8 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	var (
 		nodes       = []*Ticket{}
 		_spec       = tq.querySpec()
-		loadedTypes = [2]bool{
-			tq.withGoing != nil,
-			tq.withReturn != nil,
+		loadedTypes = [1]bool{
+			tq.withBooking != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -429,83 +393,74 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withGoing; query != nil {
-		if err := tq.loadGoing(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Going = []*Booking{} },
-			func(n *Ticket, e *Booking) { n.Edges.Going = append(n.Edges.Going, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := tq.withReturn; query != nil {
-		if err := tq.loadReturn(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Return = []*Booking{} },
-			func(n *Ticket, e *Booking) { n.Edges.Return = append(n.Edges.Return, e) }); err != nil {
+	if query := tq.withBooking; query != nil {
+		if err := tq.loadBooking(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Booking = []*Booking{} },
+			func(n *Ticket, e *Booking) { n.Edges.Booking = append(n.Edges.Booking, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (tq *TicketQuery) loadGoing(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+func (tq *TicketQuery) loadBooking(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Ticket)
+	nids := make(map[uuid.UUID]map[*Ticket]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(booking.FieldGoingTicketID)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(ticket.BookingTable)
+		s.Join(joinT).On(s.C(booking.FieldID), joinT.C(ticket.BookingPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(ticket.BookingPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(ticket.BookingPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
 	}
-	query.Where(predicate.Booking(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.GoingColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Booking](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.GoingTicketID
-		node, ok := nodeids[fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "going_ticket_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected "booking" node returned %v`, n.ID)
 		}
-		assign(node, n)
-	}
-	return nil
-}
-func (tq *TicketQuery) loadReturn(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Ticket)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		for kn := range nodes {
+			assign(kn, n)
 		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(booking.FieldReturnTicketID)
-	}
-	query.Where(predicate.Booking(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(ticket.ReturnColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ReturnTicketID
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "return_ticket_id" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "return_ticket_id" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }

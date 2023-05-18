@@ -6,10 +6,9 @@ enum BookingStatus {
 
 type Booking {
     id: String!
-    going_ticket: Ticket!
-    return_ticket: Ticket
     customer: Customer!
     status: BookingStatus!
+    ticket: [Ticket]!
 }
 
 input BookingInput{

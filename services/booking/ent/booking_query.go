@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/predicate"
 	"flookybooky/services/booking/ent/ticket"
@@ -19,12 +20,11 @@ import (
 // BookingQuery is the builder for querying Booking entities.
 type BookingQuery struct {
 	config
-	ctx              *QueryContext
-	order            []booking.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.Booking
-	withGoingTicket  *TicketQuery
-	withReturnTicket *TicketQuery
+	ctx        *QueryContext
+	order      []booking.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Booking
+	withTicket *TicketQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,8 +61,8 @@ func (bq *BookingQuery) Order(o ...booking.OrderOption) *BookingQuery {
 	return bq
 }
 
-// QueryGoingTicket chains the current query on the "going_ticket" edge.
-func (bq *BookingQuery) QueryGoingTicket() *TicketQuery {
+// QueryTicket chains the current query on the "ticket" edge.
+func (bq *BookingQuery) QueryTicket() *TicketQuery {
 	query := (&TicketClient{config: bq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := bq.prepareQuery(ctx); err != nil {
@@ -75,29 +75,7 @@ func (bq *BookingQuery) QueryGoingTicket() *TicketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(booking.Table, booking.FieldID, selector),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, booking.GoingTicketTable, booking.GoingTicketColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryReturnTicket chains the current query on the "return_ticket" edge.
-func (bq *BookingQuery) QueryReturnTicket() *TicketQuery {
-	query := (&TicketClient{config: bq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := bq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := bq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(booking.Table, booking.FieldID, selector),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, booking.ReturnTicketTable, booking.ReturnTicketColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, booking.TicketTable, booking.TicketPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(bq.driver.Dialect(), step)
 		return fromU, nil
@@ -292,38 +270,26 @@ func (bq *BookingQuery) Clone() *BookingQuery {
 		return nil
 	}
 	return &BookingQuery{
-		config:           bq.config,
-		ctx:              bq.ctx.Clone(),
-		order:            append([]booking.OrderOption{}, bq.order...),
-		inters:           append([]Interceptor{}, bq.inters...),
-		predicates:       append([]predicate.Booking{}, bq.predicates...),
-		withGoingTicket:  bq.withGoingTicket.Clone(),
-		withReturnTicket: bq.withReturnTicket.Clone(),
+		config:     bq.config,
+		ctx:        bq.ctx.Clone(),
+		order:      append([]booking.OrderOption{}, bq.order...),
+		inters:     append([]Interceptor{}, bq.inters...),
+		predicates: append([]predicate.Booking{}, bq.predicates...),
+		withTicket: bq.withTicket.Clone(),
 		// clone intermediate query.
 		sql:  bq.sql.Clone(),
 		path: bq.path,
 	}
 }
 
-// WithGoingTicket tells the query-builder to eager-load the nodes that are connected to
-// the "going_ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (bq *BookingQuery) WithGoingTicket(opts ...func(*TicketQuery)) *BookingQuery {
+// WithTicket tells the query-builder to eager-load the nodes that are connected to
+// the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
+func (bq *BookingQuery) WithTicket(opts ...func(*TicketQuery)) *BookingQuery {
 	query := (&TicketClient{config: bq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	bq.withGoingTicket = query
-	return bq
-}
-
-// WithReturnTicket tells the query-builder to eager-load the nodes that are connected to
-// the "return_ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (bq *BookingQuery) WithReturnTicket(opts ...func(*TicketQuery)) *BookingQuery {
-	query := (&TicketClient{config: bq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	bq.withReturnTicket = query
+	bq.withTicket = query
 	return bq
 }
 
@@ -405,9 +371,8 @@ func (bq *BookingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Book
 	var (
 		nodes       = []*Booking{}
 		_spec       = bq.querySpec()
-		loadedTypes = [2]bool{
-			bq.withGoingTicket != nil,
-			bq.withReturnTicket != nil,
+		loadedTypes = [1]bool{
+			bq.withTicket != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -428,78 +393,73 @@ func (bq *BookingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Book
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := bq.withGoingTicket; query != nil {
-		if err := bq.loadGoingTicket(ctx, query, nodes, nil,
-			func(n *Booking, e *Ticket) { n.Edges.GoingTicket = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := bq.withReturnTicket; query != nil {
-		if err := bq.loadReturnTicket(ctx, query, nodes, nil,
-			func(n *Booking, e *Ticket) { n.Edges.ReturnTicket = e }); err != nil {
+	if query := bq.withTicket; query != nil {
+		if err := bq.loadTicket(ctx, query, nodes,
+			func(n *Booking) { n.Edges.Ticket = []*Ticket{} },
+			func(n *Booking, e *Ticket) { n.Edges.Ticket = append(n.Edges.Ticket, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (bq *BookingQuery) loadGoingTicket(ctx context.Context, query *TicketQuery, nodes []*Booking, init func(*Booking), assign func(*Booking, *Ticket)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Booking)
-	for i := range nodes {
-		fk := nodes[i].GoingTicketID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
+func (bq *BookingQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*Booking, init func(*Booking), assign func(*Booking, *Ticket)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Booking)
+	nids := make(map[uuid.UUID]map[*Booking]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
 		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(booking.TicketTable)
+		s.Join(joinT).On(s.C(ticket.FieldID), joinT.C(booking.TicketPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(booking.TicketPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(booking.TicketPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
 	}
-	query.Where(ticket.IDIn(ids...))
-	neighbors, err := query.All(ctx)
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Booking]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Ticket](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "going_ticket_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "ticket" node returned %v`, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (bq *BookingQuery) loadReturnTicket(ctx context.Context, query *TicketQuery, nodes []*Booking, init func(*Booking), assign func(*Booking, *Ticket)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Booking)
-	for i := range nodes {
-		if nodes[i].ReturnTicketID == nil {
-			continue
-		}
-		fk := *nodes[i].ReturnTicketID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(ticket.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "return_ticket_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil
@@ -529,12 +489,6 @@ func (bq *BookingQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != booking.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if bq.withGoingTicket != nil {
-			_spec.Node.AddColumnOnce(booking.FieldGoingTicketID)
-		}
-		if bq.withReturnTicket != nil {
-			_spec.Node.AddColumnOnce(booking.FieldReturnTicketID)
 		}
 	}
 	if ps := bq.predicates; len(ps) > 0 {

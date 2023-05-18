@@ -17,8 +17,10 @@ type Ticket struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// FlightID holds the value of the "flight_id" field.
-	FlightID uuid.UUID `json:"flight_id,omitempty"`
+	// GoingFlightID holds the value of the "going_flight_id" field.
+	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
+	// ReturnFlightID holds the value of the "return_flight_id" field.
+	ReturnFlightID uuid.UUID `json:"return_flight_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status ticket.Status `json:"status,omitempty"`
 	// PassengerName holds the value of the "passenger_name" field.
@@ -39,31 +41,20 @@ type Ticket struct {
 
 // TicketEdges holds the relations/edges for other nodes in the graph.
 type TicketEdges struct {
-	// Going holds the value of the going edge.
-	Going []*Booking `json:"going,omitempty"`
-	// Return holds the value of the return edge.
-	Return []*Booking `json:"return,omitempty"`
+	// Booking holds the value of the booking edge.
+	Booking []*Booking `json:"booking,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
-// GoingOrErr returns the Going value or an error if the edge
+// BookingOrErr returns the Booking value or an error if the edge
 // was not loaded in eager-loading.
-func (e TicketEdges) GoingOrErr() ([]*Booking, error) {
+func (e TicketEdges) BookingOrErr() ([]*Booking, error) {
 	if e.loadedTypes[0] {
-		return e.Going, nil
+		return e.Booking, nil
 	}
-	return nil, &NotLoadedError{edge: "going"}
-}
-
-// ReturnOrErr returns the Return value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) ReturnOrErr() ([]*Booking, error) {
-	if e.loadedTypes[1] {
-		return e.Return, nil
-	}
-	return nil, &NotLoadedError{edge: "return"}
+	return nil, &NotLoadedError{edge: "booking"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -73,7 +64,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticket.FieldStatus, ticket.FieldPassengerName, ticket.FieldPassengerLicenseID, ticket.FieldPassengerEmail, ticket.FieldSeatNumber, ticket.FieldClass:
 			values[i] = new(sql.NullString)
-		case ticket.FieldID, ticket.FieldFlightID:
+		case ticket.FieldID, ticket.FieldGoingFlightID, ticket.FieldReturnFlightID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -96,11 +87,17 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				t.ID = *value
 			}
-		case ticket.FieldFlightID:
+		case ticket.FieldGoingFlightID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field flight_id", values[i])
+				return fmt.Errorf("unexpected type %T for field going_flight_id", values[i])
 			} else if value != nil {
-				t.FlightID = *value
+				t.GoingFlightID = *value
+			}
+		case ticket.FieldReturnFlightID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
+			} else if value != nil {
+				t.ReturnFlightID = *value
 			}
 		case ticket.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -151,14 +148,9 @@ func (t *Ticket) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
 }
 
-// QueryGoing queries the "going" edge of the Ticket entity.
-func (t *Ticket) QueryGoing() *BookingQuery {
-	return NewTicketClient(t.config).QueryGoing(t)
-}
-
-// QueryReturn queries the "return" edge of the Ticket entity.
-func (t *Ticket) QueryReturn() *BookingQuery {
-	return NewTicketClient(t.config).QueryReturn(t)
+// QueryBooking queries the "booking" edge of the Ticket entity.
+func (t *Ticket) QueryBooking() *BookingQuery {
+	return NewTicketClient(t.config).QueryBooking(t)
 }
 
 // Update returns a builder for updating this Ticket.
@@ -184,8 +176,11 @@ func (t *Ticket) String() string {
 	var builder strings.Builder
 	builder.WriteString("Ticket(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
-	builder.WriteString("flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.FlightID))
+	builder.WriteString("going_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.GoingFlightID))
+	builder.WriteString(", ")
+	builder.WriteString("return_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.ReturnFlightID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", t.Status))

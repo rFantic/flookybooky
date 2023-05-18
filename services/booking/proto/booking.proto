@@ -7,9 +7,8 @@ option go_package = "./;pb";
 message Booking {
     string id = 1;
     Customer customer = 2;
-    Ticket going_ticket = 3;
-    Ticket return_ticket = 4;
-    string status = 5;
+    repeated Ticket tickets = 3;
+    string status = 4;
 }
 
 message Bookings {
@@ -18,31 +17,32 @@ message Bookings {
 
 message BookingInput {
     string customer_id = 1;
-    TicketInput going_ticket = 2;
-    optional TicketInput return_ticket = 3;
-    string status = 4;
+    repeated Ticket tickets = 2;
+    string status = 3;
 }
 
 message BookingInputForGuest {
     CustomerInput customerInput = 1;
-    TicketInput going_ticket = 2;
-    optional TicketInput return_ticket = 3;
-    string status = 4;
+    repeated TicketInput tickets = 2;
+    string status = 3;
 }
 
 message Ticket {
     string id = 1;
-    string flight_id = 2;
-    string passenger_license_id = 3;
-    string passenger_name = 4;
-    string passenger_email = 5;
-    string seat_number = 6;
-    string class = 7;
-    string status = 8;
+    Booking booking = 2;
+    Flight going_flight = 3;
+    Flight return_flight = 4;
+    string passenger_license_id = 5;
+    string passenger_name = 6;
+    string passenger_email = 7;
+    string seat_number = 8;
+    string class = 9;
+    string status = 10;
 }
 
 message TicketInput {
-    string flight_id = 2;
+    FlightInput going_flight = 1;
+    optional FlightInput return_flight = 2;
     string passenger_license_id = 3;
     string passenger_name = 4;
     string passenger_email = 5;

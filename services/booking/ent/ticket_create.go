@@ -21,9 +21,15 @@ type TicketCreate struct {
 	hooks    []Hook
 }
 
-// SetFlightID sets the "flight_id" field.
-func (tc *TicketCreate) SetFlightID(u uuid.UUID) *TicketCreate {
-	tc.mutation.SetFlightID(u)
+// SetGoingFlightID sets the "going_flight_id" field.
+func (tc *TicketCreate) SetGoingFlightID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetGoingFlightID(u)
+	return tc
+}
+
+// SetReturnFlightID sets the "return_flight_id" field.
+func (tc *TicketCreate) SetReturnFlightID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetReturnFlightID(u)
 	return tc
 }
 
@@ -77,34 +83,19 @@ func (tc *TicketCreate) SetNillableID(u *uuid.UUID) *TicketCreate {
 	return tc
 }
 
-// AddGoingIDs adds the "going" edge to the Booking entity by IDs.
-func (tc *TicketCreate) AddGoingIDs(ids ...uuid.UUID) *TicketCreate {
-	tc.mutation.AddGoingIDs(ids...)
+// AddBookingIDs adds the "booking" edge to the Booking entity by IDs.
+func (tc *TicketCreate) AddBookingIDs(ids ...uuid.UUID) *TicketCreate {
+	tc.mutation.AddBookingIDs(ids...)
 	return tc
 }
 
-// AddGoing adds the "going" edges to the Booking entity.
-func (tc *TicketCreate) AddGoing(b ...*Booking) *TicketCreate {
+// AddBooking adds the "booking" edges to the Booking entity.
+func (tc *TicketCreate) AddBooking(b ...*Booking) *TicketCreate {
 	ids := make([]uuid.UUID, len(b))
 	for i := range b {
 		ids[i] = b[i].ID
 	}
-	return tc.AddGoingIDs(ids...)
-}
-
-// AddReturnIDs adds the "return" edge to the Booking entity by IDs.
-func (tc *TicketCreate) AddReturnIDs(ids ...uuid.UUID) *TicketCreate {
-	tc.mutation.AddReturnIDs(ids...)
-	return tc
-}
-
-// AddReturn adds the "return" edges to the Booking entity.
-func (tc *TicketCreate) AddReturn(b ...*Booking) *TicketCreate {
-	ids := make([]uuid.UUID, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tc.AddReturnIDs(ids...)
+	return tc.AddBookingIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -150,8 +141,11 @@ func (tc *TicketCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TicketCreate) check() error {
-	if _, ok := tc.mutation.FlightID(); !ok {
-		return &ValidationError{Name: "flight_id", err: errors.New(`ent: missing required field "Ticket.flight_id"`)}
+	if _, ok := tc.mutation.GoingFlightID(); !ok {
+		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Ticket.going_flight_id"`)}
+	}
+	if _, ok := tc.mutation.ReturnFlightID(); !ok {
+		return &ValidationError{Name: "return_flight_id", err: errors.New(`ent: missing required field "Ticket.return_flight_id"`)}
 	}
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Ticket.status"`)}
@@ -216,9 +210,13 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := tc.mutation.FlightID(); ok {
-		_spec.SetField(ticket.FieldFlightID, field.TypeUUID, value)
-		_node.FlightID = value
+	if value, ok := tc.mutation.GoingFlightID(); ok {
+		_spec.SetField(ticket.FieldGoingFlightID, field.TypeUUID, value)
+		_node.GoingFlightID = value
+	}
+	if value, ok := tc.mutation.ReturnFlightID(); ok {
+		_spec.SetField(ticket.FieldReturnFlightID, field.TypeUUID, value)
+		_node.ReturnFlightID = value
 	}
 	if value, ok := tc.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeEnum, value)
@@ -244,28 +242,12 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_spec.SetField(ticket.FieldClass, field.TypeEnum, value)
 		_node.Class = value
 	}
-	if nodes := tc.mutation.GoingIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.BookingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.GoingTable,
-			Columns: []string{ticket.GoingColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ReturnIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.ReturnTable,
-			Columns: []string{ticket.ReturnColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.BookingTable,
+			Columns: ticket.BookingPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),

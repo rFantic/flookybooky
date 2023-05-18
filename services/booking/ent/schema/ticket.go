@@ -16,7 +16,8 @@ type Ticket struct {
 func (Ticket) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.UUID("flight_id", uuid.UUID{}),
+		field.UUID("going_flight_id", uuid.UUID{}),
+		field.UUID("return_flight_id", uuid.UUID{}),
 		field.Enum("status").Values(
 			"Canceled", "Departed", "Scheduled",
 		),
@@ -33,7 +34,6 @@ func (Ticket) Fields() []ent.Field {
 // Edges of the Ticket.
 func (Ticket) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("going", Booking.Type),
-		edge.To("return", Booking.Type),
+		edge.From("booking", Booking.Type).Ref("ticket"),
 	}
 }

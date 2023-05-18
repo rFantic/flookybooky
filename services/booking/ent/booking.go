@@ -4,7 +4,6 @@ package ent
 
 import (
 	"flookybooky/services/booking/ent/booking"
-	"flookybooky/services/booking/ent/ticket"
 	"fmt"
 	"strings"
 	"time"
@@ -37,39 +36,20 @@ type Booking struct {
 
 // BookingEdges holds the relations/edges for other nodes in the graph.
 type BookingEdges struct {
-	// GoingTicket holds the value of the going_ticket edge.
-	GoingTicket *Ticket `json:"going_ticket,omitempty"`
-	// ReturnTicket holds the value of the return_ticket edge.
-	ReturnTicket *Ticket `json:"return_ticket,omitempty"`
+	// Ticket holds the value of the ticket edge.
+	Ticket []*Ticket `json:"ticket,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
-// GoingTicketOrErr returns the GoingTicket value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e BookingEdges) GoingTicketOrErr() (*Ticket, error) {
+// TicketOrErr returns the Ticket value or an error if the edge
+// was not loaded in eager-loading.
+func (e BookingEdges) TicketOrErr() ([]*Ticket, error) {
 	if e.loadedTypes[0] {
-		if e.GoingTicket == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: ticket.Label}
-		}
-		return e.GoingTicket, nil
+		return e.Ticket, nil
 	}
-	return nil, &NotLoadedError{edge: "going_ticket"}
-}
-
-// ReturnTicketOrErr returns the ReturnTicket value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e BookingEdges) ReturnTicketOrErr() (*Ticket, error) {
-	if e.loadedTypes[1] {
-		if e.ReturnTicket == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: ticket.Label}
-		}
-		return e.ReturnTicket, nil
-	}
-	return nil, &NotLoadedError{edge: "return_ticket"}
+	return nil, &NotLoadedError{edge: "ticket"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -150,14 +130,9 @@ func (b *Booking) Value(name string) (ent.Value, error) {
 	return b.selectValues.Get(name)
 }
 
-// QueryGoingTicket queries the "going_ticket" edge of the Booking entity.
-func (b *Booking) QueryGoingTicket() *TicketQuery {
-	return NewBookingClient(b.config).QueryGoingTicket(b)
-}
-
-// QueryReturnTicket queries the "return_ticket" edge of the Booking entity.
-func (b *Booking) QueryReturnTicket() *TicketQuery {
-	return NewBookingClient(b.config).QueryReturnTicket(b)
+// QueryTicket queries the "ticket" edge of the Booking entity.
+func (b *Booking) QueryTicket() *TicketQuery {
+	return NewBookingClient(b.config).QueryTicket(b)
 }
 
 // Update returns a builder for updating this Booking.
