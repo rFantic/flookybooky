@@ -1,5 +1,4 @@
 syntax = "proto3";
-import "google/protobuf/empty.proto";
 import "internal/proto/common.proto";
 import "services/customer/proto/customer.proto";
 package pb;
@@ -19,6 +18,13 @@ message Bookings {
 
 message BookingInput {
     string customer_id = 1;
+    TicketInput going_ticket = 2;
+    optional TicketInput return_ticket = 3;
+    string status = 4;
+}
+
+message BookingInputForGuest {
+    CustomerInput customerInput = 1;
     TicketInput going_ticket = 2;
     optional TicketInput return_ticket = 3;
     string status = 4;
@@ -50,10 +56,11 @@ message Tickets {
 }
 
 service BookingService {
+    rpc PostBookingForGuest (BookingInputForGuest) returns (Booking) {}
     rpc PostBooking (BookingInput) returns (Booking) {}
     rpc GetBooking (UUID) returns (Booking) {}
-    rpc GetBookings (google.protobuf.Empty) returns (Bookings) {}
+    rpc GetBookings (Pagination) returns (Bookings) {}
 
     rpc GetTicket (UUID) returns (Ticket) {}
-    rpc GetTickets (google.protobuf.Empty) returns (Tickets) {}
+    rpc GetTickets (Pagination) returns (Tickets) {}
 }

@@ -9,17 +9,19 @@ import (
 	"flookybooky/services/booking/internal"
 
 	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/jinzhu/copier"
 )
 
 type BookingHandler struct {
 	pb.UnimplementedBookingServiceServer
-	client ent.Client
+	customerClient pb.CustomerServiceClient
+	client         ent.Client
 }
 
-func NewBookingHandler(client ent.Client) (*BookingHandler, error) {
+func NewBookingHandler(client ent.Client, customerClient pb.CustomerServiceClient) (*BookingHandler, error) {
 	return &BookingHandler{
-		client: client,
+		client:         client,
+		customerClient: customerClient,
 	}, nil
 }
 
@@ -41,9 +43,24 @@ func (h *BookingHandler) GetTicket(ctx context.Context, req *pb.UUID) (*pb.Ticke
 	return internal.ParseTicketEntToPb(ticketRes), err
 }
 
-func (h *BookingHandler) GetBookings(ctx context.Context, req *emptypb.Empty) (*pb.Bookings, error) {
+func (h *BookingHandler) GetBookings(ctx context.Context, req *pb.Pagination) (*pb.Bookings, error) {
 	query := h.client.Booking.Query()
-	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	if req != nil {
+		var options []booking.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
 	bookingsRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
@@ -51,14 +68,40 @@ func (h *BookingHandler) GetBookings(ctx context.Context, req *emptypb.Empty) (*
 	return internal.ParseBookingsEntToPb(bookingsRes), nil
 }
 
-func (h *BookingHandler) GetTickets(ctx context.Context, req *emptypb.Empty) (*pb.Tickets, error) {
+func (h *BookingHandler) GetTickets(ctx context.Context, req *pb.Pagination) (*pb.Tickets, error) {
 	query := h.client.Ticket.Query()
-	// query = query.Offset(int(req.Offset)).Limit(int(req.Limit))
+	if req != nil {
+		var options []ticket.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
 	ticketsRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return internal.ParseTicketsEntToPb(ticketsRes), nil
+}
+
+func (h *BookingHandler) PostBookingForGuest(ctx context.Context, req *pb.BookingInputForGuest) (*pb.Booking, error) {
+	customerRes, err := h.customerClient.PostCustomer(ctx, req.CustomerInput)
+	if err != nil {
+		return nil, err
+	}
+	bookingInput := &pb.BookingInput{}
+	copier.Copy(&bookingInput, req)
+	bookingInput.CustomerId = customerRes.Id
+	return h.PostBooking(ctx, bookingInput)
 }
 
 func (h *BookingHandler) PostBooking(ctx context.Context, req *pb.BookingInput) (*pb.Booking, error) {

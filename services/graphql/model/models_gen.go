@@ -20,18 +20,25 @@ type AirportInput struct {
 }
 
 type Booking struct {
-	ID           string    `json:"id"`
-	GoingTicket  *Ticket   `json:"going_ticket"`
-	ReturnTicket *Ticket   `json:"return_ticket,omitempty"`
-	Customer     *Customer `json:"customer"`
-	Status       string    `json:"status"`
+	ID           string        `json:"id"`
+	GoingTicket  *Ticket       `json:"going_ticket"`
+	ReturnTicket *Ticket       `json:"return_ticket,omitempty"`
+	Customer     *Customer     `json:"customer"`
+	Status       BookingStatus `json:"status"`
 }
 
 type BookingInput struct {
-	CustomerID   string       `json:"customerId"`
-	GoingTicket  *TicketInput `json:"goingTicket"`
-	ReturnTicket *TicketInput `json:"returnTicket,omitempty"`
-	Status       string       `json:"status"`
+	CustomerID   string        `json:"customerId"`
+	GoingTicket  *TicketInput  `json:"goingTicket"`
+	ReturnTicket *TicketInput  `json:"returnTicket,omitempty"`
+	Status       BookingStatus `json:"status"`
+}
+
+type BookingInputForGuest struct {
+	Customer     *CustomerInput `json:"customer"`
+	GoingTicket  *TicketInput   `json:"goingTicket"`
+	ReturnTicket *TicketInput   `json:"returnTicket,omitempty"`
+	Status       BookingStatus  `json:"status"`
 }
 
 type Customer struct {
@@ -155,6 +162,49 @@ type UserUpdateInput struct {
 	ID    string  `json:"id"`
 	Email *string `json:"email,omitempty"`
 	Role  *string `json:"role,omitempty"`
+}
+
+type BookingStatus string
+
+const (
+	BookingStatusCanceled  BookingStatus = "Canceled"
+	BookingStatusScheduled BookingStatus = "Scheduled"
+	BookingStatusDeparted  BookingStatus = "Departed"
+)
+
+var AllBookingStatus = []BookingStatus{
+	BookingStatusCanceled,
+	BookingStatusScheduled,
+	BookingStatusDeparted,
+}
+
+func (e BookingStatus) IsValid() bool {
+	switch e {
+	case BookingStatusCanceled, BookingStatusScheduled, BookingStatusDeparted:
+		return true
+	}
+	return false
+}
+
+func (e BookingStatus) String() string {
+	return string(e)
+}
+
+func (e *BookingStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BookingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BookingStatus", str)
+	}
+	return nil
+}
+
+func (e BookingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type FlightStatus string

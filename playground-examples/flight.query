@@ -6,7 +6,7 @@ mutation createFlight {
     available_slots: 100
     departure_time: "2023-05-16"
     arrival_time: "2023-05-18"
-    status: "Scheduled"
+    status: Scheduled
   }){
     id
     name
@@ -38,6 +38,4 @@ query getFlights {
 }
 
 # cancel_flight -> cancel_booking -> cancel_ticket
-# create_seats
 # find flight
-#! create_flight -> create_seat

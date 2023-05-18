@@ -1,3 +1,32 @@
+mutation createBookingForGuest {
+  createBookingForGuest(
+    input: {
+      customer: {
+        name: "near"
+        address: "221 Ba Hom Street, Ward 13, District 6, HCM"
+        license_id: "034098003484"
+        phone_number: "0123456789"
+        email: "han@gmail.com"
+      }
+      goingTicket: {
+        status: Scheduled
+        flight_id: "bee9ce15-0dfd-46e9-8c2c-8c96c2eacd96"
+        passenger_license_id: "034098001265"
+        passenger_name: "near.nguyen"
+        passenger_email: "near@gmail.com"
+        seat_number: "A4"
+        ticket_class: FirstClass
+      }
+      status: "Scheduled"
+    }) {
+    id
+    customer {
+      id
+    }
+  }
+}
+
+
 mutation createBooking {
   createBooking(
     input: {

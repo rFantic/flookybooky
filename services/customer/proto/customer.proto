@@ -37,6 +37,6 @@ message CustomerUpdateInput {
 service CustomerService {
     rpc PostCustomer (CustomerInput) returns (Customer) {}
     rpc GetCustomer (UUID) returns (Customer) {}
-    rpc GetCustomers (google.protobuf.Empty) returns (Customers) {}
+    rpc GetCustomers (Pagination) returns (Customers) {}
     rpc UpdateCustomer (CustomerUpdateInput) returns (google.protobuf.Empty) {}
 }

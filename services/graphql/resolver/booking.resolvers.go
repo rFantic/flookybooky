@@ -10,8 +10,6 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // GoingTicket is the resolver for the going_ticket field.
@@ -45,6 +43,29 @@ func (r *bookingResolver) Customer(ctx context.Context, obj *model.Booking) (*mo
 	return out, nil
 }
 
+// CreateBookingForGuest is the resolver for the createBookingForGuest field.
+func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error) {
+	if input.GoingTicket != nil {
+		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{
+			Id: input.GoingTicket.FlightID,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if input.ReturnTicket != nil {
+		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{
+			Id: input.ReturnTicket.FlightID,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	bookingRes, err := r.client.BookingClient.PostBookingForGuest(ctx,
+		internal.ParseBookingInputForGuestGraphqlToPb(&input))
+	return internal.ParseBookingPbToGraphql(bookingRes), err
+}
+
 // CreateBooking is the resolver for the createBooking field.
 func (r *mutationResolver) CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error) {
 	_, err := r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{
@@ -74,8 +95,9 @@ func (r *mutationResolver) CreateBooking(ctx context.Context, input model.Bookin
 }
 
 // Booking is the resolver for the booking field.
-func (r *queryResolver) Booking(ctx context.Context) ([]*model.Booking, error) {
-	bookingsRes, err := r.client.BookingClient.GetBookings(ctx, &emptypb.Empty{})
+func (r *queryResolver) Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error) {
+	bookingsRes, err := r.client.BookingClient.GetBookings(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseBookingsPbToGraphql(bookingsRes), err
 }
 

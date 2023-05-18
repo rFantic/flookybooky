@@ -25,7 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type CustomerServiceClient interface {
 	PostCustomer(ctx context.Context, in *CustomerInput, opts ...grpc.CallOption) (*Customer, error)
 	GetCustomer(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Customer, error)
-	GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Customers, error)
+	GetCustomers(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Customers, error)
 	UpdateCustomer(ctx context.Context, in *CustomerUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -55,7 +55,7 @@ func (c *customerServiceClient) GetCustomer(ctx context.Context, in *UUID, opts 
 	return out, nil
 }
 
-func (c *customerServiceClient) GetCustomers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Customers, error) {
+func (c *customerServiceClient) GetCustomers(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Customers, error) {
 	out := new(Customers)
 	err := c.cc.Invoke(ctx, "/pb.CustomerService/GetCustomers", in, out, opts...)
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *customerServiceClient) UpdateCustomer(ctx context.Context, in *Customer
 type CustomerServiceServer interface {
 	PostCustomer(context.Context, *CustomerInput) (*Customer, error)
 	GetCustomer(context.Context, *UUID) (*Customer, error)
-	GetCustomers(context.Context, *emptypb.Empty) (*Customers, error)
+	GetCustomers(context.Context, *Pagination) (*Customers, error)
 	UpdateCustomer(context.Context, *CustomerUpdateInput) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCustomerServiceServer()
 }
@@ -94,7 +94,7 @@ func (UnimplementedCustomerServiceServer) PostCustomer(context.Context, *Custome
 func (UnimplementedCustomerServiceServer) GetCustomer(context.Context, *UUID) (*Customer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCustomer not implemented")
 }
-func (UnimplementedCustomerServiceServer) GetCustomers(context.Context, *emptypb.Empty) (*Customers, error) {
+func (UnimplementedCustomerServiceServer) GetCustomers(context.Context, *Pagination) (*Customers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCustomers not implemented")
 }
 func (UnimplementedCustomerServiceServer) UpdateCustomer(context.Context, *CustomerUpdateInput) (*emptypb.Empty, error) {
@@ -150,7 +150,7 @@ func _CustomerService_GetCustomer_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _CustomerService_GetCustomers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(Pagination)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func _CustomerService_GetCustomers_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/pb.CustomerService/GetCustomers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CustomerServiceServer).GetCustomers(ctx, req.(*emptypb.Empty))
+		return srv.(CustomerServiceServer).GetCustomers(ctx, req.(*Pagination))
 	}
 	return interceptor(ctx, in, info, handler)
 }

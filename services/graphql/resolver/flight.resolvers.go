@@ -10,8 +10,6 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Origin is the resolver for the origin field.
@@ -64,8 +62,9 @@ func (r *mutationResolver) UpdateFlight(ctx context.Context, input model.FlightU
 }
 
 // Flight is the resolver for the flight field.
-func (r *queryResolver) Flight(ctx context.Context) ([]*model.Flight, error) {
-	flightsRes, err := r.client.FlightClient.GetFlights(ctx, &emptypb.Empty{})
+func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error) {
+	flightsRes, err := r.client.FlightClient.GetFlights(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseFlightsPbToGraphql(flightsRes), err
 }
 

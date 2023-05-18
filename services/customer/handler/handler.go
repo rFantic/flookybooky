@@ -36,8 +36,25 @@ func (h *CustomerHandler) GetCustomer(ctx context.Context, req *pb.UUID) (*pb.Cu
 	return internal.ParseCustomerEntToPb(customerRes), nil
 }
 
-func (h *CustomerHandler) GetCustomers(ctx context.Context, req *emptypb.Empty) (*pb.Customers, error) {
-	customersRes, err := h.client.Customer.Query().All(ctx)
+func (h *CustomerHandler) GetCustomers(ctx context.Context, req *pb.Pagination) (*pb.Customers, error) {
+	query := h.client.Customer.Query()
+	if req != nil {
+		var options []customer.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
+	customersRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}

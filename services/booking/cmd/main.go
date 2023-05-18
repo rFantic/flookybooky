@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq"
@@ -22,6 +23,7 @@ func init() {
 }
 
 func main() {
+	servicesClient := servicesConn()
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
@@ -43,7 +45,8 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	h, err := handler.NewBookingHandler(*client)
+	h, err := handler.NewBookingHandler(*client,
+		servicesClient.CustomerClient)
 	if err != nil {
 		panic(err)
 	}
@@ -51,4 +54,19 @@ func main() {
 	reflection.Register(s)
 	pb.RegisterBookingServiceServer(s, h)
 	s.Serve(listen)
+}
+
+type ServicesClient struct {
+	CustomerClient pb.CustomerServiceClient
+}
+
+func servicesConn() ServicesClient {
+	customerConn, err := grpc.Dial("customer:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	customerClient := pb.NewCustomerServiceClient(customerConn)
+	return ServicesClient{
+		CustomerClient: customerClient,
+	}
 }

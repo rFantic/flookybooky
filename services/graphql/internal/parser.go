@@ -193,6 +193,23 @@ func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput)
 	return out
 }
 
+func ParseBookingInputForGuestGraphqlToPb(in *model.BookingInputForGuest) (out *pb.BookingInputForGuest) {
+	if in == nil {
+		return nil
+	}
+	out = &pb.BookingInputForGuest{
+		CustomerInput: ParseCustomerInputGraphqlToPb(in.Customer),
+	}
+	copier.Copy(&out, in)
+	if in.GoingTicket != nil {
+		out.GoingTicket = ParseTicketInputGraphqlToPb(in.GoingTicket)
+	}
+	if in.ReturnTicket != nil {
+		out.GoingTicket = ParseTicketInputGraphqlToPb(in.ReturnTicket)
+	}
+	return out
+}
+
 func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 	if in == nil {
 		return nil

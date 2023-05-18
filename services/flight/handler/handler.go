@@ -4,6 +4,7 @@ import (
 	"context"
 	"flookybooky/pb"
 	"flookybooky/services/flight/ent"
+	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
 	"flookybooky/services/flight/internal"
 	"fmt"
@@ -43,8 +44,24 @@ func (h *FlightHandler) GetAirport(ctx context.Context, req *pb.UUID) (*pb.Airpo
 	return internal.ParseAirportEntToPb(airportRes), err
 }
 
-func (h *FlightHandler) GetAirports(ctx context.Context, req *emptypb.Empty) (*pb.Airports, error) {
+func (h *FlightHandler) GetAirports(ctx context.Context, req *pb.Pagination) (*pb.Airports, error) {
 	query := h.client.Airport.Query()
+	if req != nil {
+		var options []airport.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
 	airportsRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
@@ -61,8 +78,24 @@ func (h *FlightHandler) GetFlight(ctx context.Context, req *pb.UUID) (*pb.Flight
 	return internal.ParseFlightEntToPb(flightRes), err
 }
 
-func (h *FlightHandler) GetFlights(ctx context.Context, req *emptypb.Empty) (*pb.Flights, error) {
+func (h *FlightHandler) GetFlights(ctx context.Context, req *pb.Pagination) (*pb.Flights, error) {
 	query := h.client.Flight.Query()
+	if req != nil {
+		var options []flight.OrderOption
+		if req.AscFields != nil {
+			options = append(options, ent.Asc(req.AscFields...))
+		}
+		if req.DesFields != nil {
+			options = append(options, ent.Desc(req.DesFields...))
+		}
+		query.Order(options...)
+		if req.Limit != nil {
+			query.Limit(int(*req.Limit))
+		}
+		if req.Offset != nil {
+			query.Offset(int(*req.Offset))
+		}
+	}
 	flightsRes, err := query.All(ctx)
 	if err != nil {
 		return nil, err
@@ -147,7 +180,3 @@ func (h *FlightHandler) UpdateFlight(ctx context.Context, req *pb.FlightUpdateIn
 	}
 	return &emptypb.Empty{}, nil
 }
-
-// func (h *FlightHandler) GetSeat(context.Context, *pb.UUID) (*pb.Seat, error)
-// func (h *FlightHandler) GetSeats(context.Context, *emptypb.Empty) (*pb.Seats, error)
-// func (h *FlightHandler) PostSeat(context.Context, *pb.Seat) (*pb.Seat, error)

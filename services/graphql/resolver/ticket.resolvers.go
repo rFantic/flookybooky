@@ -10,13 +10,12 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Ticket is the resolver for the ticket field.
-func (r *queryResolver) Ticket(ctx context.Context) ([]*model.Ticket, error) {
-	ticketsRes, err := r.client.BookingClient.GetTickets(ctx, &emptypb.Empty{})
+func (r *queryResolver) Ticket(ctx context.Context, input *model.Pagination) ([]*model.Ticket, error) {
+	ticketsRes, err := r.client.BookingClient.GetTickets(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseTicketsPbToGraphqlTo(ticketsRes), err
 }
 

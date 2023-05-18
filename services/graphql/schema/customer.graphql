@@ -30,5 +30,5 @@ extend type Mutation {
 }
 
 extend type Query {
-    customers (id: String, name: String): [Customer!]!
+    customers (input: Pagination): [Customer!]!
 }

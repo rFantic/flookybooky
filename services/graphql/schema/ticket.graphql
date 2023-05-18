@@ -32,5 +32,5 @@ input TicketInput{
 }
 
 extend type Query {
-    ticket: [Ticket!]!
+    ticket(input: Pagination): [Ticket!]!
 }

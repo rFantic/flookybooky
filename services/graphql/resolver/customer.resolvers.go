@@ -8,8 +8,6 @@ import (
 	"context"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateCustomer is the resolver for the createCustomer field.
@@ -34,8 +32,9 @@ func (r *mutationResolver) UpdateCustomer(ctx context.Context, input model.Custo
 }
 
 // Customers is the resolver for the customers field.
-func (r *queryResolver) Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error) {
-	customersRes, err := r.client.CustomerClient.GetCustomers(ctx, &emptypb.Empty{})
+func (r *queryResolver) Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error) {
+	customersRes, err := r.client.CustomerClient.GetCustomers(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	if err != nil {
 		return nil, err
 	}

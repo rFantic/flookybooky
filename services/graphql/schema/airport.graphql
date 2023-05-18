@@ -10,7 +10,7 @@ input AirportInput{
 }
 
 extend type Query {
-    airport: [Airport!]!
+    airport(input: Pagination): [Airport!]!
 }
 
 extend type Mutation {

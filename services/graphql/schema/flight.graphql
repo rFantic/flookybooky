@@ -39,7 +39,7 @@ input FlightUpdateInput{
 }
 
 extend type Query {
-    flight: [Flight!]!
+    flight(input: Pagination): [Flight!]!
 }
 
 extend type Mutation {

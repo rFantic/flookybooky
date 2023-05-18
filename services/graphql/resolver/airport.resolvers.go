@@ -8,8 +8,6 @@ import (
 	"context"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // CreateAirport is the resolver for the createAirport field.
@@ -22,7 +20,8 @@ func (r *mutationResolver) CreateAirport(ctx context.Context, input model.Airpor
 }
 
 // Airport is the resolver for the airport field.
-func (r *queryResolver) Airport(ctx context.Context) ([]*model.Airport, error) {
-	airportsRes, err := r.client.FlightClient.GetAirports(ctx, &emptypb.Empty{})
+func (r *queryResolver) Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error) {
+	airportsRes, err := r.client.FlightClient.GetAirports(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseAirportsPbToGraphql(airportsRes), err
 }

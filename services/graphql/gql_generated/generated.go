@@ -88,25 +88,26 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAirport  func(childComplexity int, input model.AirportInput) int
-		CreateBooking  func(childComplexity int, input model.BookingInput) int
-		CreateCustomer func(childComplexity int, input model.CustomerInput) int
-		CreateFlight   func(childComplexity int, input model.FlightInput) int
-		Register       func(childComplexity int, input model.UserInput) int
-		UpdateCustomer func(childComplexity int, input model.CustomerUpdateInput) int
-		UpdateFlight   func(childComplexity int, input model.FlightUpdateInput) int
-		UpdatePassword func(childComplexity int, input model.PasswordUpdateInput) int
-		UpdateUser     func(childComplexity int, input model.UserUpdateInput) int
+		CreateAirport         func(childComplexity int, input model.AirportInput) int
+		CreateBooking         func(childComplexity int, input model.BookingInput) int
+		CreateBookingForGuest func(childComplexity int, input model.BookingInputForGuest) int
+		CreateCustomer        func(childComplexity int, input model.CustomerInput) int
+		CreateFlight          func(childComplexity int, input model.FlightInput) int
+		Register              func(childComplexity int, input model.UserInput) int
+		UpdateCustomer        func(childComplexity int, input model.CustomerUpdateInput) int
+		UpdateFlight          func(childComplexity int, input model.FlightUpdateInput) int
+		UpdatePassword        func(childComplexity int, input model.PasswordUpdateInput) int
+		UpdateUser            func(childComplexity int, input model.UserUpdateInput) int
 	}
 
 	Query struct {
-		Airport   func(childComplexity int) int
-		Booking   func(childComplexity int) int
-		Customers func(childComplexity int, id *string, name *string) int
-		Flight    func(childComplexity int) int
+		Airport   func(childComplexity int, input *model.Pagination) int
+		Booking   func(childComplexity int, input *model.Pagination) int
+		Customers func(childComplexity int, input *model.Pagination) int
+		Flight    func(childComplexity int, input *model.Pagination) int
 		Login     func(childComplexity int, input model.LoginInput) int
 		Logout    func(childComplexity int) int
-		Ticket    func(childComplexity int) int
+		Ticket    func(childComplexity int, input *model.Pagination) int
 		Users     func(childComplexity int, input *model.Pagination) int
 	}
 
@@ -141,6 +142,7 @@ type FlightResolver interface {
 }
 type MutationResolver interface {
 	CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error)
+	CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error)
 	CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error)
 	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 	UpdateCustomer(ctx context.Context, input model.CustomerUpdateInput) (bool, error)
@@ -151,11 +153,11 @@ type MutationResolver interface {
 	UpdatePassword(ctx context.Context, input model.PasswordUpdateInput) (bool, error)
 }
 type QueryResolver interface {
-	Airport(ctx context.Context) ([]*model.Airport, error)
-	Booking(ctx context.Context) ([]*model.Booking, error)
-	Customers(ctx context.Context, id *string, name *string) ([]*model.Customer, error)
-	Flight(ctx context.Context) ([]*model.Flight, error)
-	Ticket(ctx context.Context) ([]*model.Ticket, error)
+	Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error)
+	Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error)
+	Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error)
+	Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error)
+	Ticket(ctx context.Context, input *model.Pagination) ([]*model.Ticket, error)
 	Users(ctx context.Context, input *model.Pagination) ([]*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error)
 	Logout(ctx context.Context) (bool, error)
@@ -367,6 +369,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateBooking(childComplexity, args["input"].(model.BookingInput)), true
 
+	case "Mutation.createBookingForGuest":
+		if e.complexity.Mutation.CreateBookingForGuest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createBookingForGuest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateBookingForGuest(childComplexity, args["input"].(model.BookingInputForGuest)), true
+
 	case "Mutation.createCustomer":
 		if e.complexity.Mutation.CreateCustomer == nil {
 			break
@@ -456,14 +470,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Airport(childComplexity), true
+		args, err := ec.field_Query_airport_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Airport(childComplexity, args["input"].(*model.Pagination)), true
 
 	case "Query.booking":
 		if e.complexity.Query.Booking == nil {
 			break
 		}
 
-		return e.complexity.Query.Booking(childComplexity), true
+		args, err := ec.field_Query_booking_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Booking(childComplexity, args["input"].(*model.Pagination)), true
 
 	case "Query.customers":
 		if e.complexity.Query.Customers == nil {
@@ -475,14 +499,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Customers(childComplexity, args["id"].(*string), args["name"].(*string)), true
+		return e.complexity.Query.Customers(childComplexity, args["input"].(*model.Pagination)), true
 
 	case "Query.flight":
 		if e.complexity.Query.Flight == nil {
 			break
 		}
 
-		return e.complexity.Query.Flight(childComplexity), true
+		args, err := ec.field_Query_flight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Flight(childComplexity, args["input"].(*model.Pagination)), true
 
 	case "Query.login":
 		if e.complexity.Query.Login == nil {
@@ -508,7 +537,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Ticket(childComplexity), true
+		args, err := ec.field_Query_ticket_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Ticket(childComplexity, args["input"].(*model.Pagination)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -623,6 +657,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAirportInput,
 		ec.unmarshalInputBookingInput,
+		ec.unmarshalInputBookingInputForGuest,
 		ec.unmarshalInputCustomerInput,
 		ec.unmarshalInputCustomerUpdateInput,
 		ec.unmarshalInputFlightInput,
@@ -705,32 +740,46 @@ input AirportInput{
 }
 
 extend type Query {
-    airport: [Airport!]!
+    airport(input: Pagination): [Airport!]!
 }
 
 extend type Mutation {
     createAirport(input: AirportInput!): Airport!
 }`, BuiltIn: false},
-	{Name: "../schema/booking.graphql", Input: `type Booking {
+	{Name: "../schema/booking.graphql", Input: `enum BookingStatus {
+    Canceled
+    Scheduled
+    Departed
+}
+
+type Booking {
     id: String!
     going_ticket: Ticket!
     return_ticket: Ticket
     customer: Customer!
-    status: String!
+    status: BookingStatus!
 }
 
 input BookingInput{
     customerId: String!
     goingTicket: TicketInput!
     returnTicket: TicketInput
-    status: String!
+    status: BookingStatus!
+}
+
+input BookingInputForGuest{
+    customer: CustomerInput!
+    goingTicket: TicketInput!
+    returnTicket: TicketInput
+    status: BookingStatus!
 }
 
 extend type Query {
-    booking: [Booking!]!
+    booking(input: Pagination): [Booking!]!
 }
 
 extend type Mutation {
+    createBookingForGuest(input: BookingInputForGuest!): Booking! 
     createBooking(input: BookingInput!): Booking!
 }`, BuiltIn: false},
 	{Name: "../schema/common.graphql", Input: `type Mutation
@@ -774,7 +823,7 @@ extend type Mutation {
 }
 
 extend type Query {
-    customers (id: String, name: String): [Customer!]!
+    customers (input: Pagination): [Customer!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/flight.graphql", Input: `enum FlightStatus{
@@ -818,7 +867,7 @@ input FlightUpdateInput{
 }
 
 extend type Query {
-    flight: [Flight!]!
+    flight(input: Pagination): [Flight!]!
 }
 
 extend type Mutation {
@@ -859,7 +908,7 @@ input TicketInput{
 }
 
 extend type Query {
-    ticket: [Ticket!]!
+    ticket(input: Pagination): [Ticket!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
@@ -946,6 +995,21 @@ func (ec *executionContext) field_Mutation_createAirport_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNAirportInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createBookingForGuest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.BookingInputForGuest
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNBookingInputForGuest2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingInputForGuest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1089,27 +1153,63 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_airport_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_booking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_customers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_flight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1120,6 +1220,21 @@ func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNLoginInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐLoginInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_ticket_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1562,9 +1677,9 @@ func (ec *executionContext) _Booking_status(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.BookingStatus)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Booking_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1574,7 +1689,7 @@ func (ec *executionContext) fieldContext_Booking_status(ctx context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type BookingStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2319,6 +2434,73 @@ func (ec *executionContext) fieldContext_Mutation_createAirport(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createBookingForGuest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createBookingForGuest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateBookingForGuest(rctx, fc.Args["input"].(model.BookingInputForGuest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Booking)
+	fc.Result = res
+	return ec.marshalNBooking2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createBookingForGuest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Booking_id(ctx, field)
+			case "going_ticket":
+				return ec.fieldContext_Booking_going_ticket(ctx, field)
+			case "return_ticket":
+				return ec.fieldContext_Booking_return_ticket(ctx, field)
+			case "customer":
+				return ec.fieldContext_Booking_customer(ctx, field)
+			case "status":
+				return ec.fieldContext_Booking_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createBookingForGuest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createBooking(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createBooking(ctx, field)
 	if err != nil {
@@ -2829,7 +3011,7 @@ func (ec *executionContext) _Query_airport(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Airport(rctx)
+		return ec.resolvers.Query().Airport(rctx, fc.Args["input"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2864,6 +3046,17 @@ func (ec *executionContext) fieldContext_Query_airport(ctx context.Context, fiel
 			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
 		},
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_airport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
 	return fc, nil
 }
 
@@ -2881,7 +3074,7 @@ func (ec *executionContext) _Query_booking(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Booking(rctx)
+		return ec.resolvers.Query().Booking(rctx, fc.Args["input"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2920,6 +3113,17 @@ func (ec *executionContext) fieldContext_Query_booking(ctx context.Context, fiel
 			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
 		},
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_booking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
 	return fc, nil
 }
 
@@ -2937,7 +3141,7 @@ func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Customers(rctx, fc.Args["id"].(*string), fc.Args["name"].(*string))
+		return ec.resolvers.Query().Customers(rctx, fc.Args["input"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3006,7 +3210,7 @@ func (ec *executionContext) _Query_flight(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Flight(rctx)
+		return ec.resolvers.Query().Flight(rctx, fc.Args["input"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3051,6 +3255,17 @@ func (ec *executionContext) fieldContext_Query_flight(ctx context.Context, field
 			return nil, fmt.Errorf("no field named %q was found under type Flight", field.Name)
 		},
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_flight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
 	return fc, nil
 }
 
@@ -3068,7 +3283,7 @@ func (ec *executionContext) _Query_ticket(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Ticket(rctx)
+		return ec.resolvers.Query().Ticket(rctx, fc.Args["input"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3112,6 +3327,17 @@ func (ec *executionContext) fieldContext_Query_ticket(ctx context.Context, field
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Ticket", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ticket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -5896,7 +6122,63 @@ func (ec *executionContext) unmarshalInputBookingInput(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBookingInputForGuest(ctx context.Context, obj interface{}) (model.BookingInputForGuest, error) {
+	var it model.BookingInputForGuest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"customer", "goingTicket", "returnTicket", "status"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "customer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customer"))
+			data, err := ec.unmarshalNCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Customer = data
+		case "goingTicket":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("goingTicket"))
+			data, err := ec.unmarshalNTicketInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐTicketInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GoingTicket = data
+		case "returnTicket":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("returnTicket"))
+			data, err := ec.unmarshalOTicketInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐTicketInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReturnTicket = data
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6921,6 +7203,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createBookingForGuest":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createBookingForGuest(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createBooking":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -7830,6 +8121,21 @@ func (ec *executionContext) unmarshalNBookingInput2flookybookyᚋservicesᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNBookingInputForGuest2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingInputForGuest(ctx context.Context, v interface{}) (model.BookingInputForGuest, error) {
+	res, err := ec.unmarshalInputBookingInputForGuest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx context.Context, v interface{}) (model.BookingStatus, error) {
+	var res model.BookingStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx context.Context, sel ast.SelectionSet, v model.BookingStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7906,6 +8212,11 @@ func (ec *executionContext) marshalNCustomer2ᚖflookybookyᚋservicesᚋgraphql
 func (ec *executionContext) unmarshalNCustomerInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (model.CustomerInput, error) {
 	res, err := ec.unmarshalInputCustomerInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCustomerInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (*model.CustomerInput, error) {
+	res, err := ec.unmarshalInputCustomerInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCustomerUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerUpdateInput(ctx context.Context, v interface{}) (model.CustomerUpdateInput, error) {

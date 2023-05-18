@@ -54,9 +54,9 @@ message Flights {
 service FlightService {
     rpc PostAirport (Airport) returns (Airport) {}
     rpc GetAirport (UUID) returns (Airport) {}
-    rpc GetAirports (google.protobuf.Empty) returns (Airports) {}
+    rpc GetAirports (Pagination) returns (Airports) {}
     rpc PostFlight (FlightInput) returns (Flight) {}
     rpc GetFlight (UUID) returns (Flight) {}
-    rpc GetFlights (google.protobuf.Empty) returns (Flights) {}
+    rpc GetFlights (Pagination) returns (Flights) {}
     rpc UpdateFlight (FlightUpdateInput) returns (google.protobuf.Empty) {}
 }

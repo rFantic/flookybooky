@@ -25,10 +25,10 @@ const _ = grpc.SupportPackageIsVersion7
 type FlightServiceClient interface {
 	PostAirport(ctx context.Context, in *Airport, opts ...grpc.CallOption) (*Airport, error)
 	GetAirport(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Airport, error)
-	GetAirports(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Airports, error)
+	GetAirports(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Airports, error)
 	PostFlight(ctx context.Context, in *FlightInput, opts ...grpc.CallOption) (*Flight, error)
 	GetFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Flight, error)
-	GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error)
+	GetFlights(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Flights, error)
 	UpdateFlight(ctx context.Context, in *FlightUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -58,7 +58,7 @@ func (c *flightServiceClient) GetAirport(ctx context.Context, in *UUID, opts ...
 	return out, nil
 }
 
-func (c *flightServiceClient) GetAirports(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Airports, error) {
+func (c *flightServiceClient) GetAirports(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Airports, error) {
 	out := new(Airports)
 	err := c.cc.Invoke(ctx, "/pb.FlightService/GetAirports", in, out, opts...)
 	if err != nil {
@@ -85,7 +85,7 @@ func (c *flightServiceClient) GetFlight(ctx context.Context, in *UUID, opts ...g
 	return out, nil
 }
 
-func (c *flightServiceClient) GetFlights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Flights, error) {
+func (c *flightServiceClient) GetFlights(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Flights, error) {
 	out := new(Flights)
 	err := c.cc.Invoke(ctx, "/pb.FlightService/GetFlights", in, out, opts...)
 	if err != nil {
@@ -109,10 +109,10 @@ func (c *flightServiceClient) UpdateFlight(ctx context.Context, in *FlightUpdate
 type FlightServiceServer interface {
 	PostAirport(context.Context, *Airport) (*Airport, error)
 	GetAirport(context.Context, *UUID) (*Airport, error)
-	GetAirports(context.Context, *emptypb.Empty) (*Airports, error)
+	GetAirports(context.Context, *Pagination) (*Airports, error)
 	PostFlight(context.Context, *FlightInput) (*Flight, error)
 	GetFlight(context.Context, *UUID) (*Flight, error)
-	GetFlights(context.Context, *emptypb.Empty) (*Flights, error)
+	GetFlights(context.Context, *Pagination) (*Flights, error)
 	UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
@@ -127,7 +127,7 @@ func (UnimplementedFlightServiceServer) PostAirport(context.Context, *Airport) (
 func (UnimplementedFlightServiceServer) GetAirport(context.Context, *UUID) (*Airport, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAirport not implemented")
 }
-func (UnimplementedFlightServiceServer) GetAirports(context.Context, *emptypb.Empty) (*Airports, error) {
+func (UnimplementedFlightServiceServer) GetAirports(context.Context, *Pagination) (*Airports, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAirports not implemented")
 }
 func (UnimplementedFlightServiceServer) PostFlight(context.Context, *FlightInput) (*Flight, error) {
@@ -136,7 +136,7 @@ func (UnimplementedFlightServiceServer) PostFlight(context.Context, *FlightInput
 func (UnimplementedFlightServiceServer) GetFlight(context.Context, *UUID) (*Flight, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlight not implemented")
 }
-func (UnimplementedFlightServiceServer) GetFlights(context.Context, *emptypb.Empty) (*Flights, error) {
+func (UnimplementedFlightServiceServer) GetFlights(context.Context, *Pagination) (*Flights, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlights not implemented")
 }
 func (UnimplementedFlightServiceServer) UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error) {
@@ -192,7 +192,7 @@ func _FlightService_GetAirport_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _FlightService_GetAirports_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(Pagination)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func _FlightService_GetAirports_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/pb.FlightService/GetAirports",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FlightServiceServer).GetAirports(ctx, req.(*emptypb.Empty))
+		return srv.(FlightServiceServer).GetAirports(ctx, req.(*Pagination))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -246,7 +246,7 @@ func _FlightService_GetFlight_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _FlightService_GetFlights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(Pagination)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func _FlightService_GetFlights_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/pb.FlightService/GetFlights",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FlightServiceServer).GetFlights(ctx, req.(*emptypb.Empty))
+		return srv.(FlightServiceServer).GetFlights(ctx, req.(*Pagination))
 	}
 	return interceptor(ctx, in, info, handler)
 }
