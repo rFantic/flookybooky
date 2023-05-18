@@ -61,6 +61,8 @@ func (h *FlightHandler) GetAirports(ctx context.Context, req *pb.Pagination) (*p
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	airportsRes, err := query.All(ctx)
 	if err != nil {
@@ -95,6 +97,8 @@ func (h *FlightHandler) GetFlights(ctx context.Context, req *pb.Pagination) (*pb
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	flightsRes, err := query.All(ctx)
 	if err != nil {

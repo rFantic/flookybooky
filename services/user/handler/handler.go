@@ -70,6 +70,8 @@ func (h *UserHandler) GetUsers(ctx context.Context, req *pb.Pagination) (*pb.Use
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	usersRes, err := query.All(ctx)
 	if err != nil {

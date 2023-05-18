@@ -53,6 +53,8 @@ func (h *CustomerHandler) GetCustomers(ctx context.Context, req *pb.Pagination) 
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	customersRes, err := query.All(ctx)
 	if err != nil {

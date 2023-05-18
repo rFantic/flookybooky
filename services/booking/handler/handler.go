@@ -60,6 +60,8 @@ func (h *BookingHandler) GetBookings(ctx context.Context, req *pb.Pagination) (*
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	bookingsRes, err := query.All(ctx)
 	if err != nil {
@@ -85,6 +87,8 @@ func (h *BookingHandler) GetTickets(ctx context.Context, req *pb.Pagination) (*p
 		if req.Offset != nil {
 			query.Offset(int(*req.Offset))
 		}
+	} else {
+		query.Limit(10)
 	}
 	ticketsRes, err := query.All(ctx)
 	if err != nil {
