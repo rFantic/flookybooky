@@ -3,28 +3,30 @@
 # flight query support pagination (refer users.query for usage)
 
 mutation createFlight {
-  createFlight (input: {
-    name: "VN 157 Airbus A321"
-    originId: "ee0a3b9e-dd5c-4c26-bd61-dfd506fe30f0"
-    destinationId: "46be7300-dd77-4116-ab03-2bf3e5085bb9"
-    total_slots: 100
-    departure_time: "2023-01-15"
-    arrival_time: "2023-01-17"
-    status: Scheduled
-  }){
-    id
-    name
-    origin{
+  flight {
+    createFlight (input: {
+      name: "VN 157 Airbus A321"
+      originId: "ee0a3b9e-dd5c-4c26-bd61-dfd506fe30f0"
+      destinationId: "46be7300-dd77-4116-ab03-2bf3e5085bb9"
+      total_slots: 100
+      departure_time: "2023-01-15"
+      arrival_time: "2023-01-17"
+      status: Scheduled
+    }){
       id
       name
+      origin{
+        id
+        name
+      }
+      destination{
+        id
+        name
+      }
+      available_slots
+      departure_time
+      arrival_time
     }
-    destination{
-      id
-      name
-    }
-    available_slots
-    departure_time
-    arrival_time
   }
 }
 
@@ -48,11 +50,13 @@ query getFlights {
 }
 
 mutation updateFlight {
-	updateFlight(input:{
-    id: "aab46872-6aed-4ce1-b820-040a5d1a88ad"
-    total_slots: 107
-    status: Scheduled
-  })
+  flight {
+    updateFlight(input:{
+      id: "aab46872-6aed-4ce1-b820-040a5d1a88ad"
+      total_slots: 107
+      status: Scheduled
+    })
+  }
 }
 
 # cancel_flight -> cancel_booking -> cancel_ticket (admin)

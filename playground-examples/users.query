@@ -8,39 +8,43 @@
 # - admin can update user role with updateUser
 
 mutation register_without_info {
-  register(input: {
+  user{
+    register(input: {
     username: "Miloo", 
     password: "passwd", 
     email: "miloo@gmail.com"
     role: "admin"}) {
-    username
-    role
-    email
-    customer {
-      name
+      username
+      role
+      email
+      customer {
+        name
+      }
     }
   }
 }
 
 mutation register_with_info {
-  register(
-    input: {
-      username: "Lilooo", 
-      password: "passwd", 
-      email: "lilooo@gmail.com"
-      role: "user", 
-      customer: {
-        name: "Nguyen Huu Nghia", 
-        address: "485 Hoa Bằng, Tân Sơn Nhì, Tân Phú, Thành phố Hồ Chí Minh, Việt Nam",
+	user {
+    register(
+      input: {
+        username: "Lilooo", 
+        password: "passwd", 
         email: "lilooo@gmail.com"
-        license_id: "034098002348", 
-        phone_number: "0856489465"}}
-  ) {
-    username
-    email
-    role
-    customer {
-      name
+        role: "user", 
+        customer: {
+          name: "Nguyen Huu Nghia", 
+          address: "485 Hoa Bằng, Tân Sơn Nhì, Tân Phú, Thành phố Hồ Chí Minh, Việt Nam",
+          email: "lilooo@gmail.com"
+          license_id: "034098002348", 
+          phone_number: "0856489465"}}
+    ) {
+      username
+      email
+      role
+      customer {
+        name
+      }
     }
   }
 }
@@ -74,19 +78,23 @@ query get_users {
 }
 
 mutation updateUser {
-  updateUser(input: {
-    id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
-    email: "liban@gmail.com"
-    role: "user"
-  })
+	user {
+    updateUser(input: {
+      id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
+      email: "liban@gmail.com"
+      role: "user"
+    })
+  }
 }
 
 mutation updatePassword {
-  updatePassword(input: {
-    id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
-    previous_password: "passwd"
-    new_password: "newpasswd",
-  })
+  user {
+    updatePassword(input: {
+      id: "7db37c97-3317-4383-ac42-74c19a72c5f8",
+      previous_password: "passwd"
+      new_password: "newpasswd",
+    })
+  }
 }
 
 # find_user (admin)

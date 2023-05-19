@@ -1,70 +1,69 @@
-# - guest (have not registered) can provide their infomation 
-# and book a flight for many passengers
-# - logged user can book a flight using their saved information
-# - user and admin can view bookings list using query
-
 mutation createBookingForGuest {
-  createBookingForGuest(
-    input: {
-      going_flight_id: "0e406bb7-6ae8-476d-bb85-cf74a1eaf1e8",
-      customer: {
-        name: "Nguyen Van Han"
-        address: "221 Ba Hom Street, Ward 13, District 6, HCM"
-        license_id: "034098003484"
-        phone_number: "0123456789"
-        email: "han@gmail.com"
+  booking{
+    createBookingForGuest(
+      input: {
+        going_flight_id: "0e406bb7-6ae8-476d-bb85-cf74a1eaf1e8",
+        customer: {
+          name: "Nguyen Van Han"
+          address: "221 Ba Hom Street, Ward 13, District 6, HCM"
+          license_id: "034098003484"
+          phone_number: "0123456789"
+          email: "han@gmail.com"
+        }
+        ticket: [{
+          status: Scheduled
+          passenger_license_id: "034094007912"
+          passenger_name: "Nguyen Nam Lan"
+          passenger_email: "lan@gmail.com"
+          seat_number: "A4"
+          ticket_class: FirstClass
+        },{
+          status: Scheduled
+          passenger_license_id: "034094004512"
+          passenger_name: "Nguyen Chuc"
+          passenger_email: "chuc@gmail.com"
+          seat_number: "B5"
+          ticket_class: BusinessClass
+        },]
+        status: Scheduled
+      }) {
+      id
+      going_flight {
+        name
       }
-      ticket: [{
-        status: Scheduled
-        passenger_license_id: "034094007912"
-        passenger_name: "Nguyen Nam Lan"
-        passenger_email: "lan@gmail.com"
-        seat_number: "A4"
-        ticket_class: FirstClass
-      },{
-        status: Scheduled
-        passenger_license_id: "034094004512"
-        passenger_name: "Nguyen Chuc"
-        passenger_email: "chuc@gmail.com"
-        seat_number: "B5"
-        ticket_class: BusinessClass
-      },]
-      status: Scheduled
-    }) {
-    id
-    going_flight {
-      name
-    }
-    customer {
-      id
-    }
-    ticket {
-      id
+      customer {
+        id
+      }
+      ticket {
+        id
+      }
     }
   }
 }
 
 mutation createBooking {
-  createBooking(
-    input: {
-      going_flight_id: "ef8db9f0-d970-47ba-86ad-60828548341a",
-      customerId: "5e9d7958-2bf6-4ba0-b8d8-20b37971588c", 
-      ticket: {
+  booking {
+    createBooking(
+      input: {
+        going_flight_id: "ef8db9f0-d970-47ba-86ad-60828548341a",
+        customerId: "5e9d7958-2bf6-4ba0-b8d8-20b37971588c", 
+        ticket: {
+          status: Scheduled
+          passenger_license_id: "034098001265"
+          passenger_name: "near.nguyen"
+          passenger_email: "near@gmail.com"
+          seat_number: "A4"
+          ticket_class: FirstClass
+        }
         status: Scheduled
-        passenger_license_id: "034098001265"
-        passenger_name: "near.nguyen"
-        passenger_email: "near@gmail.com"
-        seat_number: "A4"
-        ticket_class: FirstClass
-      }
-      status: Scheduled
-    }) {
-    id
-    going_flight {
-      name
-    }
-    customer {
+      }) {
       id
+      going_flight {
+        name
+      }
+      customer {
+        id
+      }
     }
   }
 }

@@ -21,19 +21,21 @@ mutation update_customers {
 }
 
 mutation create_customers {
-  createCustomer(
-    input: {
-      name: "Nguyen Van Han", 
-      address: "221 Ba Hom Street, Ward 13, District 6, HCM", 
-      license_id: "034098021748", 
-      phone_number: "0869546813"
-      email: "han@gmail.com"
-    }) {
-    id
-    name
-    address
-    email
-    license_id
+  customer{
+    createCustomer(
+      input: {
+        name: "Nguyen Van Han", 
+        address: "221 Ba Hom Street, Ward 13, District 6, HCM", 
+        license_id: "034098021748", 
+        phone_number: "0869546813"
+        email: "han@gmail.com"
+      }) {
+      id
+      name
+      address
+      email
+      license_id
+    }
   }
 }
 
