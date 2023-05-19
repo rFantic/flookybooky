@@ -1,6 +1,8 @@
 # - admin can create, update and cancel flight.
 # - user can get flight list using flight query
 # flight query support pagination (refer users.query for usage)
+# - flight can be search by origin airport and destination airport 
+# as well as needed booking slots and departure time and status
 
 mutation createFlight {
   flight {
