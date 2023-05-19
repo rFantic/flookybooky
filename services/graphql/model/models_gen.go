@@ -74,6 +74,11 @@ type CustomerInput struct {
 	Email       string `json:"email"`
 }
 
+type CustomerOps struct {
+	CreateCustomer *Customer `json:"createCustomer"`
+	UpdateCustomer bool      `json:"updateCustomer"`
+}
+
 type CustomerUpdateInput struct {
 	ID          string  `json:"id"`
 	Name        *string `json:"name,omitempty"`

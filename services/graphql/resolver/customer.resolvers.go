@@ -6,12 +6,13 @@ package resolver
 
 import (
 	"context"
+	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 )
 
 // CreateCustomer is the resolver for the createCustomer field.
-func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
+func (r *customerOpsResolver) CreateCustomer(ctx context.Context, obj *model.CustomerOps, input model.CustomerInput) (*model.Customer, error) {
 	customerRes, err := r.client.CustomerClient.PostCustomer(ctx,
 		internal.ParseCustomerInputGraphqlToPb(&input),
 	)
@@ -22,7 +23,7 @@ func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.Custo
 }
 
 // UpdateCustomer is the resolver for the updateCustomer field.
-func (r *mutationResolver) UpdateCustomer(ctx context.Context, input model.CustomerUpdateInput) (bool, error) {
+func (r *customerOpsResolver) UpdateCustomer(ctx context.Context, obj *model.CustomerOps, input model.CustomerUpdateInput) (bool, error) {
 	_, err := r.client.CustomerClient.UpdateCustomer(ctx,
 		internal.ParseCustomerUpdateInputGraphqlToPb(&input))
 	if err != nil {
@@ -31,9 +32,19 @@ func (r *mutationResolver) UpdateCustomer(ctx context.Context, input model.Custo
 	return true, nil
 }
 
+// Customer is the resolver for the customer field.
+func (r *mutationResolver) Customer(ctx context.Context) (*model.CustomerOps, error) {
+	return &model.CustomerOps{}, nil
+}
+
 // Customers is the resolver for the customers field.
 func (r *queryResolver) Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error) {
 	customersRes, err := r.client.CustomerClient.GetCustomers(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseCustomersPbToGraphql(customersRes), err
 }
+
+// CustomerOps returns gql_generated.CustomerOpsResolver implementation.
+func (r *Resolver) CustomerOps() gql_generated.CustomerOpsResolver { return &customerOpsResolver{r} }
+
+type customerOpsResolver struct{ *Resolver }

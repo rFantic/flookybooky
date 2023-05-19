@@ -24,9 +24,13 @@ input CustomerUpdateInput {
     email: String
 }
 
+type CustomerOps {
+    createCustomer(input: CustomerInput!): Customer! @hasRoles(roles: [admin]) @goField(forceResolver: true)
+    updateCustomer(input: CustomerUpdateInput!): Boolean! @hasRoles(roles: [user, admin]) @goField(forceResolver: true)
+}
+
 extend type Mutation {
-    createCustomer(input: CustomerInput!): Customer! @hasRoles(roles: [admin])
-    updateCustomer(input: CustomerUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
+    customer: CustomerOps!
 }
 
 extend type Query {
