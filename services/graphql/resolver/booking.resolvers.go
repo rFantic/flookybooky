@@ -118,6 +118,18 @@ func (r *bookingOpsResolver) CreateBooking(ctx context.Context, obj *model.Booki
 	return internal.ParseBookingPbToGraphql(bookingRes), err
 }
 
+// CancelBooking is the resolver for the cancelBooking field.
+func (r *bookingOpsResolver) CancelBooking(ctx context.Context, obj *model.BookingOps, input *model.BookingCancelInput) (bool, error) {
+	if input != nil {
+		_, err := r.client.BookingClient.CancelBooking(ctx, &pb.UUID{Id: input.ID})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, fmt.Errorf("missing input")
+}
+
 // Booking is the resolver for the booking field.
 func (r *mutationResolver) Booking(ctx context.Context) (*model.BookingOps, error) {
 	return &model.BookingOps{}, nil
@@ -128,18 +140,6 @@ func (r *queryResolver) Booking(ctx context.Context, input *model.Pagination) ([
 	bookingsRes, err := r.client.BookingClient.GetBookings(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseBookingsPbToGraphql(bookingsRes), err
-}
-
-// CancelBooking is the resolver for the cancelBooking field.
-func (r *queryResolver) CancelBooking(ctx context.Context, input *model.BookingCancelInput) (bool, error) {
-	if input != nil {
-		_, err := r.client.BookingClient.CancelBooking(ctx, &pb.UUID{Id: input.ID})
-		if err != nil {
-			return false, err
-		}
-		return true, nil
-	}
-	return false, fmt.Errorf("missing input")
 }
 
 // Booking returns gql_generated.BookingResolver implementation.

@@ -55,6 +55,7 @@ type BookingInputForGuest struct {
 type BookingOps struct {
 	CreateBookingForGuest *Booking `json:"createBookingForGuest"`
 	CreateBooking         *Booking `json:"createBooking"`
+	CancelBooking         bool     `json:"cancelBooking"`
 }
 
 type Customer struct {
@@ -117,6 +118,7 @@ type FlightInput struct {
 type FlightOps struct {
 	CreateFlight *Flight `json:"createFlight"`
 	UpdateFlight bool    `json:"updateFlight"`
+	CancelFlight bool    `json:"cancelFlight"`
 }
 
 type FlightUpdateInput struct {

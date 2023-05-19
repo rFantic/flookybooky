@@ -62,20 +62,8 @@ func (r *flightOpsResolver) UpdateFlight(ctx context.Context, obj *model.FlightO
 	return true, nil
 }
 
-// Flight is the resolver for the flight field.
-func (r *mutationResolver) Flight(ctx context.Context) (*model.FlightOps, error) {
-	return &model.FlightOps{}, nil
-}
-
-// Flight is the resolver for the flight field.
-func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error) {
-	flightsRes, err := r.client.FlightClient.GetFlights(ctx,
-		internal.ParsePaginationGraphqlToPb(input))
-	return internal.ParseFlightsPbToGraphql(flightsRes), err
-}
-
 // CancelFlight is the resolver for the cancelFlight field.
-func (r *queryResolver) CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error) {
+func (r *flightOpsResolver) CancelFlight(ctx context.Context, obj *model.FlightOps, input *model.FlightCancelInput) (bool, error) {
 	if input != nil {
 		_, err := r.client.FlightClient.CancelFlight(ctx, &pb.UUID{Id: input.ID})
 		if err != nil {
@@ -88,6 +76,18 @@ func (r *queryResolver) CancelFlight(ctx context.Context, input *model.FlightCan
 		return true, nil
 	}
 	return false, fmt.Errorf("missing input")
+}
+
+// Flight is the resolver for the flight field.
+func (r *mutationResolver) Flight(ctx context.Context) (*model.FlightOps, error) {
+	return &model.FlightOps{}, nil
+}
+
+// Flight is the resolver for the flight field.
+func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error) {
+	flightsRes, err := r.client.FlightClient.GetFlights(ctx,
+		internal.ParsePaginationGraphqlToPb(input))
+	return internal.ParseFlightsPbToGraphql(flightsRes), err
 }
 
 // Flight returns gql_generated.FlightResolver implementation.

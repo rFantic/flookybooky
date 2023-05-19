@@ -46,11 +46,11 @@ input FlightCancelInput {
 type FlightOps {
     createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])  @goField(forceResolver: true)
     updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin]) @goField(forceResolver: true)
 }
 
 extend type Query {
     flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
-    cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {

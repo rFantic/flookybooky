@@ -73,6 +73,7 @@ type ComplexityRoot struct {
 	}
 
 	BookingOps struct {
+		CancelBooking         func(childComplexity int, input *model.BookingCancelInput) int
 		CreateBooking         func(childComplexity int, input model.BookingInput) int
 		CreateBookingForGuest func(childComplexity int, input model.BookingInputForGuest) int
 	}
@@ -104,6 +105,7 @@ type ComplexityRoot struct {
 	}
 
 	FlightOps struct {
+		CancelFlight func(childComplexity int, input *model.FlightCancelInput) int
 		CreateFlight func(childComplexity int, input model.FlightInput) int
 		UpdateFlight func(childComplexity int, input model.FlightUpdateInput) int
 	}
@@ -121,16 +123,14 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Airport       func(childComplexity int, input *model.Pagination) int
-		Booking       func(childComplexity int, input *model.Pagination) int
-		CancelBooking func(childComplexity int, input *model.BookingCancelInput) int
-		CancelFlight  func(childComplexity int, input *model.FlightCancelInput) int
-		Customers     func(childComplexity int, input *model.Pagination) int
-		Flight        func(childComplexity int, input *model.Pagination) int
-		Login         func(childComplexity int, input model.LoginInput) int
-		Logout        func(childComplexity int) int
-		Ticket        func(childComplexity int, input *model.Pagination) int
-		Users         func(childComplexity int, input *model.Pagination) int
+		Airport   func(childComplexity int, input *model.Pagination) int
+		Booking   func(childComplexity int, input *model.Pagination) int
+		Customers func(childComplexity int, input *model.Pagination) int
+		Flight    func(childComplexity int, input *model.Pagination) int
+		Login     func(childComplexity int, input model.LoginInput) int
+		Logout    func(childComplexity int) int
+		Ticket    func(childComplexity int, input *model.Pagination) int
+		Users     func(childComplexity int, input *model.Pagination) int
 	}
 
 	Ticket struct {
@@ -172,6 +172,7 @@ type BookingResolver interface {
 type BookingOpsResolver interface {
 	CreateBookingForGuest(ctx context.Context, obj *model.BookingOps, input model.BookingInputForGuest) (*model.Booking, error)
 	CreateBooking(ctx context.Context, obj *model.BookingOps, input model.BookingInput) (*model.Booking, error)
+	CancelBooking(ctx context.Context, obj *model.BookingOps, input *model.BookingCancelInput) (bool, error)
 }
 type CustomerOpsResolver interface {
 	CreateCustomer(ctx context.Context, obj *model.CustomerOps, input model.CustomerInput) (*model.Customer, error)
@@ -184,6 +185,7 @@ type FlightResolver interface {
 type FlightOpsResolver interface {
 	CreateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightInput) (*model.Flight, error)
 	UpdateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightUpdateInput) (bool, error)
+	CancelFlight(ctx context.Context, obj *model.FlightOps, input *model.FlightCancelInput) (bool, error)
 }
 type MutationResolver interface {
 	Airport(ctx context.Context) (*model.AirportOps, error)
@@ -195,10 +197,8 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error)
 	Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error)
-	CancelBooking(ctx context.Context, input *model.BookingCancelInput) (bool, error)
 	Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error)
 	Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error)
-	CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error)
 	Ticket(ctx context.Context, input *model.Pagination) ([]*model.Ticket, error)
 	Users(ctx context.Context, input *model.Pagination) ([]*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error)
@@ -302,6 +302,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Booking.Ticket(childComplexity), true
+
+	case "BookingOps.cancelBooking":
+		if e.complexity.BookingOps.CancelBooking == nil {
+			break
+		}
+
+		args, err := ec.field_BookingOps_cancelBooking_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BookingOps.CancelBooking(childComplexity, args["input"].(*model.BookingCancelInput)), true
 
 	case "BookingOps.createBooking":
 		if e.complexity.BookingOps.CreateBooking == nil {
@@ -456,6 +468,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Flight.TotalSlots(childComplexity), true
 
+	case "FlightOps.cancelFlight":
+		if e.complexity.FlightOps.CancelFlight == nil {
+			break
+		}
+
+		args, err := ec.field_FlightOps_cancelFlight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.FlightOps.CancelFlight(childComplexity, args["input"].(*model.FlightCancelInput)), true
+
 	case "FlightOps.createFlight":
 		if e.complexity.FlightOps.CreateFlight == nil {
 			break
@@ -545,30 +569,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Booking(childComplexity, args["input"].(*model.Pagination)), true
-
-	case "Query.cancelBooking":
-		if e.complexity.Query.CancelBooking == nil {
-			break
-		}
-
-		args, err := ec.field_Query_cancelBooking_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CancelBooking(childComplexity, args["input"].(*model.BookingCancelInput)), true
-
-	case "Query.cancelFlight":
-		if e.complexity.Query.CancelFlight == nil {
-			break
-		}
-
-		args, err := ec.field_Query_cancelFlight_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CancelFlight(childComplexity, args["input"].(*model.FlightCancelInput)), true
 
 	case "Query.customers":
 		if e.complexity.Query.Customers == nil {
@@ -907,11 +907,11 @@ input BookingCancelInput {
 type BookingOps {
     createBookingForGuest(input: BookingInputForGuest!): Booking!  @goField(forceResolver: true)
     createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])  @goField(forceResolver: true)
+    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin]) @goField(forceResolver: true)
 }
 
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
-    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
@@ -1021,11 +1021,11 @@ input FlightCancelInput {
 type FlightOps {
     createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])  @goField(forceResolver: true)
     updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin]) @goField(forceResolver: true)
 }
 
 extend type Query {
     flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
-    cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
@@ -1156,6 +1156,21 @@ func (ec *executionContext) field_AirportOps_createAirport_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_BookingOps_cancelBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.BookingCancelInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOBookingCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingCancelInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_BookingOps_createBookingForGuest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1208,6 +1223,21 @@ func (ec *executionContext) field_CustomerOps_updateCustomer_args(ctx context.Co
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCustomerUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_FlightOps_cancelFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.FlightCancelInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1283,36 +1313,6 @@ func (ec *executionContext) field_Query_booking_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_cancelBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.BookingCancelInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOBookingCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingCancelInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_cancelFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.FlightCancelInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2190,6 +2190,85 @@ func (ec *executionContext) fieldContext_BookingOps_createBooking(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_BookingOps_createBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BookingOps_cancelBooking(ctx context.Context, field graphql.CollectedField, obj *model.BookingOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BookingOps_cancelBooking(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.BookingOps().CancelBooking(rctx, obj, fc.Args["input"].(*model.BookingCancelInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BookingOps_cancelBooking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BookingOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BookingOps_cancelBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3222,6 +3301,85 @@ func (ec *executionContext) fieldContext_FlightOps_updateFlight(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _FlightOps_cancelFlight(ctx context.Context, field graphql.CollectedField, obj *model.FlightOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlightOps_cancelFlight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.FlightOps().CancelFlight(rctx, obj, fc.Args["input"].(*model.FlightCancelInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlightOps_cancelFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlightOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_FlightOps_cancelFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginInfo_tokenString(ctx context.Context, field graphql.CollectedField, obj *model.LoginInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LoginInfo_tokenString(ctx, field)
 	if err != nil {
@@ -3357,6 +3515,8 @@ func (ec *executionContext) fieldContext_Mutation_booking(ctx context.Context, f
 				return ec.fieldContext_BookingOps_createBookingForGuest(ctx, field)
 			case "createBooking":
 				return ec.fieldContext_BookingOps_createBooking(ctx, field)
+			case "cancelBooking":
+				return ec.fieldContext_BookingOps_cancelBooking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BookingOps", field.Name)
 		},
@@ -3457,6 +3617,8 @@ func (ec *executionContext) fieldContext_Mutation_flight(ctx context.Context, fi
 				return ec.fieldContext_FlightOps_createFlight(ctx, field)
 			case "updateFlight":
 				return ec.fieldContext_FlightOps_updateFlight(ctx, field)
+			case "cancelFlight":
+				return ec.fieldContext_FlightOps_cancelFlight(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FlightOps", field.Name)
 		},
@@ -3696,85 +3858,6 @@ func (ec *executionContext) fieldContext_Query_booking(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_cancelBooking(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_cancelBooking(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CancelBooking(rctx, fc.Args["input"].(*model.BookingCancelInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_cancelBooking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_cancelBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_customers(ctx, field)
 	if err != nil {
@@ -3961,85 +4044,6 @@ func (ec *executionContext) fieldContext_Query_flight(ctx context.Context, field
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_flight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_cancelFlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_cancelFlight(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CancelFlight(rctx, fc.Args["input"].(*model.FlightCancelInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_cancelFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_cancelFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -8184,6 +8188,26 @@ func (ec *executionContext) _BookingOps(ctx context.Context, sel ast.SelectionSe
 				return innerFunc(ctx)
 
 			})
+		case "cancelBooking":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BookingOps_cancelBooking(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8479,6 +8503,26 @@ func (ec *executionContext) _FlightOps(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "cancelFlight":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlightOps_cancelFlight(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8658,29 +8702,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "cancelBooking":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_cancelBooking(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "customers":
 			field := field
 
@@ -8714,29 +8735,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_flight(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "cancelFlight":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_cancelFlight(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
