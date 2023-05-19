@@ -1,7 +1,7 @@
-
 mutation createBookingForGuest {
   createBookingForGuest(
     input: {
+      going_flight_id: "437797ec-2add-4e0a-83b9-406ab091bb4b",
       customer: {
         name: "near"
         address: "221 Ba Hom Street, Ward 13, District 6, HCM"
@@ -9,32 +9,43 @@ mutation createBookingForGuest {
         phone_number: "0123456789"
         email: "han@gmail.com"
       }
-      goingTicket: {
+      ticket: [{
         status: Scheduled
-        flight_id: "bee9ce15-0dfd-46e9-8c2c-8c96c2eacd96"
         passenger_license_id: "034098001265"
         passenger_name: "near.nguyen"
         passenger_email: "near@gmail.com"
         seat_number: "A4"
         ticket_class: FirstClass
-      }
+      },{
+        status: Scheduled
+        passenger_license_id: "034098001265"
+        passenger_name: "adsnear.nguyen"
+        passenger_email: "near@gmail.com"
+        seat_number: "A4"
+        ticket_class: FirstClass
+      },]
       status: Scheduled
     }) {
     id
+    going_flight {
+      name
+    }
     customer {
+      id
+    }
+    ticket {
       id
     }
   }
 }
 
-
 mutation createBooking {
   createBooking(
     input: {
-      customerId: "36ccf135-697a-4275-a563-d22ac15bdcac", 
-      goingTicket: {
+      going_flight_id: "ef8db9f0-d970-47ba-86ad-60828548341a",
+      customerId: "5e9d7958-2bf6-4ba0-b8d8-20b37971588c", 
+      ticket: {
         status: Scheduled
-        flight_id: "bee9ce15-0dfd-46e9-8c2c-8c96c2eacd96"
         passenger_license_id: "034098001265"
         passenger_name: "near.nguyen"
         passenger_email: "near@gmail.com"
@@ -44,6 +55,9 @@ mutation createBooking {
       status: Scheduled
     }) {
     id
+    going_flight {
+      name
+    }
     customer {
       id
     }
@@ -53,12 +67,12 @@ mutation createBooking {
 query getBookings {
   booking {
     id
-    going_ticket {
+    going_flight {
+      name
+    }
+    ticket {
       id
       status
-      flight {
-        name
-      }
     }
     customer {
       id
@@ -70,5 +84,6 @@ query getBookings {
     }
   }
 }
+
 # set_status
 # find booking

@@ -878,7 +878,7 @@ input FlightUpdateInput{
     name: String
     originId: String
     destinationId: String
-    available_slots: Int
+    total_slots: Int
     departure_time: String
     arrival_time: String
     status: FlightStatus
@@ -6572,7 +6572,7 @@ func (ec *executionContext) unmarshalInputFlightUpdateInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "originId", "destinationId", "available_slots", "departure_time", "arrival_time", "status"}
+	fieldsInOrder := [...]string{"id", "name", "originId", "destinationId", "total_slots", "departure_time", "arrival_time", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6615,15 +6615,15 @@ func (ec *executionContext) unmarshalInputFlightUpdateInput(ctx context.Context,
 				return it, err
 			}
 			it.DestinationID = data
-		case "available_slots":
+		case "total_slots":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("available_slots"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("total_slots"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.AvailableSlots = data
+			it.TotalSlots = data
 		case "departure_time":
 			var err error
 

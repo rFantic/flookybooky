@@ -10,6 +10,7 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
+	"fmt"
 )
 
 // GoingFlight is the resolver for the going_flight field.
@@ -69,7 +70,38 @@ func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input mode
 
 // CreateBooking is the resolver for the createBooking field.
 func (r *mutationResolver) CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error) {
-	_, err := r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{
+	ticketNums := len(input.Ticket)
+	goingFlight, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
+	if err != nil {
+		return nil, err
+	}
+	if int(goingFlight.AvailableSlots) < ticketNums {
+		return nil, fmt.Errorf("not enough available slots")
+	}
+	_, err = r.client.FlightClient.SetAvailableSlots(ctx, &pb.AvailableSlotsInput{
+		Id:             input.GoingFlightID,
+		AvailableSlots: goingFlight.AvailableSlots - int64(ticketNums),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if input.ReturnFlightID != nil {
+		returnFlight, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *input.ReturnFlightID})
+		if err != nil {
+			return nil, err
+		}
+		if int(returnFlight.AvailableSlots) < ticketNums {
+			return nil, fmt.Errorf("not enough available slots")
+		}
+		_, err = r.client.FlightClient.SetAvailableSlots(ctx, &pb.AvailableSlotsInput{
+			Id:             input.GoingFlightID,
+			AvailableSlots: returnFlight.AvailableSlots - int64(ticketNums),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = r.client.CustomerClient.GetCustomer(ctx, &pb.UUID{
 		Id: input.CustomerID,
 	})
 	if err != nil {

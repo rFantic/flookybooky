@@ -1,9 +1,9 @@
 mutation createFlight {
   createFlight (input: {
     name: "VN 157 Airbus A321"
-    originId: "0859dea8-2f0f-4764-bcd5-d6971224f77b"
-    destinationId: "0859dea8-2f0f-4764-bcd5-d6971224f77b"
-    available_slots: 100
+    originId: "ea144562-c994-42d0-aa1d-e43475517de0"
+    destinationId: "ea144562-c994-42d0-aa1d-e43475517de0"
+    total_slots: 100
     departure_time: "2023-01-15"
     arrival_time: "2023-01-17"
     status: Scheduled
@@ -38,7 +38,7 @@ query getFlights {
       name
       address
     }
-    available_slots
+    total_slots
     status
   }
 }
@@ -46,7 +46,7 @@ query getFlights {
 mutation updateFlight {
 	updateFlight(input:{
     id: "aab46872-6aed-4ce1-b820-040a5d1a88ad"
-    available_slots: 107
+    total_slots: 107
     status: Scheduled
   })
 }

@@ -16,7 +16,7 @@ mutation update_customers {
 mutation create_customers {
   createCustomer(
     input: {
-      name: "anear nguyen", 
+      name: "near nguyen", 
       address: "fake address", 
       license_id: "034098021748", 
       phone_number: "0123456789"

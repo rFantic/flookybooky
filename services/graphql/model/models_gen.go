@@ -93,14 +93,14 @@ type FlightInput struct {
 }
 
 type FlightUpdateInput struct {
-	ID             string        `json:"id"`
-	Name           *string       `json:"name,omitempty"`
-	OriginID       *string       `json:"originId,omitempty"`
-	DestinationID  *string       `json:"destinationId,omitempty"`
-	AvailableSlots *int          `json:"available_slots,omitempty"`
-	DepartureTime  *string       `json:"departure_time,omitempty"`
-	ArrivalTime    *string       `json:"arrival_time,omitempty"`
-	Status         *FlightStatus `json:"status,omitempty"`
+	ID            string        `json:"id"`
+	Name          *string       `json:"name,omitempty"`
+	OriginID      *string       `json:"originId,omitempty"`
+	DestinationID *string       `json:"destinationId,omitempty"`
+	TotalSlots    *int          `json:"total_slots,omitempty"`
+	DepartureTime *string       `json:"departure_time,omitempty"`
+	ArrivalTime   *string       `json:"arrival_time,omitempty"`
+	Status        *FlightStatus `json:"status,omitempty"`
 }
 
 type LoginInfo struct {

@@ -33,7 +33,7 @@ input FlightUpdateInput{
     name: String
     originId: String
     destinationId: String
-    available_slots: Int
+    total_slots: Int
     departure_time: String
     arrival_time: String
     status: FlightStatus

@@ -189,3 +189,15 @@ func (h *FlightHandler) UpdateFlight(ctx context.Context, req *pb.FlightUpdateIn
 	}
 	return &emptypb.Empty{}, nil
 }
+
+func (h *FlightHandler) SetAvailableSlots(ctx context.Context, req *pb.AvailableSlotsInput) (*emptypb.Empty, error) {
+	_flightId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = h.client.Flight.UpdateOneID(_flightId).SetAvailableSlots(int(req.AvailableSlots)).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

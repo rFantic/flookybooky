@@ -2,10 +2,6 @@ query getTicket {
   ticket {
     id
     status
-    flight {
-      id
-      name
-    }
     passenger_license_id
     passenger_name
     passenger_email
