@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -28,6 +29,9 @@ type BookingServiceClient interface {
 	GetBookings(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Bookings, error)
 	GetTicket(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Ticket, error)
 	GetTickets(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Tickets, error)
+	CancelBooking(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CancelTicket(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CancelBookingOfFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type bookingServiceClient struct {
@@ -92,6 +96,33 @@ func (c *bookingServiceClient) GetTickets(ctx context.Context, in *Pagination, o
 	return out, nil
 }
 
+func (c *bookingServiceClient) CancelBooking(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/pb.BookingService/CancelBooking", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookingServiceClient) CancelTicket(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/pb.BookingService/CancelTicket", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookingServiceClient) CancelBookingOfFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/pb.BookingService/CancelBookingOfFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingServiceServer is the server API for BookingService service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
@@ -102,6 +133,9 @@ type BookingServiceServer interface {
 	GetBookings(context.Context, *Pagination) (*Bookings, error)
 	GetTicket(context.Context, *UUID) (*Ticket, error)
 	GetTickets(context.Context, *Pagination) (*Tickets, error)
+	CancelBooking(context.Context, *UUID) (*emptypb.Empty, error)
+	CancelTicket(context.Context, *UUID) (*emptypb.Empty, error)
+	CancelBookingOfFlight(context.Context, *UUID) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
 
@@ -126,6 +160,15 @@ func (UnimplementedBookingServiceServer) GetTicket(context.Context, *UUID) (*Tic
 }
 func (UnimplementedBookingServiceServer) GetTickets(context.Context, *Pagination) (*Tickets, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTickets not implemented")
+}
+func (UnimplementedBookingServiceServer) CancelBooking(context.Context, *UUID) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelBooking not implemented")
+}
+func (UnimplementedBookingServiceServer) CancelTicket(context.Context, *UUID) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelTicket not implemented")
+}
+func (UnimplementedBookingServiceServer) CancelBookingOfFlight(context.Context, *UUID) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelBookingOfFlight not implemented")
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
@@ -248,6 +291,60 @@ func _BookingService_GetTickets_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingService_CancelBooking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UUID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CancelBooking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.BookingService/CancelBooking",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CancelBooking(ctx, req.(*UUID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookingService_CancelTicket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UUID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CancelTicket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.BookingService/CancelTicket",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CancelTicket(ctx, req.(*UUID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookingService_CancelBookingOfFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UUID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CancelBookingOfFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.BookingService/CancelBookingOfFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CancelBookingOfFlight(ctx, req.(*UUID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +375,18 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTickets",
 			Handler:    _BookingService_GetTickets_Handler,
+		},
+		{
+			MethodName: "CancelBooking",
+			Handler:    _BookingService_CancelBooking_Handler,
+		},
+		{
+			MethodName: "CancelTicket",
+			Handler:    _BookingService_CancelTicket_Handler,
+		},
+		{
+			MethodName: "CancelBookingOfFlight",
+			Handler:    _BookingService_CancelBookingOfFlight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

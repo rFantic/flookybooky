@@ -1,5 +1,5 @@
 enum BookingStatus {
-    Canceled
+    Cancelled
     Scheduled
     Departed
 }
@@ -29,8 +29,13 @@ input BookingInputForGuest{
     status: BookingStatus!
 }
 
+input BookingCancelInput {
+    id: String!
+}
+
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
+    cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {

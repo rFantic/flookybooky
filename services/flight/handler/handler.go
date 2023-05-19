@@ -15,12 +15,14 @@ import (
 
 type FlightHandler struct {
 	pb.UnimplementedFlightServiceServer
-	client ent.Client
+	bookingClient pb.BookingServiceClient
+	client        ent.Client
 }
 
-func NewFlightHandler(client ent.Client) (*FlightHandler, error) {
+func NewFlightHandler(client ent.Client, bookingClient pb.BookingServiceClient) (*FlightHandler, error) {
 	return &FlightHandler{
-		client: client,
+		client:        client,
+		bookingClient: bookingClient,
 	}, nil
 }
 
@@ -196,6 +198,30 @@ func (h *FlightHandler) SetAvailableSlots(ctx context.Context, req *pb.Available
 		return nil, err
 	}
 	err = h.client.Flight.UpdateOneID(_flightId).SetAvailableSlots(int(req.AvailableSlots)).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *FlightHandler) CancelFlight(ctx context.Context, req *pb.UUID) (*emptypb.Empty, error) {
+	flightId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	_flightRes, err := h.client.Flight.Get(ctx, flightId)
+	if err != nil {
+		return nil, err
+	}
+	if _flightRes.Status != flight.StatusScheduled {
+		return nil, fmt.Errorf("flight already departed")
+	}
+	_, err = h.bookingClient.CancelBookingOfFlight(ctx, &pb.UUID{Id: req.Id})
+	if err != nil {
+		return nil, err
+	}
+	err = h.client.Flight.UpdateOneID(flightId).
+		SetStatus(flight.StatusCancelled).Exec(ctx)
 	if err != nil {
 		return nil, err
 	}

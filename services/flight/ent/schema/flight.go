@@ -25,7 +25,7 @@ func (Flight) Fields() []ent.Field {
 		field.Time("arrival_time"),
 		field.Int("total_slots"),
 		field.Int("available_slots"),
-		field.Enum("status").Values("Canceled", "Departed", "Landed", "Scheduled", "Delayed"),
+		field.Enum("status").Values("Cancelled", "Departed", "Landed", "Scheduled", "Delayed"),
 		field.Time("created_at").Immutable().Default(time.Now),
 	}
 }

@@ -28,7 +28,7 @@ var (
 		{Name: "arrival_time", Type: field.TypeTime},
 		{Name: "total_slots", Type: field.TypeInt},
 		{Name: "available_slots", Type: field.TypeInt},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Departed", "Landed", "Scheduled", "Delayed"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"Cancelled", "Departed", "Landed", "Scheduled", "Delayed"}},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "origin_id", Type: field.TypeUUID},
 		{Name: "destinartion_id", Type: field.TypeUUID},

@@ -1,5 +1,5 @@
 enum TicketStatus {
-    Canceled
+    Cancelled
     Departed
     Scheduled
 }

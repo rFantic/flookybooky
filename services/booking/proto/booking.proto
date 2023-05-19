@@ -2,6 +2,7 @@ syntax = "proto3";
 import "internal/proto/common.proto";
 import "services/customer/proto/customer.proto";
 import "services/flight/proto/flight.proto";
+import "google/protobuf/empty.proto";
 package pb;
 option go_package = "./;pb";
 
@@ -66,4 +67,8 @@ service BookingService {
 
     rpc GetTicket (UUID) returns (Ticket) {}
     rpc GetTickets (Pagination) returns (Tickets) {}
+
+    rpc CancelBooking (UUID) returns (google.protobuf.Empty) {}
+    rpc CancelTicket (UUID) returns (google.protobuf.Empty) {}
+    rpc CancelBookingOfFlight (UUID)  returns (google.protobuf.Empty) {}
 }

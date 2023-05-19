@@ -7,9 +7,11 @@ import (
 	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/ticket"
 	"flookybooky/services/booking/internal"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type BookingHandler struct {
@@ -179,4 +181,63 @@ func (h *BookingHandler) PostTicket(ctx context.Context, req *pb.TicketInput) (*
 	ticketRes, err := query.Save(ctx)
 	return internal.ParseTicketEntToPb(ticketRes), err
 
+}
+
+func (h *BookingHandler) CancelBooking(ctx context.Context, req *pb.UUID) (*emptypb.Empty, error) {
+	bookingId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	_bookingRes, err := h.client.Booking.Get(ctx, bookingId)
+	if err != nil {
+		return nil, err
+	}
+	if _bookingRes.Status != booking.StatusScheduled {
+		return nil, fmt.Errorf("flight already departed")
+	}
+	booking, err := h.client.Booking.UpdateOneID(bookingId).
+		SetStatus(booking.StatusCancelled).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tickets, err := booking.QueryTicket().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tickets {
+		h.CancelTicket(ctx, &pb.UUID{Id: t.ID.String()})
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *BookingHandler) CancelTicket(ctx context.Context, req *pb.UUID) (*emptypb.Empty, error) {
+	ticketId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = h.client.Ticket.UpdateOneID(ticketId).
+		SetStatus(ticket.StatusCanceled).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *BookingHandler) CancelBookingOfFlight(ctx context.Context, req *pb.UUID) (*emptypb.Empty, error) {
+	flightId, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, err
+	}
+	bookings, err := h.client.Booking.Query().Where(
+		booking.Or(booking.GoingFlightID(flightId), booking.ReturnFlightID(flightId))).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, b := range bookings {
+		_, err := h.CancelBooking(ctx, &pb.UUID{Id: b.ID.String()})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &emptypb.Empty{}, nil
 }

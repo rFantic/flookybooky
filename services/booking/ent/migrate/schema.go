@@ -14,7 +14,7 @@ var (
 		{Name: "customer_id", Type: field.TypeUUID},
 		{Name: "going_flight_id", Type: field.TypeUUID},
 		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Scheduled", "Departed"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"Cancelled", "Scheduled", "Departed"}},
 		{Name: "created_at", Type: field.TypeTime},
 	}
 	// BookingsTable holds the schema information for the "bookings" table.

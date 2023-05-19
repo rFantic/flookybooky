@@ -71,7 +71,7 @@ type Status string
 
 // Status values.
 const (
-	StatusCanceled  Status = "Canceled"
+	StatusCancelled Status = "Cancelled"
 	StatusScheduled Status = "Scheduled"
 	StatusDeparted  Status = "Departed"
 )
@@ -83,7 +83,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusCanceled, StatusScheduled, StatusDeparted:
+	case StatusCancelled, StatusScheduled, StatusDeparted:
 		return nil
 	default:
 		return fmt.Errorf("booking: invalid enum value for status field: %q", s)

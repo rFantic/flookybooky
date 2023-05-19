@@ -31,6 +31,7 @@ type FlightServiceClient interface {
 	GetFlights(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Flights, error)
 	UpdateFlight(ctx context.Context, in *FlightUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SetAvailableSlots(ctx context.Context, in *AvailableSlotsInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CancelFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type flightServiceClient struct {
@@ -113,6 +114,15 @@ func (c *flightServiceClient) SetAvailableSlots(ctx context.Context, in *Availab
 	return out, nil
 }
 
+func (c *flightServiceClient) CancelFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/CancelFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FlightServiceServer is the server API for FlightService service.
 // All implementations must embed UnimplementedFlightServiceServer
 // for forward compatibility
@@ -125,6 +135,7 @@ type FlightServiceServer interface {
 	GetFlights(context.Context, *Pagination) (*Flights, error)
 	UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error)
 	SetAvailableSlots(context.Context, *AvailableSlotsInput) (*emptypb.Empty, error)
+	CancelFlight(context.Context, *UUID) (*emptypb.Empty, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
 
@@ -155,6 +166,9 @@ func (UnimplementedFlightServiceServer) UpdateFlight(context.Context, *FlightUpd
 }
 func (UnimplementedFlightServiceServer) SetAvailableSlots(context.Context, *AvailableSlotsInput) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAvailableSlots not implemented")
+}
+func (UnimplementedFlightServiceServer) CancelFlight(context.Context, *UUID) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelFlight not implemented")
 }
 func (UnimplementedFlightServiceServer) mustEmbedUnimplementedFlightServiceServer() {}
 
@@ -313,6 +327,24 @@ func _FlightService_SetAvailableSlots_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_CancelFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UUID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).CancelFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/CancelFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).CancelFlight(ctx, req.(*UUID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FlightService_ServiceDesc is the grpc.ServiceDesc for FlightService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -351,6 +383,10 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetAvailableSlots",
 			Handler:    _FlightService_SetAvailableSlots_Handler,
+		},
+		{
+			MethodName: "CancelFlight",
+			Handler:    _FlightService_CancelFlight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

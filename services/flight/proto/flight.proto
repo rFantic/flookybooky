@@ -66,4 +66,6 @@ service FlightService {
     rpc GetFlights (Pagination) returns (Flights) {}
     rpc UpdateFlight (FlightUpdateInput) returns (google.protobuf.Empty) {}
     rpc SetAvailableSlots (AvailableSlotsInput) returns (google.protobuf.Empty) {}
+
+    rpc CancelFlight (UUID) returns (google.protobuf.Empty) {}
 }
