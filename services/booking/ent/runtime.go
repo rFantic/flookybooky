@@ -18,7 +18,7 @@ func init() {
 	bookingFields := schema.Booking{}.Fields()
 	_ = bookingFields
 	// bookingDescCreatedAt is the schema descriptor for created_at field.
-	bookingDescCreatedAt := bookingFields[5].Descriptor()
+	bookingDescCreatedAt := bookingFields[3].Descriptor()
 	// booking.DefaultCreatedAt holds the default value on creation for the created_at field.
 	booking.DefaultCreatedAt = bookingDescCreatedAt.Default.(func() time.Time)
 	// bookingDescID is the schema descriptor for id field.

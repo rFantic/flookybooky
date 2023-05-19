@@ -18,10 +18,6 @@ const (
 	FieldID = "id"
 	// FieldCustomerID holds the string denoting the customer_id field in the database.
 	FieldCustomerID = "customer_id"
-	// FieldGoingTicketID holds the string denoting the going_ticket_id field in the database.
-	FieldGoingTicketID = "going_ticket_id"
-	// FieldReturnTicketID holds the string denoting the return_ticket_id field in the database.
-	FieldReturnTicketID = "return_ticket_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -30,28 +26,22 @@ const (
 	EdgeTicket = "ticket"
 	// Table holds the table name of the booking in the database.
 	Table = "bookings"
-	// TicketTable is the table that holds the ticket relation/edge. The primary key declared below.
-	TicketTable = "booking_ticket"
+	// TicketTable is the table that holds the ticket relation/edge.
+	TicketTable = "tickets"
 	// TicketInverseTable is the table name for the Ticket entity.
 	// It exists in this package in order to avoid circular dependency with the "ticket" package.
 	TicketInverseTable = "tickets"
+	// TicketColumn is the table column denoting the ticket relation/edge.
+	TicketColumn = "booking_id"
 )
 
 // Columns holds all SQL columns for booking fields.
 var Columns = []string{
 	FieldID,
 	FieldCustomerID,
-	FieldGoingTicketID,
-	FieldReturnTicketID,
 	FieldStatus,
 	FieldCreatedAt,
 }
-
-var (
-	// TicketPrimaryKey and TicketColumn2 are the table columns denoting the
-	// primary key for the ticket relation (M2M).
-	TicketPrimaryKey = []string{"booking_id", "ticket_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -107,16 +97,6 @@ func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCustomerID, opts...).ToFunc()
 }
 
-// ByGoingTicketID orders the results by the going_ticket_id field.
-func ByGoingTicketID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldGoingTicketID, opts...).ToFunc()
-}
-
-// ByReturnTicketID orders the results by the return_ticket_id field.
-func ByReturnTicketID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldReturnTicketID, opts...).ToFunc()
-}
-
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
@@ -144,6 +124,6 @@ func newTicketStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, TicketTable, TicketPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketTable, TicketColumn),
 	)
 }

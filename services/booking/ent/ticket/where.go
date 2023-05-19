@@ -55,6 +55,11 @@ func IDLTE(id uuid.UUID) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldID, id))
 }
 
+// BookingID applies equality check predicate on the "booking_id" field. It's identical to BookingIDEQ.
+func BookingID(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldBookingID, v))
+}
+
 // GoingFlightID applies equality check predicate on the "going_flight_id" field. It's identical to GoingFlightIDEQ.
 func GoingFlightID(v uuid.UUID) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldGoingFlightID, v))
@@ -83,6 +88,26 @@ func PassengerEmail(v string) predicate.Ticket {
 // SeatNumber applies equality check predicate on the "seat_number" field. It's identical to SeatNumberEQ.
 func SeatNumber(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldSeatNumber, v))
+}
+
+// BookingIDEQ applies the EQ predicate on the "booking_id" field.
+func BookingIDEQ(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldBookingID, v))
+}
+
+// BookingIDNEQ applies the NEQ predicate on the "booking_id" field.
+func BookingIDNEQ(v uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldBookingID, v))
+}
+
+// BookingIDIn applies the In predicate on the "booking_id" field.
+func BookingIDIn(vs ...uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldBookingID, vs...))
+}
+
+// BookingIDNotIn applies the NotIn predicate on the "booking_id" field.
+func BookingIDNotIn(vs ...uuid.UUID) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldBookingID, vs...))
 }
 
 // GoingFlightIDEQ applies the EQ predicate on the "going_flight_id" field.
@@ -163,6 +188,16 @@ func ReturnFlightIDLT(v uuid.UUID) predicate.Ticket {
 // ReturnFlightIDLTE applies the LTE predicate on the "return_flight_id" field.
 func ReturnFlightIDLTE(v uuid.UUID) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldReturnFlightID, v))
+}
+
+// ReturnFlightIDIsNil applies the IsNil predicate on the "return_flight_id" field.
+func ReturnFlightIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldReturnFlightID))
+}
+
+// ReturnFlightIDNotNil applies the NotNil predicate on the "return_flight_id" field.
+func ReturnFlightIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldReturnFlightID))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -470,7 +505,7 @@ func HasBooking() predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, BookingTable, BookingPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, BookingTable, BookingColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

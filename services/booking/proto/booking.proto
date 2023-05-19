@@ -1,13 +1,14 @@
 syntax = "proto3";
 import "internal/proto/common.proto";
 import "services/customer/proto/customer.proto";
+import "services/flight/proto/flight.proto";
 package pb;
 option go_package = "./;pb";
 
 message Booking {
     string id = 1;
     Customer customer = 2;
-    repeated Ticket tickets = 3;
+    Tickets tickets = 3;
     string status = 4;
 }
 
@@ -17,7 +18,7 @@ message Bookings {
 
 message BookingInput {
     string customer_id = 1;
-    repeated Ticket tickets = 2;
+    repeated TicketInput tickets = 2;
     string status = 3;
 }
 
@@ -41,8 +42,8 @@ message Ticket {
 }
 
 message TicketInput {
-    FlightInput going_flight = 1;
-    optional FlightInput return_flight = 2;
+    string going_flight_id = 1;
+    optional string return_flight_id = 2;
     string passenger_license_id = 3;
     string passenger_name = 4;
     string passenger_email = 5;

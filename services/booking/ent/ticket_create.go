@@ -21,6 +21,12 @@ type TicketCreate struct {
 	hooks    []Hook
 }
 
+// SetBookingID sets the "booking_id" field.
+func (tc *TicketCreate) SetBookingID(u uuid.UUID) *TicketCreate {
+	tc.mutation.SetBookingID(u)
+	return tc
+}
+
 // SetGoingFlightID sets the "going_flight_id" field.
 func (tc *TicketCreate) SetGoingFlightID(u uuid.UUID) *TicketCreate {
 	tc.mutation.SetGoingFlightID(u)
@@ -30,6 +36,14 @@ func (tc *TicketCreate) SetGoingFlightID(u uuid.UUID) *TicketCreate {
 // SetReturnFlightID sets the "return_flight_id" field.
 func (tc *TicketCreate) SetReturnFlightID(u uuid.UUID) *TicketCreate {
 	tc.mutation.SetReturnFlightID(u)
+	return tc
+}
+
+// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableReturnFlightID(u *uuid.UUID) *TicketCreate {
+	if u != nil {
+		tc.SetReturnFlightID(*u)
+	}
 	return tc
 }
 
@@ -83,19 +97,9 @@ func (tc *TicketCreate) SetNillableID(u *uuid.UUID) *TicketCreate {
 	return tc
 }
 
-// AddBookingIDs adds the "booking" edge to the Booking entity by IDs.
-func (tc *TicketCreate) AddBookingIDs(ids ...uuid.UUID) *TicketCreate {
-	tc.mutation.AddBookingIDs(ids...)
-	return tc
-}
-
-// AddBooking adds the "booking" edges to the Booking entity.
-func (tc *TicketCreate) AddBooking(b ...*Booking) *TicketCreate {
-	ids := make([]uuid.UUID, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return tc.AddBookingIDs(ids...)
+// SetBooking sets the "booking" edge to the Booking entity.
+func (tc *TicketCreate) SetBooking(b *Booking) *TicketCreate {
+	return tc.SetBookingID(b.ID)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -141,11 +145,11 @@ func (tc *TicketCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TicketCreate) check() error {
+	if _, ok := tc.mutation.BookingID(); !ok {
+		return &ValidationError{Name: "booking_id", err: errors.New(`ent: missing required field "Ticket.booking_id"`)}
+	}
 	if _, ok := tc.mutation.GoingFlightID(); !ok {
 		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Ticket.going_flight_id"`)}
-	}
-	if _, ok := tc.mutation.ReturnFlightID(); !ok {
-		return &ValidationError{Name: "return_flight_id", err: errors.New(`ent: missing required field "Ticket.return_flight_id"`)}
 	}
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Ticket.status"`)}
@@ -174,6 +178,9 @@ func (tc *TicketCreate) check() error {
 		if err := ticket.ClassValidator(v); err != nil {
 			return &ValidationError{Name: "class", err: fmt.Errorf(`ent: validator failed for field "Ticket.class": %w`, err)}
 		}
+	}
+	if _, ok := tc.mutation.BookingID(); !ok {
+		return &ValidationError{Name: "booking", err: errors.New(`ent: missing required edge "Ticket.booking"`)}
 	}
 	return nil
 }
@@ -244,10 +251,10 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	}
 	if nodes := tc.mutation.BookingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   ticket.BookingTable,
-			Columns: ticket.BookingPrimaryKey,
+			Columns: []string{ticket.BookingColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(booking.FieldID, field.TypeUUID),
@@ -256,6 +263,7 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.BookingID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

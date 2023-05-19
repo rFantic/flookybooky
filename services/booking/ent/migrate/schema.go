@@ -12,8 +12,6 @@ var (
 	BookingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "customer_id", Type: field.TypeUUID},
-		{Name: "going_ticket_id", Type: field.TypeUUID},
-		{Name: "return_ticket_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Scheduled", "Departed"}},
 		{Name: "created_at", Type: field.TypeTime},
 	}
@@ -27,42 +25,26 @@ var (
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "going_flight_id", Type: field.TypeUUID},
-		{Name: "return_flight_id", Type: field.TypeUUID},
+		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Departed", "Scheduled"}},
 		{Name: "passenger_name", Type: field.TypeString},
 		{Name: "passenger_license_id", Type: field.TypeString},
 		{Name: "passenger_email", Type: field.TypeString},
 		{Name: "seat_number", Type: field.TypeString},
 		{Name: "class", Type: field.TypeEnum, Enums: []string{"FirstClass", "BusinessClass", "EconomyClass"}},
+		{Name: "booking_id", Type: field.TypeUUID},
 	}
 	// TicketsTable holds the schema information for the "tickets" table.
 	TicketsTable = &schema.Table{
 		Name:       "tickets",
 		Columns:    TicketsColumns,
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
-	}
-	// BookingTicketColumns holds the columns for the "booking_ticket" table.
-	BookingTicketColumns = []*schema.Column{
-		{Name: "booking_id", Type: field.TypeUUID},
-		{Name: "ticket_id", Type: field.TypeUUID},
-	}
-	// BookingTicketTable holds the schema information for the "booking_ticket" table.
-	BookingTicketTable = &schema.Table{
-		Name:       "booking_ticket",
-		Columns:    BookingTicketColumns,
-		PrimaryKey: []*schema.Column{BookingTicketColumns[0], BookingTicketColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "booking_ticket_booking_id",
-				Columns:    []*schema.Column{BookingTicketColumns[0]},
+				Symbol:     "tickets_bookings_ticket",
+				Columns:    []*schema.Column{TicketsColumns[9]},
 				RefColumns: []*schema.Column{BookingsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "booking_ticket_ticket_id",
-				Columns:    []*schema.Column{BookingTicketColumns[1]},
-				RefColumns: []*schema.Column{TicketsColumns[0]},
-				OnDelete:   schema.Cascade,
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -70,11 +52,9 @@ var (
 	Tables = []*schema.Table{
 		BookingsTable,
 		TicketsTable,
-		BookingTicketTable,
 	}
 )
 
 func init() {
-	BookingTicketTable.ForeignKeys[0].RefTable = BookingsTable
-	BookingTicketTable.ForeignKeys[1].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[0].RefTable = BookingsTable
 }

@@ -14,7 +14,7 @@ type Ticket {
     id: String!
     booking: Booking!
     going_flight: Flight!
-    return_fligt: Flight!
+    return_flight: Flight!
     passenger_license_id: String!
     passenger_name: String!
     passenger_email: String!
@@ -25,7 +25,7 @@ type Ticket {
 
 input TicketInput{
     going_flight_id: String!
-    return_flight_id: String!
+    return_flight_id: String
     passenger_license_id: String!
     passenger_name: String!
     passenger_email: String!

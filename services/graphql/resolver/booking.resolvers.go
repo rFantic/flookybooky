@@ -12,24 +12,6 @@ import (
 	"flookybooky/services/graphql/model"
 )
 
-// GoingTicket is the resolver for the going_ticket field.
-func (r *bookingResolver) GoingTicket(ctx context.Context, obj *model.Booking) (*model.Ticket, error) {
-	if obj.GoingTicket == nil {
-		return nil, nil
-	}
-	ticketRes, err := r.client.BookingClient.GetTicket(ctx, &pb.UUID{Id: obj.GoingTicket.ID})
-	return internal.ParseTicketPbToGraphqlTo(ticketRes), err
-}
-
-// ReturnTicket is the resolver for the return_ticket field.
-func (r *bookingResolver) ReturnTicket(ctx context.Context, obj *model.Booking) (*model.Ticket, error) {
-	if obj.ReturnTicket == nil {
-		return nil, nil
-	}
-	ticketRes, err := r.client.BookingClient.GetTicket(ctx, &pb.UUID{Id: obj.ReturnTicket.ID})
-	return internal.ParseTicketPbToGraphqlTo(ticketRes), err
-}
-
 // Customer is the resolver for the customer field.
 func (r *bookingResolver) Customer(ctx context.Context, obj *model.Booking) (*model.Customer, error) {
 	var out *model.Customer
@@ -43,22 +25,23 @@ func (r *bookingResolver) Customer(ctx context.Context, obj *model.Booking) (*mo
 	return out, nil
 }
 
+// Ticket is the resolver for the ticket field.
+func (r *bookingResolver) Ticket(ctx context.Context, obj *model.Booking) ([]*model.Ticket, error) {
+	return obj.Ticket, nil
+}
+
 // CreateBookingForGuest is the resolver for the createBookingForGuest field.
 func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error) {
-	if input.GoingTicket != nil {
-		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-			Id: input.GoingTicket.FlightID,
-		})
+	for _, t := range input.Ticket {
+		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: t.GoingFlightID})
 		if err != nil {
 			return nil, err
 		}
-	}
-	if input.ReturnTicket != nil {
-		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-			Id: input.ReturnTicket.FlightID,
-		})
-		if err != nil {
-			return nil, err
+		if t.ReturnFlightID != nil {
+			_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *t.ReturnFlightID})
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	bookingRes, err := r.client.BookingClient.PostBookingForGuest(ctx,
@@ -73,22 +56,6 @@ func (r *mutationResolver) CreateBooking(ctx context.Context, input model.Bookin
 	})
 	if err != nil {
 		return nil, err
-	}
-	if input.GoingTicket != nil {
-		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-			Id: input.GoingTicket.FlightID,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	if input.ReturnTicket != nil {
-		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{
-			Id: input.ReturnTicket.FlightID,
-		})
-		if err != nil {
-			return nil, err
-		}
 	}
 	bookingRes, err := r.client.BookingClient.PostBooking(ctx, internal.ParseBookingInputGraphqlToPb(&input))
 	return internal.ParseBookingPbToGraphql(bookingRes), err

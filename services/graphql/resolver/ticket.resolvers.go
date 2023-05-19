@@ -19,13 +19,24 @@ func (r *queryResolver) Ticket(ctx context.Context, input *model.Pagination) ([]
 	return internal.ParseTicketsPbToGraphqlTo(ticketsRes), err
 }
 
-// Flight is the resolver for the flight field.
-func (r *ticketResolver) Flight(ctx context.Context, obj *model.Ticket) (*model.Flight, error) {
-	if obj.Flight == nil {
-		return nil, nil
+// GoingFlight is the resolver for the going_flight field.
+func (r *ticketResolver) GoingFlight(ctx context.Context, obj *model.Ticket) (*model.Flight, error) {
+	if obj.GoingFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx,
+			&pb.UUID{Id: obj.GoingFlight.ID})
+		return internal.ParseFlightPbToGraphql(flightRes), err
 	}
-	flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: obj.Flight.ID})
-	return internal.ParseFlightPbToGraphql(flightRes), err
+	return nil, nil
+}
+
+// ReturnFlight is the resolver for the return_flight field.
+func (r *ticketResolver) ReturnFlight(ctx context.Context, obj *model.Ticket) (*model.Flight, error) {
+	if obj.ReturnFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx,
+			&pb.UUID{Id: obj.ReturnFlight.ID})
+		return internal.ParseFlightPbToGraphql(flightRes), err
+	}
+	return nil, nil
 }
 
 // Ticket returns gql_generated.TicketResolver implementation.

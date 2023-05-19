@@ -20,10 +20,6 @@ type Booking struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// CustomerID holds the value of the "customer_id" field.
 	CustomerID uuid.UUID `json:"customer_id,omitempty"`
-	// GoingTicketID holds the value of the "going_ticket_id" field.
-	GoingTicketID uuid.UUID `json:"going_ticket_id,omitempty"`
-	// ReturnTicketID holds the value of the "return_ticket_id" field.
-	ReturnTicketID *uuid.UUID `json:"return_ticket_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status booking.Status `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -57,13 +53,11 @@ func (*Booking) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case booking.FieldReturnTicketID:
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case booking.FieldStatus:
 			values[i] = new(sql.NullString)
 		case booking.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingTicketID:
+		case booking.FieldID, booking.FieldCustomerID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -91,19 +85,6 @@ func (b *Booking) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field customer_id", values[i])
 			} else if value != nil {
 				b.CustomerID = *value
-			}
-		case booking.FieldGoingTicketID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field going_ticket_id", values[i])
-			} else if value != nil {
-				b.GoingTicketID = *value
-			}
-		case booking.FieldReturnTicketID:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field return_ticket_id", values[i])
-			} else if value.Valid {
-				b.ReturnTicketID = new(uuid.UUID)
-				*b.ReturnTicketID = *value.S.(*uuid.UUID)
 			}
 		case booking.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -160,14 +141,6 @@ func (b *Booking) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", b.ID))
 	builder.WriteString("customer_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.CustomerID))
-	builder.WriteString(", ")
-	builder.WriteString("going_ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", b.GoingTicketID))
-	builder.WriteString(", ")
-	if v := b.ReturnTicketID; v != nil {
-		builder.WriteString("return_ticket_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", b.Status))

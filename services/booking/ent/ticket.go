@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/ticket"
 	"fmt"
 	"strings"
@@ -17,6 +18,8 @@ type Ticket struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// BookingID holds the value of the "booking_id" field.
+	BookingID uuid.UUID `json:"booking_id,omitempty"`
 	// GoingFlightID holds the value of the "going_flight_id" field.
 	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
 	// ReturnFlightID holds the value of the "return_flight_id" field.
@@ -42,16 +45,20 @@ type Ticket struct {
 // TicketEdges holds the relations/edges for other nodes in the graph.
 type TicketEdges struct {
 	// Booking holds the value of the booking edge.
-	Booking []*Booking `json:"booking,omitempty"`
+	Booking *Booking `json:"booking,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // BookingOrErr returns the Booking value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) BookingOrErr() ([]*Booking, error) {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) BookingOrErr() (*Booking, error) {
 	if e.loadedTypes[0] {
+		if e.Booking == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: booking.Label}
+		}
 		return e.Booking, nil
 	}
 	return nil, &NotLoadedError{edge: "booking"}
@@ -64,7 +71,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticket.FieldStatus, ticket.FieldPassengerName, ticket.FieldPassengerLicenseID, ticket.FieldPassengerEmail, ticket.FieldSeatNumber, ticket.FieldClass:
 			values[i] = new(sql.NullString)
-		case ticket.FieldID, ticket.FieldGoingFlightID, ticket.FieldReturnFlightID:
+		case ticket.FieldID, ticket.FieldBookingID, ticket.FieldGoingFlightID, ticket.FieldReturnFlightID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -86,6 +93,12 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				t.ID = *value
+			}
+		case ticket.FieldBookingID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field booking_id", values[i])
+			} else if value != nil {
+				t.BookingID = *value
 			}
 		case ticket.FieldGoingFlightID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -176,6 +189,9 @@ func (t *Ticket) String() string {
 	var builder strings.Builder
 	builder.WriteString("Ticket(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString("booking_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.BookingID))
+	builder.WriteString(", ")
 	builder.WriteString("going_flight_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.GoingFlightID))
 	builder.WriteString(", ")

@@ -151,9 +151,12 @@ func ParseTicketInputGraphqlToPb(in *model.TicketInput) (out *pb.TicketInput) {
 		return nil
 	}
 	out = &pb.TicketInput{
-		FlightId:           in.FlightID,
+		GoingFlightId:      in.GoingFlightID,
 		PassengerLicenseId: in.PassengerLicenseID,
 		Class:              in.TicketClass.String(),
+	}
+	if in.ReturnFlightID != nil {
+		out.ReturnFlightId = in.ReturnFlightID
 	}
 	copier.Copy(&out, in)
 	return out
@@ -169,7 +172,11 @@ func ParseTicketPbToGraphqlTo(in *pb.Ticket) (out *model.Ticket) {
 		TicketClass:        model.TicketClass(in.Class),
 	}
 	copier.Copy(&out, in)
-	out.Flight = &model.Flight{ID: in.FlightId}
+	out.Booking = ParseBookingPbToGraphql(in.Booking)
+	out.GoingFlight = ParseFlightPbToGraphql(in.GoingFlight)
+	if in.ReturnFlight != nil {
+		out.ReturnFlight = ParseFlightPbToGraphql(in.ReturnFlight)
+	}
 	return out
 }
 
@@ -192,13 +199,11 @@ func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput)
 	out = &pb.BookingInput{
 		CustomerId: in.CustomerID,
 	}
-	if in.GoingTicket != nil {
-		out.GoingTicket = ParseTicketInputGraphqlToPb(in.GoingTicket)
-	}
-	if in.ReturnTicket != nil {
-		out.GoingTicket = ParseTicketInputGraphqlToPb(in.ReturnTicket)
-	}
 	copier.Copy(&out, in)
+	out.Tickets = make([]*pb.TicketInput, len(in.Ticket))
+	for i, t := range in.Ticket {
+		out.Tickets[i] = ParseTicketInputGraphqlToPb(t)
+	}
 	return out
 }
 
@@ -210,11 +215,9 @@ func ParseBookingInputForGuestGraphqlToPb(in *model.BookingInputForGuest) (out *
 		CustomerInput: ParseCustomerInputGraphqlToPb(in.Customer),
 	}
 	copier.Copy(&out, in)
-	if in.GoingTicket != nil {
-		out.GoingTicket = ParseTicketInputGraphqlToPb(in.GoingTicket)
-	}
-	if in.ReturnTicket != nil {
-		out.GoingTicket = ParseTicketInputGraphqlToPb(in.ReturnTicket)
+	out.Tickets = make([]*pb.TicketInput, len(in.Ticket))
+	for i, t := range in.Ticket {
+		out.Tickets[i] = ParseTicketInputGraphqlToPb(t)
 	}
 	return out
 }
@@ -234,11 +237,8 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 		}
 		copier.Copy(&out.Customer, in.Customer)
 	}
-	if in.GoingTicket != nil {
-		out.GoingTicket = ParseTicketPbToGraphqlTo(in.GoingTicket)
-	}
-	if in.ReturnTicket != nil {
-		out.ReturnTicket = ParseTicketPbToGraphqlTo(in.ReturnTicket)
+	if in.Tickets != nil {
+		out.Ticket = ParseTicketsPbToGraphqlTo(in.Tickets)
 	}
 	return out
 }

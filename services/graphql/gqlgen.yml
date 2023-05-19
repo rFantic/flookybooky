@@ -22,9 +22,7 @@ models:
     fields:
       customer:
         resolver: true
-      going_ticket:
-        resolver: true
-      return_ticket:
+      ticket:
         resolver: true
   
   Flight:
@@ -36,5 +34,7 @@ models:
   
   Ticket:
     fields:
-      flight:
+      going_flight:
+        resolver: true
+      return_flight:
         resolver: true

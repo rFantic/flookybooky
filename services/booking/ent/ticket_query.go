@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"flookybooky/services/booking/ent/booking"
 	"flookybooky/services/booking/ent/predicate"
 	"flookybooky/services/booking/ent/ticket"
@@ -75,7 +74,7 @@ func (tq *TicketQuery) QueryBooking() *BookingQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(booking.Table, booking.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ticket.BookingTable, ticket.BookingPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.BookingTable, ticket.BookingColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,12 +298,12 @@ func (tq *TicketQuery) WithBooking(opts ...func(*BookingQuery)) *TicketQuery {
 // Example:
 //
 //	var v []struct {
-//		GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
+//		BookingID uuid.UUID `json:"booking_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		GroupBy(ticket.FieldGoingFlightID).
+//		GroupBy(ticket.FieldBookingID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
@@ -322,11 +321,11 @@ func (tq *TicketQuery) GroupBy(field string, fields ...string) *TicketGroupBy {
 // Example:
 //
 //	var v []struct {
-//		GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
+//		BookingID uuid.UUID `json:"booking_id,omitempty"`
 //	}
 //
 //	client.Ticket.Query().
-//		Select(ticket.FieldGoingFlightID).
+//		Select(ticket.FieldBookingID).
 //		Scan(ctx, &v)
 func (tq *TicketQuery) Select(fields ...string) *TicketSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
@@ -394,9 +393,8 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		return nodes, nil
 	}
 	if query := tq.withBooking; query != nil {
-		if err := tq.loadBooking(ctx, query, nodes,
-			func(n *Ticket) { n.Edges.Booking = []*Booking{} },
-			func(n *Ticket, e *Booking) { n.Edges.Booking = append(n.Edges.Booking, e) }); err != nil {
+		if err := tq.loadBooking(ctx, query, nodes, nil,
+			func(n *Ticket, e *Booking) { n.Edges.Booking = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -404,62 +402,30 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 }
 
 func (tq *TicketQuery) loadBooking(ctx context.Context, query *BookingQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Booking)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Ticket)
-	nids := make(map[uuid.UUID]map[*Ticket]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].BookingID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(ticket.BookingTable)
-		s.Join(joinT).On(s.C(booking.FieldID), joinT.C(ticket.BookingPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(ticket.BookingPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(ticket.BookingPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Booking](ctx, query, qr, query.inters)
+	query.Where(booking.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "booking" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "booking_id" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
@@ -489,6 +455,9 @@ func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != ticket.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if tq.withBooking != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldBookingID)
 		}
 	}
 	if ps := tq.predicates; len(ps) > 0 {

@@ -4,6 +4,7 @@ import (
 	"flookybooky/pb"
 	"flookybooky/services/booking/ent"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 )
 
@@ -12,9 +13,16 @@ func ParseTicketEntToPb(in *ent.Ticket) (out *pb.Ticket) {
 		return nil
 	}
 	out = &pb.Ticket{
-		Id:                 in.ID.String(),
-		FlightId:           in.FlightID.String(),
+		Id: in.ID.String(),
+		GoingFlight: &pb.Flight{
+			Id: in.GoingFlightID.String(),
+		},
 		PassengerLicenseId: in.PassengerLicenseID,
+	}
+	if in.ReturnFlightID != uuid.Nil {
+		out.ReturnFlight = &pb.Flight{
+			Id: in.ReturnFlightID.String(),
+		}
 	}
 	copier.Copy(&out, in)
 	return out
@@ -44,14 +52,6 @@ func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	copier.Copy(&out, in)
 	out.Customer = &pb.Customer{
 		Id: in.CustomerID.String(),
-	}
-	out.GoingTicket = &pb.Ticket{
-		Id: in.GoingTicketID.String(),
-	}
-	if in.ReturnTicketID != nil {
-		out.ReturnTicket = &pb.Ticket{
-			Id: in.ReturnTicketID.String(),
-		}
 	}
 	return out
 }

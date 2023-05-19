@@ -13,15 +13,13 @@ type Booking {
 
 input BookingInput{
     customerId: String!
-    goingTicket: TicketInput!
-    returnTicket: TicketInput
+    ticket: [TicketInput]!
     status: BookingStatus!
 }
 
 input BookingInputForGuest{
     customer: CustomerInput!
-    goingTicket: TicketInput!
-    returnTicket: TicketInput
+    ticket: [TicketInput]!
     status: BookingStatus!
 }
 

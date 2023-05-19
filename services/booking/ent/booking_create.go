@@ -28,26 +28,6 @@ func (bc *BookingCreate) SetCustomerID(u uuid.UUID) *BookingCreate {
 	return bc
 }
 
-// SetGoingTicketID sets the "going_ticket_id" field.
-func (bc *BookingCreate) SetGoingTicketID(u uuid.UUID) *BookingCreate {
-	bc.mutation.SetGoingTicketID(u)
-	return bc
-}
-
-// SetReturnTicketID sets the "return_ticket_id" field.
-func (bc *BookingCreate) SetReturnTicketID(u uuid.UUID) *BookingCreate {
-	bc.mutation.SetReturnTicketID(u)
-	return bc
-}
-
-// SetNillableReturnTicketID sets the "return_ticket_id" field if the given value is not nil.
-func (bc *BookingCreate) SetNillableReturnTicketID(u *uuid.UUID) *BookingCreate {
-	if u != nil {
-		bc.SetReturnTicketID(*u)
-	}
-	return bc
-}
-
 // SetStatus sets the "status" field.
 func (bc *BookingCreate) SetStatus(b booking.Status) *BookingCreate {
 	bc.mutation.SetStatus(b)
@@ -147,9 +127,6 @@ func (bc *BookingCreate) check() error {
 	if _, ok := bc.mutation.CustomerID(); !ok {
 		return &ValidationError{Name: "customer_id", err: errors.New(`ent: missing required field "Booking.customer_id"`)}
 	}
-	if _, ok := bc.mutation.GoingTicketID(); !ok {
-		return &ValidationError{Name: "going_ticket_id", err: errors.New(`ent: missing required field "Booking.going_ticket_id"`)}
-	}
 	if _, ok := bc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Booking.status"`)}
 	}
@@ -200,14 +177,6 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 		_node.CustomerID = value
 	}
-	if value, ok := bc.mutation.GoingTicketID(); ok {
-		_spec.SetField(booking.FieldGoingTicketID, field.TypeUUID, value)
-		_node.GoingTicketID = value
-	}
-	if value, ok := bc.mutation.ReturnTicketID(); ok {
-		_spec.SetField(booking.FieldReturnTicketID, field.TypeUUID, value)
-		_node.ReturnTicketID = &value
-	}
 	if value, ok := bc.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
@@ -218,10 +187,10 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 	}
 	if nodes := bc.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),

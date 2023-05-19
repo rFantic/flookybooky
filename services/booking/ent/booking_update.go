@@ -35,32 +35,6 @@ func (bu *BookingUpdate) SetCustomerID(u uuid.UUID) *BookingUpdate {
 	return bu
 }
 
-// SetGoingTicketID sets the "going_ticket_id" field.
-func (bu *BookingUpdate) SetGoingTicketID(u uuid.UUID) *BookingUpdate {
-	bu.mutation.SetGoingTicketID(u)
-	return bu
-}
-
-// SetReturnTicketID sets the "return_ticket_id" field.
-func (bu *BookingUpdate) SetReturnTicketID(u uuid.UUID) *BookingUpdate {
-	bu.mutation.SetReturnTicketID(u)
-	return bu
-}
-
-// SetNillableReturnTicketID sets the "return_ticket_id" field if the given value is not nil.
-func (bu *BookingUpdate) SetNillableReturnTicketID(u *uuid.UUID) *BookingUpdate {
-	if u != nil {
-		bu.SetReturnTicketID(*u)
-	}
-	return bu
-}
-
-// ClearReturnTicketID clears the value of the "return_ticket_id" field.
-func (bu *BookingUpdate) ClearReturnTicketID() *BookingUpdate {
-	bu.mutation.ClearReturnTicketID()
-	return bu
-}
-
 // SetStatus sets the "status" field.
 func (bu *BookingUpdate) SetStatus(b booking.Status) *BookingUpdate {
 	bu.mutation.SetStatus(b)
@@ -160,24 +134,15 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bu.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
-	if value, ok := bu.mutation.GoingTicketID(); ok {
-		_spec.SetField(booking.FieldGoingTicketID, field.TypeUUID, value)
-	}
-	if value, ok := bu.mutation.ReturnTicketID(); ok {
-		_spec.SetField(booking.FieldReturnTicketID, field.TypeUUID, value)
-	}
-	if bu.mutation.ReturnTicketIDCleared() {
-		_spec.ClearField(booking.FieldReturnTicketID, field.TypeUUID)
-	}
 	if value, ok := bu.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
 	if bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -187,10 +152,10 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := bu.mutation.RemovedTicketIDs(); len(nodes) > 0 && !bu.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -203,10 +168,10 @@ func (bu *BookingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := bu.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -240,32 +205,6 @@ type BookingUpdateOne struct {
 // SetCustomerID sets the "customer_id" field.
 func (buo *BookingUpdateOne) SetCustomerID(u uuid.UUID) *BookingUpdateOne {
 	buo.mutation.SetCustomerID(u)
-	return buo
-}
-
-// SetGoingTicketID sets the "going_ticket_id" field.
-func (buo *BookingUpdateOne) SetGoingTicketID(u uuid.UUID) *BookingUpdateOne {
-	buo.mutation.SetGoingTicketID(u)
-	return buo
-}
-
-// SetReturnTicketID sets the "return_ticket_id" field.
-func (buo *BookingUpdateOne) SetReturnTicketID(u uuid.UUID) *BookingUpdateOne {
-	buo.mutation.SetReturnTicketID(u)
-	return buo
-}
-
-// SetNillableReturnTicketID sets the "return_ticket_id" field if the given value is not nil.
-func (buo *BookingUpdateOne) SetNillableReturnTicketID(u *uuid.UUID) *BookingUpdateOne {
-	if u != nil {
-		buo.SetReturnTicketID(*u)
-	}
-	return buo
-}
-
-// ClearReturnTicketID clears the value of the "return_ticket_id" field.
-func (buo *BookingUpdateOne) ClearReturnTicketID() *BookingUpdateOne {
-	buo.mutation.ClearReturnTicketID()
 	return buo
 }
 
@@ -398,24 +337,15 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	if value, ok := buo.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 	}
-	if value, ok := buo.mutation.GoingTicketID(); ok {
-		_spec.SetField(booking.FieldGoingTicketID, field.TypeUUID, value)
-	}
-	if value, ok := buo.mutation.ReturnTicketID(); ok {
-		_spec.SetField(booking.FieldReturnTicketID, field.TypeUUID, value)
-	}
-	if buo.mutation.ReturnTicketIDCleared() {
-		_spec.ClearField(booking.FieldReturnTicketID, field.TypeUUID)
-	}
 	if value, ok := buo.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)
 	}
 	if buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -425,10 +355,10 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	}
 	if nodes := buo.mutation.RemovedTicketIDs(); len(nodes) > 0 && !buo.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),
@@ -441,10 +371,10 @@ func (buo *BookingUpdateOne) sqlSave(ctx context.Context) (_node *Booking, err e
 	}
 	if nodes := buo.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   booking.TicketTable,
-			Columns: booking.TicketPrimaryKey,
+			Columns: []string{booking.TicketColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeUUID),

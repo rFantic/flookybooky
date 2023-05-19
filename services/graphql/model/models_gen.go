@@ -20,25 +20,22 @@ type AirportInput struct {
 }
 
 type Booking struct {
-	ID           string        `json:"id"`
-	GoingTicket  *Ticket       `json:"going_ticket"`
-	ReturnTicket *Ticket       `json:"return_ticket,omitempty"`
-	Customer     *Customer     `json:"customer"`
-	Status       BookingStatus `json:"status"`
+	ID       string        `json:"id"`
+	Customer *Customer     `json:"customer"`
+	Status   BookingStatus `json:"status"`
+	Ticket   []*Ticket     `json:"ticket"`
 }
 
 type BookingInput struct {
-	CustomerID   string        `json:"customerId"`
-	GoingTicket  *TicketInput  `json:"goingTicket"`
-	ReturnTicket *TicketInput  `json:"returnTicket,omitempty"`
-	Status       BookingStatus `json:"status"`
+	CustomerID string         `json:"customerId"`
+	Ticket     []*TicketInput `json:"ticket"`
+	Status     BookingStatus  `json:"status"`
 }
 
 type BookingInputForGuest struct {
-	Customer     *CustomerInput `json:"customer"`
-	GoingTicket  *TicketInput   `json:"goingTicket"`
-	ReturnTicket *TicketInput   `json:"returnTicket,omitempty"`
-	Status       BookingStatus  `json:"status"`
+	Customer *CustomerInput `json:"customer"`
+	Ticket   []*TicketInput `json:"ticket"`
+	Status   BookingStatus  `json:"status"`
 }
 
 type Customer struct {
@@ -80,14 +77,13 @@ type Flight struct {
 }
 
 type FlightInput struct {
-	Name           string       `json:"name"`
-	OriginID       string       `json:"originId"`
-	DestinationID  string       `json:"destinationId"`
-	TotalSlots     int          `json:"total_slots"`
-	AvailableSlots int          `json:"available_slots"`
-	DepartureTime  string       `json:"departure_time"`
-	ArrivalTime    string       `json:"arrival_time"`
-	Status         FlightStatus `json:"status"`
+	Name          string       `json:"name"`
+	OriginID      string       `json:"originId"`
+	DestinationID string       `json:"destinationId"`
+	TotalSlots    int          `json:"total_slots"`
+	DepartureTime string       `json:"departure_time"`
+	ArrivalTime   string       `json:"arrival_time"`
+	Status        FlightStatus `json:"status"`
 }
 
 type FlightUpdateInput struct {
@@ -125,23 +121,26 @@ type PasswordUpdateInput struct {
 
 type Ticket struct {
 	ID                 string       `json:"id"`
-	Status             TicketStatus `json:"status"`
-	Flight             *Flight      `json:"flight"`
+	Booking            *Booking     `json:"booking"`
+	GoingFlight        *Flight      `json:"going_flight"`
+	ReturnFlight       *Flight      `json:"return_flight"`
 	PassengerLicenseID string       `json:"passenger_license_id"`
 	PassengerName      string       `json:"passenger_name"`
 	PassengerEmail     string       `json:"passenger_email"`
 	SeatNumber         string       `json:"seat_number"`
 	TicketClass        TicketClass  `json:"ticket_class"`
+	Status             TicketStatus `json:"status"`
 }
 
 type TicketInput struct {
-	Status             TicketStatus `json:"status"`
-	FlightID           string       `json:"flight_id"`
+	GoingFlightID      string       `json:"going_flight_id"`
+	ReturnFlightID     *string      `json:"return_flight_id,omitempty"`
 	PassengerLicenseID string       `json:"passenger_license_id"`
 	PassengerName      string       `json:"passenger_name"`
 	PassengerEmail     string       `json:"passenger_email"`
 	SeatNumber         string       `json:"seat_number"`
 	TicketClass        TicketClass  `json:"ticket_class"`
+	Status             TicketStatus `json:"status"`
 }
 
 type User struct {

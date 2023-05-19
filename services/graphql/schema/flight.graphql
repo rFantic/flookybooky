@@ -23,7 +23,6 @@ input FlightInput{
     originId: String!
     destinationId: String!
     total_slots: Int!
-    available_slots: Int!
     departure_time: String!
     arrival_time: String!
     status: FlightStatus!
