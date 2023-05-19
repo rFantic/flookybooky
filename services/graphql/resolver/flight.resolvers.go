@@ -76,7 +76,18 @@ func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]
 
 // CancelFlight is the resolver for the cancelFlight field.
 func (r *queryResolver) CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error) {
-	panic(fmt.Errorf("not implemented: CancelFlight - cancelFlight"))
+	if input != nil {
+		_, err := r.client.FlightClient.CancelFlight(ctx, &pb.UUID{Id: input.ID})
+		if err != nil {
+			return false, err
+		}
+		_, err = r.client.BookingClient.CancelBookingOfFlight(ctx, &pb.UUID{Id: input.ID})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, fmt.Errorf("missing input")
 }
 
 // Flight returns gql_generated.FlightResolver implementation.

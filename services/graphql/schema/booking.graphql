@@ -40,7 +40,7 @@ type BookingOps {
 
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
-    cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
+    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {

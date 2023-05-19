@@ -123,7 +123,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Airport       func(childComplexity int, input *model.Pagination) int
 		Booking       func(childComplexity int, input *model.Pagination) int
-		CancelBooking func(childComplexity int, input *model.FlightCancelInput) int
+		CancelBooking func(childComplexity int, input *model.BookingCancelInput) int
 		CancelFlight  func(childComplexity int, input *model.FlightCancelInput) int
 		Customers     func(childComplexity int, input *model.Pagination) int
 		Flight        func(childComplexity int, input *model.Pagination) int
@@ -195,7 +195,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error)
 	Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error)
-	CancelBooking(ctx context.Context, input *model.FlightCancelInput) (bool, error)
+	CancelBooking(ctx context.Context, input *model.BookingCancelInput) (bool, error)
 	Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error)
 	Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error)
 	CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error)
@@ -556,7 +556,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CancelBooking(childComplexity, args["input"].(*model.FlightCancelInput)), true
+		return e.complexity.Query.CancelBooking(childComplexity, args["input"].(*model.BookingCancelInput)), true
 
 	case "Query.cancelFlight":
 		if e.complexity.Query.CancelFlight == nil {
@@ -911,7 +911,7 @@ type BookingOps {
 
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
-    cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
+    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
@@ -1294,10 +1294,10 @@ func (ec *executionContext) field_Query_booking_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_cancelBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.FlightCancelInput
+	var arg0 *model.BookingCancelInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx, tmp)
+		arg0, err = ec.unmarshalOBookingCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingCancelInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3711,7 +3711,7 @@ func (ec *executionContext) _Query_cancelBooking(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CancelBooking(rctx, fc.Args["input"].(*model.FlightCancelInput))
+			return ec.resolvers.Query().CancelBooking(rctx, fc.Args["input"].(*model.BookingCancelInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
@@ -10356,6 +10356,14 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOBookingCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingCancelInput(ctx context.Context, v interface{}) (*model.BookingCancelInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBookingCancelInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

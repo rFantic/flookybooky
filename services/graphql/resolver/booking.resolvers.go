@@ -11,6 +11,7 @@ import (
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 	"fmt"
+	"time"
 )
 
 // GoingFlight is the resolver for the going_flight field.
@@ -53,9 +54,12 @@ func (r *bookingResolver) Ticket(ctx context.Context, obj *model.Booking) ([]*mo
 
 // CreateBookingForGuest is the resolver for the createBookingForGuest field.
 func (r *bookingOpsResolver) CreateBookingForGuest(ctx context.Context, obj *model.BookingOps, input model.BookingInputForGuest) (*model.Booking, error) {
-	_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
+	_flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
 	if err != nil {
 		return nil, err
+	}
+	if time.Until(_flightRes.DepartureTime.AsTime()).Hours() < 24 {
+		return nil, fmt.Errorf("booking for flight closed")
 	}
 	if input.ReturnFlightID != nil {
 		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *input.ReturnFlightID})
@@ -74,6 +78,9 @@ func (r *bookingOpsResolver) CreateBooking(ctx context.Context, obj *model.Booki
 	goingFlight, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
 	if err != nil {
 		return nil, err
+	}
+	if time.Until(goingFlight.DepartureTime.AsTime()).Hours() < 24 {
+		return nil, fmt.Errorf("booking for flight closed")
 	}
 	if int(goingFlight.AvailableSlots) < ticketNums {
 		return nil, fmt.Errorf("not enough available slots")
@@ -124,8 +131,15 @@ func (r *queryResolver) Booking(ctx context.Context, input *model.Pagination) ([
 }
 
 // CancelBooking is the resolver for the cancelBooking field.
-func (r *queryResolver) CancelBooking(ctx context.Context, input *model.FlightCancelInput) (bool, error) {
-	panic(fmt.Errorf("not implemented: CancelBooking - cancelBooking"))
+func (r *queryResolver) CancelBooking(ctx context.Context, input *model.BookingCancelInput) (bool, error) {
+	if input != nil {
+		_, err := r.client.BookingClient.CancelBooking(ctx, &pb.UUID{Id: input.ID})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, fmt.Errorf("missing input")
 }
 
 // Booking returns gql_generated.BookingResolver implementation.
