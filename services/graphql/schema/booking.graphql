@@ -30,10 +30,10 @@ input BookingInputForGuest{
 }
 
 extend type Query {
-    booking(input: Pagination): [Booking!]!
+    booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
     createBookingForGuest(input: BookingInputForGuest!): Booking! 
-    createBooking(input: BookingInput!): Booking!
+    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])
 }

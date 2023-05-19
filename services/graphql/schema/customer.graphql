@@ -25,10 +25,10 @@ input CustomerUpdateInput {
 }
 
 extend type Mutation {
-    createCustomer(input: CustomerInput!): Customer!
-    updateCustomer(input: CustomerUpdateInput!): Boolean!
+    createCustomer(input: CustomerInput!): Customer! @hasRoles(roles: [admin])
+    updateCustomer(input: CustomerUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
 }
 
 extend type Query {
-    customers (input: Pagination): [Customer!]!
+    customers (input: Pagination): [Customer!]! @hasRoles(roles: [admin])
 }

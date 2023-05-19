@@ -28,7 +28,7 @@ type Resolver struct{ client Client }
 
 func NewSchema(client Client) graphql.ExecutableSchema {
 	var d = gql_generated.DirectiveRoot{
-		HasRole: func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (interface{}, error) {
+		HasRoles: func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []*model.Role) (interface{}, error) {
 			c, _ := ctx.Value(util.ContextKey{}).(*gin.Context)
 			tokenString, err := c.Cookie("Authentication")
 			if err != nil {
@@ -54,7 +54,7 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 					return nil, fmt.Errorf("claims user not found")
 				}
 				ctxRole := model.Role(res.Role)
-				if role != ctxRole {
+				if !Contains(roles, ctxRole) {
 					return nil, fmt.Errorf("current role not qualified")
 				}
 			} else {
@@ -68,4 +68,13 @@ func NewSchema(client Client) graphql.ExecutableSchema {
 		Resolvers:  &Resolver{client},
 		Directives: d,
 	})
+}
+
+func Contains(roles []*model.Role, role model.Role) bool {
+	for _, r := range roles {
+		if r.String() == role.String() {
+			return true
+		}
+	}
+	return false
 }

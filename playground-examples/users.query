@@ -1,5 +1,9 @@
 query get_users {
-  users {
+  users (input: {
+    ascFields: ["username", "email"]
+    limit: 10
+    offset: 0
+  }) {
     id
     username
     email
@@ -31,7 +35,7 @@ mutation register_with_info {
       username: "Lilooo", 
       password: "passwd", 
       email: "lilooo@gmail.com"
-      role: "admin", 
+      role: "user", 
       customer: {
         name: "near nguyen", 
         address: "fake address",
@@ -64,7 +68,7 @@ mutation updatePassword {
   })
 }
 
-mutation login {
+query login {
   login(input: {username: "Lilooo", password: "passwd"}) {
     tokenString
   }
@@ -74,4 +78,6 @@ query logout {
 	logout
 }
 
-# find_user
+
+# find_user (admin)
+# show_profile (user)

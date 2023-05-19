@@ -51,5 +51,6 @@ mutation updateFlight {
   })
 }
 
-# cancel_flight -> cancel_booking -> cancel_ticket
-# find flight
+# cancel_flight -> cancel_booking -> cancel_ticket (admin)
+# search suitable flight (user)
+# search flight

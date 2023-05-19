@@ -1,4 +1,4 @@
-directive @hasRole(role: Role!) on FIELD_DEFINITION
+directive @hasRoles(roles: [Role]!) on FIELD_DEFINITION
 
 enum Role {
     admin
@@ -44,12 +44,12 @@ type LoginInfo {
 
 extend type Mutation {
     register(input: UserInput!): User!
-    updateUser(input: UserUpdateInput!): Boolean!
-    updatePassword(input: PasswordUpdateInput!): Boolean!
+    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])
+    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
 }
 
 extend type Query {
-    users(input: Pagination): [User!]! @hasRole(role: admin)
+    users(input: Pagination): [User!]! @hasRoles(roles: [admin])
     login(input: LoginInput!): LoginInfo!
     logout: Boolean!
 }

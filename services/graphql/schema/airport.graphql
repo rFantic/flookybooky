@@ -10,9 +10,9 @@ input AirportInput{
 }
 
 extend type Query {
-    airport(input: Pagination): [Airport!]!
+    airport(input: Pagination): [Airport!]! @hasRoles(roles: [user, admin])
 }
 
 extend type Mutation {
-    createAirport(input: AirportInput!): Airport!
+    createAirport(input: AirportInput!): Airport! @hasRoles(roles: [admin])
 }

@@ -40,10 +40,10 @@ input FlightUpdateInput{
 }
 
 extend type Query {
-    flight(input: Pagination): [Flight!]!
+    flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
 }
 
 extend type Mutation {
-    createFlight(input: FlightInput!): Flight!
-    updateFlight(input: FlightUpdateInput!): Boolean!
+    createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])
+    updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])
 }

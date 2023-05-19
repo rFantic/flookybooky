@@ -85,5 +85,6 @@ query getBookings {
   }
 }
 
-# set_status
-# find booking
+# set_status (admin)
+# booking history (user)
+# cancel_booking (user)
