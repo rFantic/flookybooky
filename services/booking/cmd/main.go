@@ -46,7 +46,8 @@ func main() {
 
 	s := grpc.NewServer()
 	h, err := handler.NewBookingHandler(*client,
-		servicesClient.CustomerClient)
+		servicesClient.CustomerClient,
+		servicesClient.FlightClient)
 	if err != nil {
 		panic(err)
 	}
@@ -58,6 +59,7 @@ func main() {
 
 type ServicesClient struct {
 	CustomerClient pb.CustomerServiceClient
+	FlightClient   pb.FlightServiceClient
 }
 
 func servicesConn() ServicesClient {
@@ -66,7 +68,13 @@ func servicesConn() ServicesClient {
 		panic(err)
 	}
 	customerClient := pb.NewCustomerServiceClient(customerConn)
+	flightConn, err := grpc.Dial("flight:2220", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	flightClient := pb.NewFlightServiceClient(flightConn)
 	return ServicesClient{
 		CustomerClient: customerClient,
+		FlightClient:   flightClient,
 	}
 }

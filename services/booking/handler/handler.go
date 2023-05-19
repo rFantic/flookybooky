@@ -8,6 +8,7 @@ import (
 	"flookybooky/services/booking/ent/ticket"
 	"flookybooky/services/booking/internal"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -17,13 +18,16 @@ import (
 type BookingHandler struct {
 	pb.UnimplementedBookingServiceServer
 	customerClient pb.CustomerServiceClient
+	flightClient   pb.FlightServiceClient
 	client         ent.Client
 }
 
-func NewBookingHandler(client ent.Client, customerClient pb.CustomerServiceClient) (*BookingHandler, error) {
+func NewBookingHandler(client ent.Client, customerClient pb.CustomerServiceClient,
+	flightClient pb.FlightServiceClient) (*BookingHandler, error) {
 	return &BookingHandler{
 		client:         client,
 		customerClient: customerClient,
+		flightClient:   flightClient,
 	}, nil
 }
 
@@ -191,6 +195,13 @@ func (h *BookingHandler) CancelBooking(ctx context.Context, req *pb.UUID) (*empt
 	_bookingRes, err := h.client.Booking.Get(ctx, bookingId)
 	if err != nil {
 		return nil, err
+	}
+	_flightRes, err := h.flightClient.GetFlight(ctx, &pb.UUID{Id: _bookingRes.GoingFlightID.String()})
+	if err != nil {
+		return nil, err
+	}
+	if time.Until(_flightRes.DepartureTime.AsTime()).Hours() < 24 {
+		return nil, fmt.Errorf("cannot cancel booking within 24 hours")
 	}
 	if _bookingRes.Status != booking.StatusScheduled {
 		return nil, fmt.Errorf("flight already departed")
