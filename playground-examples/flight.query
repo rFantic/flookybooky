@@ -8,8 +8,8 @@ mutation createFlight {
       name: "VN 157 Airbus A321"
       originId: "ee0a3b9e-dd5c-4c26-bd61-dfd506fe30f0"
       destinationId: "46be7300-dd77-4116-ab03-2bf3e5085bb9"
-      total_slots: 1
-      departure_time: "2023-05-20T10:00:00AM"
+      total_slots: 20
+      departure_time: "2023-05-20T10:00:00PM"
       arrival_time: "2023-05-21T05:00:00PM"
       status: Scheduled
     }){
@@ -67,4 +67,21 @@ mutation cancelFlight {
   }
 }
 
-# search suitable flight (user)
+query searchFlight {
+	searchFlight (input: {
+    available_slots_at_least: 5
+    destination_id: "46be7300-dd77-4116-ab03-2bf3e5085bb9"
+  }) {
+    id
+    name
+    origin {
+      address
+    }
+    destination {
+      address
+    }
+    total_slots
+    available_slots
+  }
+}
+  

@@ -136,7 +136,7 @@ func ParseFlightPbToGraphql(in *pb.Flight) (out *model.Flight) {
 }
 
 func ParseFlightsPbToGraphql(in *pb.Flights) (out []*model.Flight) {
-	if in.Flights == nil {
+	if in == nil {
 		return nil
 	}
 	out = make([]*model.Flight, len(in.Flights))
@@ -327,4 +327,17 @@ func ParseFlightUpdateInputGraphqlToPb(in *model.FlightUpdateInput) (out *pb.Fli
 		out.DestinationId = in.DestinationID
 	}
 	return out, err
+}
+
+func ParseFlightSearchInputGraphqlToPb(in *model.FlightSearchInput) (out *pb.FlightSearchInput) {
+	if in == nil {
+		return &pb.FlightSearchInput{}
+	}
+	out = &pb.FlightSearchInput{
+		OriginId:      in.OriginID,
+		DestinationId: in.DestinationID,
+		Status:        (*string)(in.Status),
+	}
+	copier.Copy(&out, in)
+	return out
 }

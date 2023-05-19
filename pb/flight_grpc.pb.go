@@ -31,6 +31,7 @@ type FlightServiceClient interface {
 	GetFlights(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (*Flights, error)
 	UpdateFlight(ctx context.Context, in *FlightUpdateInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SetAvailableSlots(ctx context.Context, in *AvailableSlotsInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SearchFlight(ctx context.Context, in *FlightSearchInput, opts ...grpc.CallOption) (*Flights, error)
 	CancelFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -114,6 +115,15 @@ func (c *flightServiceClient) SetAvailableSlots(ctx context.Context, in *Availab
 	return out, nil
 }
 
+func (c *flightServiceClient) SearchFlight(ctx context.Context, in *FlightSearchInput, opts ...grpc.CallOption) (*Flights, error) {
+	out := new(Flights)
+	err := c.cc.Invoke(ctx, "/pb.FlightService/SearchFlight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *flightServiceClient) CancelFlight(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/pb.FlightService/CancelFlight", in, out, opts...)
@@ -135,6 +145,7 @@ type FlightServiceServer interface {
 	GetFlights(context.Context, *Pagination) (*Flights, error)
 	UpdateFlight(context.Context, *FlightUpdateInput) (*emptypb.Empty, error)
 	SetAvailableSlots(context.Context, *AvailableSlotsInput) (*emptypb.Empty, error)
+	SearchFlight(context.Context, *FlightSearchInput) (*Flights, error)
 	CancelFlight(context.Context, *UUID) (*emptypb.Empty, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
@@ -166,6 +177,9 @@ func (UnimplementedFlightServiceServer) UpdateFlight(context.Context, *FlightUpd
 }
 func (UnimplementedFlightServiceServer) SetAvailableSlots(context.Context, *AvailableSlotsInput) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAvailableSlots not implemented")
+}
+func (UnimplementedFlightServiceServer) SearchFlight(context.Context, *FlightSearchInput) (*Flights, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchFlight not implemented")
 }
 func (UnimplementedFlightServiceServer) CancelFlight(context.Context, *UUID) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelFlight not implemented")
@@ -327,6 +341,24 @@ func _FlightService_SetAvailableSlots_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_SearchFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlightSearchInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).SearchFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FlightService/SearchFlight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).SearchFlight(ctx, req.(*FlightSearchInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FlightService_CancelFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UUID)
 	if err := dec(in); err != nil {
@@ -383,6 +415,10 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetAvailableSlots",
 			Handler:    _FlightService_SetAvailableSlots_Handler,
+		},
+		{
+			MethodName: "SearchFlight",
+			Handler:    _FlightService_SearchFlight_Handler,
 		},
 		{
 			MethodName: "CancelFlight",

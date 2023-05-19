@@ -90,6 +90,12 @@ func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]
 	return internal.ParseFlightsPbToGraphql(flightsRes), err
 }
 
+// SearchFlight is the resolver for the searchFlight field.
+func (r *queryResolver) SearchFlight(ctx context.Context, input *model.FlightSearchInput) ([]*model.Flight, error) {
+	flightsRes, err := r.client.FlightClient.SearchFlight(ctx, internal.ParseFlightSearchInputGraphqlToPb(input))
+	return internal.ParseFlightsPbToGraphql(flightsRes), err
+}
+
 // Flight returns gql_generated.FlightResolver implementation.
 func (r *Resolver) Flight() gql_generated.FlightResolver { return &flightResolver{r} }
 

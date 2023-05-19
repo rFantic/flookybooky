@@ -121,6 +121,15 @@ type FlightOps struct {
 	CancelFlight bool    `json:"cancelFlight"`
 }
 
+type FlightSearchInput struct {
+	AvailableSlotsAtLeast *int          `json:"available_slots_at_least,omitempty"`
+	OriginID              *string       `json:"origin_id,omitempty"`
+	DestinationID         *string       `json:"destination_id,omitempty"`
+	DepartureTimeBefore   *string       `json:"departure_time_before,omitempty"`
+	DepartureTimeAfter    *string       `json:"departure_time_after,omitempty"`
+	Status                *FlightStatus `json:"status,omitempty"`
+}
+
 type FlightUpdateInput struct {
 	ID            string        `json:"id"`
 	Name          *string       `json:"name,omitempty"`

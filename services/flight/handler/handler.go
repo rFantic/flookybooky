@@ -6,6 +6,7 @@ import (
 	"flookybooky/services/flight/ent"
 	"flookybooky/services/flight/ent/airport"
 	"flookybooky/services/flight/ent/flight"
+	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/internal"
 	"fmt"
 
@@ -226,4 +227,39 @@ func (h *FlightHandler) CancelFlight(ctx context.Context, req *pb.UUID) (*emptyp
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (h *FlightHandler) SearchFlight(ctx context.Context, req *pb.FlightSearchInput) (*pb.Flights, error) {
+	if req == nil {
+		return h.GetFlights(ctx, &pb.Pagination{})
+	}
+	var ps []predicate.Flight
+	if req.OriginId != nil {
+		_originId, err := uuid.Parse(*req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+		ps = append(ps, flight.OriginID(_originId))
+	}
+	if req.DestinationId != nil {
+		_destinationId, err := uuid.Parse(*req.DestinationId)
+		if err != nil {
+			return nil, err
+		}
+		ps = append(ps, flight.DestinartionID(_destinationId))
+	}
+	if req.AvailableSlotsAtLeast != nil {
+		ps = append(ps, flight.AvailableSlotsGTE(int(req.GetAvailableSlotsAtLeast())))
+	}
+	if req.DepartureTimeAfter != nil {
+		ps = append(ps, flight.DepartureTimeGTE(req.DepartureTimeAfter.AsTime()))
+	}
+	if req.DepartureTimeBefore != nil {
+		ps = append(ps, flight.DepartureTimeLTE(req.DepartureTimeBefore.AsTime()))
+	}
+	if req.Status != nil {
+		ps = append(ps, flight.StatusEQ(flight.Status(*req.Status)))
+	}
+	_flightRes, err := h.client.Flight.Query().Where(ps...).All(ctx)
+	return internal.ParseFlightsEntToPb(_flightRes), err
 }

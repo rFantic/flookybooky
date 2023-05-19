@@ -43,6 +43,15 @@ input FlightCancelInput {
     id: String!
 }
 
+input FlightSearchInput {
+    available_slots_at_least: Int
+    origin_id: String
+    destination_id: String
+    departure_time_before: String
+    departure_time_after: String
+    status: FlightStatus
+}
+
 type FlightOps {
     createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])  @goField(forceResolver: true)
     updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
@@ -50,7 +59,8 @@ type FlightOps {
 }
 
 extend type Query {
-    flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
+    flight(input: Pagination): [Flight!]!
+    searchFlight(input: FlightSearchInput): [Flight]!
 }
 
 extend type Mutation {

@@ -57,6 +57,15 @@ message AvailableSlotsInput{
     int64 available_slots = 2;
 }
 
+message FlightSearchInput {
+    optional int64 available_slots_at_least = 1;
+    optional string origin_id = 2;
+    optional string destination_id = 3;
+    optional google.protobuf.Timestamp departure_time_before = 4;
+    optional google.protobuf.Timestamp departure_time_after = 5;
+    optional string status = 6;
+}
+
 service FlightService {
     rpc PostAirport (Airport) returns (Airport) {}
     rpc GetAirport (UUID) returns (Airport) {}
@@ -66,6 +75,6 @@ service FlightService {
     rpc GetFlights (Pagination) returns (Flights) {}
     rpc UpdateFlight (FlightUpdateInput) returns (google.protobuf.Empty) {}
     rpc SetAvailableSlots (AvailableSlotsInput) returns (google.protobuf.Empty) {}
-
+    rpc SearchFlight (FlightSearchInput) returns (Flights) {}
     rpc CancelFlight (UUID) returns (google.protobuf.Empty) {}
 }
