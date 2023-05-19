@@ -36,7 +36,7 @@ input BookingCancelInput {
 type BookingOps {
     createBookingForGuest(input: BookingInputForGuest!): Booking!  @goField(forceResolver: true)
     createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])  @goField(forceResolver: true)
-    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin]) @goField(forceResolver: true)
+    cancelBooking(input: BookingCancelInput): Boolean!  @goField(forceResolver: true)
 }
 
 extend type Query {

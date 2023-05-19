@@ -92,11 +92,11 @@ func ParseFlightInputGraphqlToPb(in *model.FlightInput) (out *pb.FlightInput, er
 	if in == nil {
 		return nil, fmt.Errorf("nil flight input")
 	}
-	_departureTime, err := time.Parse("2006-01-02", in.DepartureTime)
+	_departureTime, err := time.Parse("2006-01-02T03:04:05PM", in.DepartureTime)
 	if err != nil {
 		return nil, err
 	}
-	_arrivalTime, err := time.Parse("2006-01-02", in.ArrivalTime)
+	_arrivalTime, err := time.Parse("2006-01-02T03:04:05PM", in.ArrivalTime)
 	if err != nil {
 		return nil, err
 	}

@@ -907,7 +907,7 @@ input BookingCancelInput {
 type BookingOps {
     createBookingForGuest(input: BookingInputForGuest!): Booking!  @goField(forceResolver: true)
     createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])  @goField(forceResolver: true)
-    cancelBooking(input: BookingCancelInput): Boolean! @hasRoles(roles: [admin]) @goField(forceResolver: true)
+    cancelBooking(input: BookingCancelInput): Boolean!  @goField(forceResolver: true)
 }
 
 extend type Query {
@@ -2209,32 +2209,8 @@ func (ec *executionContext) _BookingOps_cancelBooking(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.BookingOps().CancelBooking(rctx, obj, fc.Args["input"].(*model.BookingCancelInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, obj, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BookingOps().CancelBooking(rctx, obj, fc.Args["input"].(*model.BookingCancelInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
