@@ -19,6 +19,10 @@ type AirportInput struct {
 	Address string `json:"address"`
 }
 
+type AirportOps struct {
+	CreateAirport *Airport `json:"createAirport"`
+}
+
 type Booking struct {
 	ID           string        `json:"id"`
 	GoingFlight  *Flight       `json:"going_flight"`
@@ -46,6 +50,11 @@ type BookingInputForGuest struct {
 	ReturnFlightID *string        `json:"return_flight_id,omitempty"`
 	Ticket         []*TicketInput `json:"ticket"`
 	Status         BookingStatus  `json:"status"`
+}
+
+type BookingOps struct {
+	CreateBookingForGuest *Booking `json:"createBookingForGuest"`
+	CreateBooking         *Booking `json:"createBooking"`
 }
 
 type Customer struct {
@@ -98,6 +107,11 @@ type FlightInput struct {
 	DepartureTime string       `json:"departure_time"`
 	ArrivalTime   string       `json:"arrival_time"`
 	Status        FlightStatus `json:"status"`
+}
+
+type FlightOps struct {
+	CreateFlight *Flight `json:"createFlight"`
+	UpdateFlight bool    `json:"updateFlight"`
 }
 
 type FlightUpdateInput struct {
@@ -167,6 +181,12 @@ type UserInput struct {
 	Email    string         `json:"email"`
 	Role     string         `json:"role"`
 	Customer *CustomerInput `json:"customer,omitempty"`
+}
+
+type UserOps struct {
+	Register       *User `json:"register"`
+	UpdateUser     bool  `json:"updateUser"`
+	UpdatePassword bool  `json:"updatePassword"`
 }
 
 type UserUpdateInput struct {

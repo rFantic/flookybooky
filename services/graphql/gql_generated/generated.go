@@ -36,11 +36,15 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AirportOps() AirportOpsResolver
 	Booking() BookingResolver
+	BookingOps() BookingOpsResolver
 	Flight() FlightResolver
+	FlightOps() FlightOpsResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	User() UserResolver
+	UserOps() UserOpsResolver
 }
 
 type DirectiveRoot struct {
@@ -54,6 +58,10 @@ type ComplexityRoot struct {
 		Name    func(childComplexity int) int
 	}
 
+	AirportOps struct {
+		CreateAirport func(childComplexity int, input model.AirportInput) int
+	}
+
 	Booking struct {
 		Customer     func(childComplexity int) int
 		GoingFlight  func(childComplexity int) int
@@ -61,6 +69,11 @@ type ComplexityRoot struct {
 		ReturnFlight func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Ticket       func(childComplexity int) int
+	}
+
+	BookingOps struct {
+		CreateBooking         func(childComplexity int, input model.BookingInput) int
+		CreateBookingForGuest func(childComplexity int, input model.BookingInputForGuest) int
 	}
 
 	Customer struct {
@@ -84,21 +97,22 @@ type ComplexityRoot struct {
 		TotalSlots     func(childComplexity int) int
 	}
 
+	FlightOps struct {
+		CreateFlight func(childComplexity int, input model.FlightInput) int
+		UpdateFlight func(childComplexity int, input model.FlightUpdateInput) int
+	}
+
 	LoginInfo struct {
 		TokenString func(childComplexity int) int
 	}
 
 	Mutation struct {
-		CreateAirport         func(childComplexity int, input model.AirportInput) int
-		CreateBooking         func(childComplexity int, input model.BookingInput) int
-		CreateBookingForGuest func(childComplexity int, input model.BookingInputForGuest) int
-		CreateCustomer        func(childComplexity int, input model.CustomerInput) int
-		CreateFlight          func(childComplexity int, input model.FlightInput) int
-		Register              func(childComplexity int, input model.UserInput) int
-		UpdateCustomer        func(childComplexity int, input model.CustomerUpdateInput) int
-		UpdateFlight          func(childComplexity int, input model.FlightUpdateInput) int
-		UpdatePassword        func(childComplexity int, input model.PasswordUpdateInput) int
-		UpdateUser            func(childComplexity int, input model.UserUpdateInput) int
+		Airport        func(childComplexity int) int
+		Booking        func(childComplexity int) int
+		CreateCustomer func(childComplexity int, input model.CustomerInput) int
+		Flight         func(childComplexity int) int
+		UpdateCustomer func(childComplexity int, input model.CustomerUpdateInput) int
+		User           func(childComplexity int) int
 	}
 
 	Query struct {
@@ -132,8 +146,17 @@ type ComplexityRoot struct {
 		Role     func(childComplexity int) int
 		Username func(childComplexity int) int
 	}
+
+	UserOps struct {
+		Register       func(childComplexity int, input model.UserInput) int
+		UpdatePassword func(childComplexity int, input model.PasswordUpdateInput) int
+		UpdateUser     func(childComplexity int, input model.UserUpdateInput) int
+	}
 }
 
+type AirportOpsResolver interface {
+	CreateAirport(ctx context.Context, obj *model.AirportOps, input model.AirportInput) (*model.Airport, error)
+}
 type BookingResolver interface {
 	GoingFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error)
 	ReturnFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error)
@@ -141,21 +164,25 @@ type BookingResolver interface {
 
 	Ticket(ctx context.Context, obj *model.Booking) ([]*model.Ticket, error)
 }
+type BookingOpsResolver interface {
+	CreateBookingForGuest(ctx context.Context, obj *model.BookingOps, input model.BookingInputForGuest) (*model.Booking, error)
+	CreateBooking(ctx context.Context, obj *model.BookingOps, input model.BookingInput) (*model.Booking, error)
+}
 type FlightResolver interface {
 	Origin(ctx context.Context, obj *model.Flight) (*model.Airport, error)
 	Destination(ctx context.Context, obj *model.Flight) (*model.Airport, error)
 }
+type FlightOpsResolver interface {
+	CreateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightInput) (*model.Flight, error)
+	UpdateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightUpdateInput) (bool, error)
+}
 type MutationResolver interface {
-	CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error)
-	CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error)
-	CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error)
+	Airport(ctx context.Context) (*model.AirportOps, error)
+	Booking(ctx context.Context) (*model.BookingOps, error)
 	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 	UpdateCustomer(ctx context.Context, input model.CustomerUpdateInput) (bool, error)
-	CreateFlight(ctx context.Context, input model.FlightInput) (*model.Flight, error)
-	UpdateFlight(ctx context.Context, input model.FlightUpdateInput) (bool, error)
-	Register(ctx context.Context, input model.UserInput) (*model.User, error)
-	UpdateUser(ctx context.Context, input model.UserUpdateInput) (bool, error)
-	UpdatePassword(ctx context.Context, input model.PasswordUpdateInput) (bool, error)
+	Flight(ctx context.Context) (*model.FlightOps, error)
+	User(ctx context.Context) (*model.UserOps, error)
 }
 type QueryResolver interface {
 	Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error)
@@ -171,6 +198,11 @@ type QueryResolver interface {
 }
 type UserResolver interface {
 	Customer(ctx context.Context, obj *model.User) (*model.Customer, error)
+}
+type UserOpsResolver interface {
+	Register(ctx context.Context, obj *model.UserOps, input model.UserInput) (*model.User, error)
+	UpdateUser(ctx context.Context, obj *model.UserOps, input model.UserUpdateInput) (bool, error)
+	UpdatePassword(ctx context.Context, obj *model.UserOps, input model.PasswordUpdateInput) (bool, error)
 }
 
 type executableSchema struct {
@@ -208,6 +240,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Airport.Name(childComplexity), true
+
+	case "AirportOps.createAirport":
+		if e.complexity.AirportOps.CreateAirport == nil {
+			break
+		}
+
+		args, err := ec.field_AirportOps_createAirport_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AirportOps.CreateAirport(childComplexity, args["input"].(model.AirportInput)), true
 
 	case "Booking.customer":
 		if e.complexity.Booking.Customer == nil {
@@ -250,6 +294,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Booking.Ticket(childComplexity), true
+
+	case "BookingOps.createBooking":
+		if e.complexity.BookingOps.CreateBooking == nil {
+			break
+		}
+
+		args, err := ec.field_BookingOps_createBooking_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BookingOps.CreateBooking(childComplexity, args["input"].(model.BookingInput)), true
+
+	case "BookingOps.createBookingForGuest":
+		if e.complexity.BookingOps.CreateBookingForGuest == nil {
+			break
+		}
+
+		args, err := ec.field_BookingOps_createBookingForGuest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.BookingOps.CreateBookingForGuest(childComplexity, args["input"].(model.BookingInputForGuest)), true
 
 	case "Customer.address":
 		if e.complexity.Customer.Address == nil {
@@ -356,6 +424,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Flight.TotalSlots(childComplexity), true
 
+	case "FlightOps.createFlight":
+		if e.complexity.FlightOps.CreateFlight == nil {
+			break
+		}
+
+		args, err := ec.field_FlightOps_createFlight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.FlightOps.CreateFlight(childComplexity, args["input"].(model.FlightInput)), true
+
+	case "FlightOps.updateFlight":
+		if e.complexity.FlightOps.UpdateFlight == nil {
+			break
+		}
+
+		args, err := ec.field_FlightOps_updateFlight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.FlightOps.UpdateFlight(childComplexity, args["input"].(model.FlightUpdateInput)), true
+
 	case "LoginInfo.tokenString":
 		if e.complexity.LoginInfo.TokenString == nil {
 			break
@@ -363,41 +455,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LoginInfo.TokenString(childComplexity), true
 
-	case "Mutation.createAirport":
-		if e.complexity.Mutation.CreateAirport == nil {
+	case "Mutation.airport":
+		if e.complexity.Mutation.Airport == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createAirport_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
+		return e.complexity.Mutation.Airport(childComplexity), true
 
-		return e.complexity.Mutation.CreateAirport(childComplexity, args["input"].(model.AirportInput)), true
-
-	case "Mutation.createBooking":
-		if e.complexity.Mutation.CreateBooking == nil {
+	case "Mutation.booking":
+		if e.complexity.Mutation.Booking == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createBooking_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateBooking(childComplexity, args["input"].(model.BookingInput)), true
-
-	case "Mutation.createBookingForGuest":
-		if e.complexity.Mutation.CreateBookingForGuest == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createBookingForGuest_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateBookingForGuest(childComplexity, args["input"].(model.BookingInputForGuest)), true
+		return e.complexity.Mutation.Booking(childComplexity), true
 
 	case "Mutation.createCustomer":
 		if e.complexity.Mutation.CreateCustomer == nil {
@@ -411,29 +481,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateCustomer(childComplexity, args["input"].(model.CustomerInput)), true
 
-	case "Mutation.createFlight":
-		if e.complexity.Mutation.CreateFlight == nil {
+	case "Mutation.flight":
+		if e.complexity.Mutation.Flight == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createFlight_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateFlight(childComplexity, args["input"].(model.FlightInput)), true
-
-	case "Mutation.register":
-		if e.complexity.Mutation.Register == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_register_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.Register(childComplexity, args["input"].(model.UserInput)), true
+		return e.complexity.Mutation.Flight(childComplexity), true
 
 	case "Mutation.updateCustomer":
 		if e.complexity.Mutation.UpdateCustomer == nil {
@@ -447,41 +500,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateCustomer(childComplexity, args["input"].(model.CustomerUpdateInput)), true
 
-	case "Mutation.updateFlight":
-		if e.complexity.Mutation.UpdateFlight == nil {
+	case "Mutation.user":
+		if e.complexity.Mutation.User == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateFlight_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateFlight(childComplexity, args["input"].(model.FlightUpdateInput)), true
-
-	case "Mutation.updatePassword":
-		if e.complexity.Mutation.UpdatePassword == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updatePassword_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdatePassword(childComplexity, args["input"].(model.PasswordUpdateInput)), true
-
-	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(model.UserUpdateInput)), true
+		return e.complexity.Mutation.User(childComplexity), true
 
 	case "Query.airport":
 		if e.complexity.Query.Airport == nil {
@@ -689,6 +713,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Username(childComplexity), true
 
+	case "UserOps.register":
+		if e.complexity.UserOps.Register == nil {
+			break
+		}
+
+		args, err := ec.field_UserOps_register_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserOps.Register(childComplexity, args["input"].(model.UserInput)), true
+
+	case "UserOps.updatePassword":
+		if e.complexity.UserOps.UpdatePassword == nil {
+			break
+		}
+
+		args, err := ec.field_UserOps_updatePassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserOps.UpdatePassword(childComplexity, args["input"].(model.PasswordUpdateInput)), true
+
+	case "UserOps.updateUser":
+		if e.complexity.UserOps.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_UserOps_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.UserOps.UpdateUser(childComplexity, args["input"].(model.UserUpdateInput)), true
+
 	}
 	return 0, false
 }
@@ -783,12 +843,16 @@ input AirportInput{
     address: String!
 }
 
+type AirportOps {
+    createAirport(input: AirportInput!): Airport! @hasRoles(roles: [admin]) @goField(forceResolver: true)
+}
+
 extend type Query {
     airport(input: Pagination): [Airport!]! @hasRoles(roles: [user, admin])
 }
 
 extend type Mutation {
-    createAirport(input: AirportInput!): Airport! @hasRoles(roles: [admin])
+    airport: AirportOps!
 }`, BuiltIn: false},
 	{Name: "../schema/booking.graphql", Input: `enum BookingStatus {
     Cancelled
@@ -798,11 +862,11 @@ extend type Mutation {
 
 type Booking {
     id: String!
-    going_flight: Flight!
-    return_flight: Flight!
-    customer: Customer!
+    going_flight: Flight!  @goField(forceResolver: true)
+    return_flight: Flight!  @goField(forceResolver: true)
+    customer: Customer!  @goField(forceResolver: true)
     status: BookingStatus!
-    ticket: [Ticket]!
+    ticket: [Ticket]!  @goField(forceResolver: true)
 }
 
 input BookingInput{
@@ -825,16 +889,28 @@ input BookingCancelInput {
     id: String!
 }
 
+type BookingOps {
+    createBookingForGuest(input: BookingInputForGuest!): Booking!  @goField(forceResolver: true)
+    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])  @goField(forceResolver: true)
+}
+
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
     cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
-    createBookingForGuest(input: BookingInputForGuest!): Booking! 
-    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])
+    booking: BookingOps!
 }`, BuiltIn: false},
-	{Name: "../schema/common.graphql", Input: `type Mutation
+	{Name: "../schema/common.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION  | FIELD_DEFINITION
+directive @hasRoles(roles: [Role]!) on FIELD_DEFINITION
+
+enum Role {
+    admin
+    user
+}
+
+type Mutation
 type Query 
 
 input Pagination {
@@ -889,8 +965,8 @@ extend type Query {
 type Flight {
     id: String!
     name: String!
-    origin: Airport!
-    destination: Airport!
+    origin: Airport!  @goField(forceResolver: true)
+    destination: Airport!  @goField(forceResolver: true)
     total_slots: Int!
     available_slots: Int!
     departure_time: String!
@@ -923,14 +999,18 @@ input FlightCancelInput {
     id: String!
 }
 
+type FlightOps {
+    createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+}
+
 extend type Query {
     flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
     cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
-    createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])
-    updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])
+    flight: FlightOps!
 }`, BuiltIn: false},
 	{Name: "../schema/ticket.graphql", Input: `enum TicketStatus {
     Cancelled
@@ -968,19 +1048,12 @@ extend type Query {
     ticket(input: Pagination): [Ticket!]! @hasRoles(roles: [admin])
 }
 `, BuiltIn: false},
-	{Name: "../schema/user.graphql", Input: `directive @hasRoles(roles: [Role]!) on FIELD_DEFINITION
-
-enum Role {
-    admin
-    user
-}
-
-type User {
+	{Name: "../schema/user.graphql", Input: `type User {
     id: ID!
     username: String!
     email: String!
     role: String!
-    customer: Customer
+    customer: Customer @goField(forceResolver: true)
 }
 
 input UserInput {
@@ -1012,10 +1085,14 @@ type LoginInfo {
     tokenString: String!
 }
 
+type UserOps {
+    register(input: UserInput!): User!  @goField(forceResolver: true)
+    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])  @goField(forceResolver: true)
+}
+
 extend type Mutation {
-    register(input: UserInput!): User!
-    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])
-    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
+    user: UserOps!
 }
 
 extend type Query {
@@ -1045,7 +1122,7 @@ func (ec *executionContext) dir_hasRoles_args(ctx context.Context, rawArgs map[s
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createAirport_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_AirportOps_createAirport_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.AirportInput
@@ -1060,7 +1137,7 @@ func (ec *executionContext) field_Mutation_createAirport_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createBookingForGuest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_BookingOps_createBookingForGuest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.BookingInputForGuest
@@ -1075,13 +1152,43 @@ func (ec *executionContext) field_Mutation_createBookingForGuest_args(ctx contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_BookingOps_createBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.BookingInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNBookingInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_FlightOps_createFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.FlightInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNFlightInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_FlightOps_updateFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.FlightUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNFlightUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1105,36 +1212,6 @@ func (ec *executionContext) field_Mutation_createCustomer_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.FlightInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFlightInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_register_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_updateCustomer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1142,51 +1219,6 @@ func (ec *executionContext) field_Mutation_updateCustomer_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCustomerUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐCustomerUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.FlightUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFlightUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updatePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.PasswordUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNPasswordUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐPasswordUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UserUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1337,6 +1369,51 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_UserOps_register_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_UserOps_updatePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.PasswordUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNPasswordUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐPasswordUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_UserOps_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1511,6 +1588,93 @@ func (ec *executionContext) fieldContext_Airport_address(ctx context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AirportOps_createAirport(ctx context.Context, field graphql.CollectedField, obj *model.AirportOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AirportOps_createAirport(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.AirportOps().CreateAirport(rctx, obj, fc.Args["input"].(model.AirportInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Airport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Airport`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Airport)
+	fc.Result = res
+	return ec.marshalNAirport2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AirportOps_createAirport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AirportOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Airport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Airport_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Airport_address(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AirportOps_createAirport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -1847,6 +2011,168 @@ func (ec *executionContext) fieldContext_Booking_ticket(ctx context.Context, fie
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Ticket", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BookingOps_createBookingForGuest(ctx context.Context, field graphql.CollectedField, obj *model.BookingOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BookingOps_createBookingForGuest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BookingOps().CreateBookingForGuest(rctx, obj, fc.Args["input"].(model.BookingInputForGuest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Booking)
+	fc.Result = res
+	return ec.marshalNBooking2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BookingOps_createBookingForGuest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BookingOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Booking_id(ctx, field)
+			case "going_flight":
+				return ec.fieldContext_Booking_going_flight(ctx, field)
+			case "return_flight":
+				return ec.fieldContext_Booking_return_flight(ctx, field)
+			case "customer":
+				return ec.fieldContext_Booking_customer(ctx, field)
+			case "status":
+				return ec.fieldContext_Booking_status(ctx, field)
+			case "ticket":
+				return ec.fieldContext_Booking_ticket(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BookingOps_createBookingForGuest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BookingOps_createBooking(ctx context.Context, field graphql.CollectedField, obj *model.BookingOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BookingOps_createBooking(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.BookingOps().CreateBooking(rctx, obj, fc.Args["input"].(model.BookingInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Booking); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Booking`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Booking)
+	fc.Result = res
+	return ec.marshalNBooking2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BookingOps_createBooking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BookingOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Booking_id(ctx, field)
+			case "going_flight":
+				return ec.fieldContext_Booking_going_flight(ctx, field)
+			case "return_flight":
+				return ec.fieldContext_Booking_return_flight(ctx, field)
+			case "customer":
+				return ec.fieldContext_Booking_customer(ctx, field)
+			case "status":
+				return ec.fieldContext_Booking_status(ctx, field)
+			case "ticket":
+				return ec.fieldContext_Booking_ticket(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_BookingOps_createBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2527,6 +2853,184 @@ func (ec *executionContext) fieldContext_Flight_status(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _FlightOps_createFlight(ctx context.Context, field graphql.CollectedField, obj *model.FlightOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlightOps_createFlight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.FlightOps().CreateFlight(rctx, obj, fc.Args["input"].(model.FlightInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Flight); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Flight`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Flight)
+	fc.Result = res
+	return ec.marshalNFlight2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlight(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlightOps_createFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlightOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Flight_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Flight_name(ctx, field)
+			case "origin":
+				return ec.fieldContext_Flight_origin(ctx, field)
+			case "destination":
+				return ec.fieldContext_Flight_destination(ctx, field)
+			case "total_slots":
+				return ec.fieldContext_Flight_total_slots(ctx, field)
+			case "available_slots":
+				return ec.fieldContext_Flight_available_slots(ctx, field)
+			case "departure_time":
+				return ec.fieldContext_Flight_departure_time(ctx, field)
+			case "arrival_time":
+				return ec.fieldContext_Flight_arrival_time(ctx, field)
+			case "status":
+				return ec.fieldContext_Flight_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Flight", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_FlightOps_createFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlightOps_updateFlight(ctx context.Context, field graphql.CollectedField, obj *model.FlightOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlightOps_updateFlight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.FlightOps().UpdateFlight(rctx, obj, fc.Args["input"].(model.FlightUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlightOps_updateFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlightOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_FlightOps_updateFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginInfo_tokenString(ctx context.Context, field graphql.CollectedField, obj *model.LoginInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LoginInfo_tokenString(ctx, field)
 	if err != nil {
@@ -2571,95 +3075,8 @@ func (ec *executionContext) fieldContext_LoginInfo_tokenString(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createAirport(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateAirport(rctx, fc.Args["input"].(model.AirportInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Airport); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Airport`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Airport)
-	fc.Result = res
-	return ec.marshalNAirport2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirport(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createAirport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Airport_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Airport_name(ctx, field)
-			case "address":
-				return ec.fieldContext_Airport_address(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Airport", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createAirport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createBookingForGuest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createBookingForGuest(ctx, field)
+func (ec *executionContext) _Mutation_airport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_airport(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2672,7 +3089,7 @@ func (ec *executionContext) _Mutation_createBookingForGuest(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateBookingForGuest(rctx, fc.Args["input"].(model.BookingInputForGuest))
+		return ec.resolvers.Mutation().Airport(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2684,12 +3101,12 @@ func (ec *executionContext) _Mutation_createBookingForGuest(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Booking)
+	res := resTmp.(*model.AirportOps)
 	fc.Result = res
-	return ec.marshalNBooking2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx, field.Selections, res)
+	return ec.marshalNAirportOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportOps(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createBookingForGuest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_airport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -2697,38 +3114,17 @@ func (ec *executionContext) fieldContext_Mutation_createBookingForGuest(ctx cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Booking_id(ctx, field)
-			case "going_flight":
-				return ec.fieldContext_Booking_going_flight(ctx, field)
-			case "return_flight":
-				return ec.fieldContext_Booking_return_flight(ctx, field)
-			case "customer":
-				return ec.fieldContext_Booking_customer(ctx, field)
-			case "status":
-				return ec.fieldContext_Booking_status(ctx, field)
-			case "ticket":
-				return ec.fieldContext_Booking_ticket(ctx, field)
+			case "createAirport":
+				return ec.fieldContext_AirportOps_createAirport(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type AirportOps", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createBookingForGuest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createBooking(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createBooking(ctx, field)
+func (ec *executionContext) _Mutation_booking(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_booking(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2740,32 +3136,8 @@ func (ec *executionContext) _Mutation_createBooking(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateBooking(rctx, fc.Args["input"].(model.BookingInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Booking); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Booking`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Booking(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2777,12 +3149,12 @@ func (ec *executionContext) _Mutation_createBooking(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Booking)
+	res := resTmp.(*model.BookingOps)
 	fc.Result = res
-	return ec.marshalNBooking2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx, field.Selections, res)
+	return ec.marshalNBookingOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingOps(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createBooking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_booking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -2790,32 +3162,13 @@ func (ec *executionContext) fieldContext_Mutation_createBooking(ctx context.Cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Booking_id(ctx, field)
-			case "going_flight":
-				return ec.fieldContext_Booking_going_flight(ctx, field)
-			case "return_flight":
-				return ec.fieldContext_Booking_return_flight(ctx, field)
-			case "customer":
-				return ec.fieldContext_Booking_customer(ctx, field)
-			case "status":
-				return ec.fieldContext_Booking_status(ctx, field)
-			case "ticket":
-				return ec.fieldContext_Booking_ticket(ctx, field)
+			case "createBookingForGuest":
+				return ec.fieldContext_BookingOps_createBookingForGuest(ctx, field)
+			case "createBooking":
+				return ec.fieldContext_BookingOps_createBooking(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Booking", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type BookingOps", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
@@ -2992,186 +3345,8 @@ func (ec *executionContext) fieldContext_Mutation_updateCustomer(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createFlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createFlight(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateFlight(rctx, fc.Args["input"].(model.FlightInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Flight); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Flight`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Flight)
-	fc.Result = res
-	return ec.marshalNFlight2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlight(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Flight_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Flight_name(ctx, field)
-			case "origin":
-				return ec.fieldContext_Flight_origin(ctx, field)
-			case "destination":
-				return ec.fieldContext_Flight_destination(ctx, field)
-			case "total_slots":
-				return ec.fieldContext_Flight_total_slots(ctx, field)
-			case "available_slots":
-				return ec.fieldContext_Flight_available_slots(ctx, field)
-			case "departure_time":
-				return ec.fieldContext_Flight_departure_time(ctx, field)
-			case "arrival_time":
-				return ec.fieldContext_Flight_arrival_time(ctx, field)
-			case "status":
-				return ec.fieldContext_Flight_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Flight", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateFlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateFlight(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateFlight(rctx, fc.Args["input"].(model.FlightUpdateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_register(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_register(ctx, field)
+func (ec *executionContext) _Mutation_flight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flight(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3184,7 +3359,7 @@ func (ec *executionContext) _Mutation_register(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Register(rctx, fc.Args["input"].(model.UserInput))
+		return ec.resolvers.Mutation().Flight(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3196,12 +3371,12 @@ func (ec *executionContext) _Mutation_register(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.FlightOps)
 	fc.Result = res
-	return ec.marshalNUser2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNFlightOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightOps(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_flight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -3209,36 +3384,19 @@ func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "role":
-				return ec.fieldContext_User_role(ctx, field)
-			case "customer":
-				return ec.fieldContext_User_customer(ctx, field)
+			case "createFlight":
+				return ec.fieldContext_FlightOps_createFlight(ctx, field)
+			case "updateFlight":
+				return ec.fieldContext_FlightOps_updateFlight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type FlightOps", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_register_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateUser(ctx, field)
+func (ec *executionContext) _Mutation_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_user(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3250,32 +3408,8 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UserUpdateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().User(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3287,110 +3421,28 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*model.UserOps)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNUserOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐUserOps(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updatePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updatePassword(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdatePassword(rctx, fc.Args["input"].(model.PasswordUpdateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
-			if err != nil {
-				return nil, err
+			switch field.Name {
+			case "register":
+				return ec.fieldContext_UserOps_register(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_UserOps_updateUser(ctx, field)
+			case "updatePassword":
+				return ec.fieldContext_UserOps_updatePassword(ctx, field)
 			}
-			if ec.directives.HasRoles == nil {
-				return nil, errors.New("directive hasRoles is not implemented")
-			}
-			return ec.directives.HasRoles(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updatePassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			return nil, fmt.Errorf("no field named %q was found under type UserOps", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updatePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
@@ -4938,6 +4990,231 @@ func (ec *executionContext) fieldContext_User_customer(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Customer", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOps_register(ctx context.Context, field graphql.CollectedField, obj *model.UserOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOps_register(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.UserOps().Register(rctx, obj, fc.Args["input"].(model.UserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOps_register(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			case "customer":
+				return ec.fieldContext_User_customer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserOps_register_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOps_updateUser(ctx context.Context, field graphql.CollectedField, obj *model.UserOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOps_updateUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.UserOps().UpdateUser(rctx, obj, fc.Args["input"].(model.UserUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOps_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserOps_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOps_updatePassword(ctx context.Context, field graphql.CollectedField, obj *model.UserOps) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOps_updatePassword(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.UserOps().UpdatePassword(rctx, obj, fc.Args["input"].(model.PasswordUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, obj, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOps_updatePassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOps",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_UserOps_updatePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -7632,6 +7909,47 @@ func (ec *executionContext) _Airport(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var airportOpsImplementors = []string{"AirportOps"}
+
+func (ec *executionContext) _AirportOps(ctx context.Context, sel ast.SelectionSet, obj *model.AirportOps) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, airportOpsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AirportOps")
+		case "createAirport":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AirportOps_createAirport(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var bookingImplementors = []string{"Booking"}
 
 func (ec *executionContext) _Booking(ctx context.Context, sel ast.SelectionSet, obj *model.Booking) graphql.Marshaler {
@@ -7726,6 +8044,67 @@ func (ec *executionContext) _Booking(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Booking_ticket(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var bookingOpsImplementors = []string{"BookingOps"}
+
+func (ec *executionContext) _BookingOps(ctx context.Context, sel ast.SelectionSet, obj *model.BookingOps) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, bookingOpsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BookingOps")
+		case "createBookingForGuest":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BookingOps_createBookingForGuest(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "createBooking":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BookingOps_createBooking(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -7920,6 +8299,67 @@ func (ec *executionContext) _Flight(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var flightOpsImplementors = []string{"FlightOps"}
+
+func (ec *executionContext) _FlightOps(ctx context.Context, sel ast.SelectionSet, obj *model.FlightOps) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, flightOpsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlightOps")
+		case "createFlight":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlightOps_createFlight(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "updateFlight":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlightOps_updateFlight(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var loginInfoImplementors = []string{"LoginInfo"}
 
 func (ec *executionContext) _LoginInfo(ctx context.Context, sel ast.SelectionSet, obj *model.LoginInfo) graphql.Marshaler {
@@ -7967,28 +8407,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createAirport":
+		case "airport":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createAirport(ctx, field)
+				return ec._Mutation_airport(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createBookingForGuest":
+		case "booking":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createBookingForGuest(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "createBooking":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createBooking(ctx, field)
+				return ec._Mutation_booking(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -8012,46 +8443,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createFlight":
+		case "flight":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createFlight(ctx, field)
+				return ec._Mutation_flight(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateFlight":
+		case "user":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateFlight(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "register":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_register(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updateUser":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateUser(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updatePassword":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updatePassword(ctx, field)
+				return ec._Mutation_user(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -8483,6 +8887,87 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var userOpsImplementors = []string{"UserOps"}
+
+func (ec *executionContext) _UserOps(ctx context.Context, sel ast.SelectionSet, obj *model.UserOps) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userOpsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserOps")
+		case "register":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserOps_register(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "updateUser":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserOps_updateUser(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "updatePassword":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserOps_updatePassword(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
@@ -8864,6 +9349,20 @@ func (ec *executionContext) unmarshalNAirportInput2flookybookyᚋservicesᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNAirportOps2flookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportOps(ctx context.Context, sel ast.SelectionSet, v model.AirportOps) graphql.Marshaler {
+	return ec._AirportOps(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAirportOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐAirportOps(ctx context.Context, sel ast.SelectionSet, v *model.AirportOps) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AirportOps(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNBooking2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBooking(ctx context.Context, sel ast.SelectionSet, v model.Booking) graphql.Marshaler {
 	return ec._Booking(ctx, sel, &v)
 }
@@ -8930,6 +9429,20 @@ func (ec *executionContext) unmarshalNBookingInput2flookybookyᚋservicesᚋgrap
 func (ec *executionContext) unmarshalNBookingInputForGuest2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingInputForGuest(ctx context.Context, v interface{}) (model.BookingInputForGuest, error) {
 	res, err := ec.unmarshalInputBookingInputForGuest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBookingOps2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingOps(ctx context.Context, sel ast.SelectionSet, v model.BookingOps) graphql.Marshaler {
+	return ec._BookingOps(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBookingOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingOps(ctx context.Context, sel ast.SelectionSet, v *model.BookingOps) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BookingOps(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBookingStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐBookingStatus(ctx context.Context, v interface{}) (model.BookingStatus, error) {
@@ -9091,6 +9604,20 @@ func (ec *executionContext) marshalNFlight2ᚖflookybookyᚋservicesᚋgraphql�
 func (ec *executionContext) unmarshalNFlightInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightInput(ctx context.Context, v interface{}) (model.FlightInput, error) {
 	res, err := ec.unmarshalInputFlightInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlightOps2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightOps(ctx context.Context, sel ast.SelectionSet, v model.FlightOps) graphql.Marshaler {
+	return ec._FlightOps(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFlightOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightOps(ctx context.Context, sel ast.SelectionSet, v *model.FlightOps) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FlightOps(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFlightStatus2flookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightStatus(ctx context.Context, v interface{}) (model.FlightStatus, error) {
@@ -9422,6 +9949,20 @@ func (ec *executionContext) marshalNUser2ᚖflookybookyᚋservicesᚋgraphqlᚋm
 func (ec *executionContext) unmarshalNUserInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserInput(ctx context.Context, v interface{}) (model.UserInput, error) {
 	res, err := ec.unmarshalInputUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserOps2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserOps(ctx context.Context, sel ast.SelectionSet, v model.UserOps) graphql.Marshaler {
+	return ec._UserOps(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserOps2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐUserOps(ctx context.Context, sel ast.SelectionSet, v *model.UserOps) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserOps(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNUserUpdateInput2flookybookyᚋservicesᚋgraphqlᚋmodelᚐUserUpdateInput(ctx context.Context, v interface{}) (model.UserUpdateInput, error) {

@@ -1,16 +1,9 @@
-directive @hasRoles(roles: [Role]!) on FIELD_DEFINITION
-
-enum Role {
-    admin
-    user
-}
-
 type User {
     id: ID!
     username: String!
     email: String!
     role: String!
-    customer: Customer
+    customer: Customer @goField(forceResolver: true)
 }
 
 input UserInput {
@@ -42,10 +35,14 @@ type LoginInfo {
     tokenString: String!
 }
 
+type UserOps {
+    register(input: UserInput!): User!  @goField(forceResolver: true)
+    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])  @goField(forceResolver: true)
+}
+
 extend type Mutation {
-    register(input: UserInput!): User!
-    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])
-    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
+    user: UserOps!
 }
 
 extend type Query {

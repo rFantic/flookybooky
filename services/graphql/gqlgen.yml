@@ -11,27 +11,3 @@ model:
 exec:
   filename: gql_generated/generated.go
   package: gql_generated
-
-models:
-  User:
-    fields:
-      customer:
-        resolver: true
-    
-  Booking:
-    fields:
-      customer:
-        resolver: true
-      ticket:
-        resolver: true
-      going_flight:
-        resolver: true
-      return_flight:
-        resolver: true
-  
-  Flight:
-    fields:
-      origin:
-        resolver: true
-      destination:
-        resolver: true

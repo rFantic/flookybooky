@@ -40,7 +40,7 @@ func (r *flightResolver) Destination(ctx context.Context, obj *model.Flight) (*m
 }
 
 // CreateFlight is the resolver for the createFlight field.
-func (r *mutationResolver) CreateFlight(ctx context.Context, input model.FlightInput) (*model.Flight, error) {
+func (r *flightOpsResolver) CreateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightInput) (*model.Flight, error) {
 	flightReq, err := internal.ParseFlightInputGraphqlToPb(&input)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (r *mutationResolver) CreateFlight(ctx context.Context, input model.FlightI
 }
 
 // UpdateFlight is the resolver for the updateFlight field.
-func (r *mutationResolver) UpdateFlight(ctx context.Context, input model.FlightUpdateInput) (bool, error) {
+func (r *flightOpsResolver) UpdateFlight(ctx context.Context, obj *model.FlightOps, input model.FlightUpdateInput) (bool, error) {
 	updateInput, err := internal.ParseFlightUpdateInputGraphqlToPb(&input)
 	if err != nil {
 		return false, err
@@ -60,6 +60,11 @@ func (r *mutationResolver) UpdateFlight(ctx context.Context, input model.FlightU
 		return false, err
 	}
 	return true, nil
+}
+
+// Flight is the resolver for the flight field.
+func (r *mutationResolver) Flight(ctx context.Context) (*model.FlightOps, error) {
+	return &model.FlightOps{}, nil
 }
 
 // Flight is the resolver for the flight field.
@@ -77,4 +82,8 @@ func (r *queryResolver) CancelFlight(ctx context.Context, input *model.FlightCan
 // Flight returns gql_generated.FlightResolver implementation.
 func (r *Resolver) Flight() gql_generated.FlightResolver { return &flightResolver{r} }
 
+// FlightOps returns gql_generated.FlightOpsResolver implementation.
+func (r *Resolver) FlightOps() gql_generated.FlightOpsResolver { return &flightOpsResolver{r} }
+
 type flightResolver struct{ *Resolver }
+type flightOpsResolver struct{ *Resolver }

@@ -6,11 +6,11 @@ enum BookingStatus {
 
 type Booking {
     id: String!
-    going_flight: Flight!
-    return_flight: Flight!
-    customer: Customer!
+    going_flight: Flight!  @goField(forceResolver: true)
+    return_flight: Flight!  @goField(forceResolver: true)
+    customer: Customer!  @goField(forceResolver: true)
     status: BookingStatus!
-    ticket: [Ticket]!
+    ticket: [Ticket]!  @goField(forceResolver: true)
 }
 
 input BookingInput{
@@ -33,12 +33,16 @@ input BookingCancelInput {
     id: String!
 }
 
+type BookingOps {
+    createBookingForGuest(input: BookingInputForGuest!): Booking!  @goField(forceResolver: true)
+    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])  @goField(forceResolver: true)
+}
+
 extend type Query {
     booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
     cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
-    createBookingForGuest(input: BookingInputForGuest!): Booking! 
-    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])
+    booking: BookingOps!
 }

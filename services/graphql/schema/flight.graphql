@@ -9,8 +9,8 @@ enum FlightStatus{
 type Flight {
     id: String!
     name: String!
-    origin: Airport!
-    destination: Airport!
+    origin: Airport!  @goField(forceResolver: true)
+    destination: Airport!  @goField(forceResolver: true)
     total_slots: Int!
     available_slots: Int!
     departure_time: String!
@@ -43,12 +43,16 @@ input FlightCancelInput {
     id: String!
 }
 
+type FlightOps {
+    createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+    updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])  @goField(forceResolver: true)
+}
+
 extend type Query {
     flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
     cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
-    createFlight(input: FlightInput!): Flight! @hasRoles(roles: [admin])
-    updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])
+    flight: FlightOps!
 }

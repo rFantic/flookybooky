@@ -11,44 +11,14 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Register is the resolver for the register field.
-func (r *mutationResolver) Register(ctx context.Context, input model.UserInput) (*model.User, error) {
-	userReq := internal.ParseUserInputGraphqlToPb(&input)
-	if input.Customer != nil {
-		customerReq := internal.ParseCustomerInputGraphqlToPb(input.Customer)
-		customerRes, err := r.client.CustomerClient.PostCustomer(ctx, customerReq)
-		if err != nil {
-			return nil, err
-		}
-		userReq.CustomerId = &customerRes.Id
-	}
-	userRes, err := r.client.UserClient.PostUser(ctx, userReq)
-	if err != nil {
-		return nil, err
-	}
-	return internal.ParseUserPbToGraphql(userRes), nil
-}
-
-// UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UserUpdateInput) (bool, error) {
-	_, err := r.client.UserClient.UpdateUser(ctx, internal.ParseUserUpdateInputGraphqlToPb(&input))
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-// UpdatePassword is the resolver for the updatePassword field.
-func (r *mutationResolver) UpdatePassword(ctx context.Context, input model.PasswordUpdateInput) (bool, error) {
-	_, err := r.client.UserClient.UpdatePassword(ctx, internal.ParsePasswordInputGraphqlToPb(&input))
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+// User is the resolver for the user field.
+func (r *mutationResolver) User(ctx context.Context) (*model.UserOps, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
 }
 
 // Users is the resolver for the users field.
@@ -106,7 +76,47 @@ func (r *userResolver) Customer(ctx context.Context, obj *model.User) (*model.Cu
 	return out, nil
 }
 
+// Register is the resolver for the register field.
+func (r *userOpsResolver) Register(ctx context.Context, obj *model.UserOps, input model.UserInput) (*model.User, error) {
+	userReq := internal.ParseUserInputGraphqlToPb(&input)
+	if input.Customer != nil {
+		customerReq := internal.ParseCustomerInputGraphqlToPb(input.Customer)
+		customerRes, err := r.client.CustomerClient.PostCustomer(ctx, customerReq)
+		if err != nil {
+			return nil, err
+		}
+		userReq.CustomerId = &customerRes.Id
+	}
+	userRes, err := r.client.UserClient.PostUser(ctx, userReq)
+	if err != nil {
+		return nil, err
+	}
+	return internal.ParseUserPbToGraphql(userRes), nil
+}
+
+// UpdateUser is the resolver for the updateUser field.
+func (r *userOpsResolver) UpdateUser(ctx context.Context, obj *model.UserOps, input model.UserUpdateInput) (bool, error) {
+	_, err := r.client.UserClient.UpdateUser(ctx, internal.ParseUserUpdateInputGraphqlToPb(&input))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdatePassword is the resolver for the updatePassword field.
+func (r *userOpsResolver) UpdatePassword(ctx context.Context, obj *model.UserOps, input model.PasswordUpdateInput) (bool, error) {
+	_, err := r.client.UserClient.UpdatePassword(ctx, internal.ParsePasswordInputGraphqlToPb(&input))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // User returns gql_generated.UserResolver implementation.
 func (r *Resolver) User() gql_generated.UserResolver { return &userResolver{r} }
 
+// UserOps returns gql_generated.UserOpsResolver implementation.
+func (r *Resolver) UserOps() gql_generated.UserOpsResolver { return &userOpsResolver{r} }
+
 type userResolver struct{ *Resolver }
+type userOpsResolver struct{ *Resolver }

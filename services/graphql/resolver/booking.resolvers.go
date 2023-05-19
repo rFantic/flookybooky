@@ -52,7 +52,7 @@ func (r *bookingResolver) Ticket(ctx context.Context, obj *model.Booking) ([]*mo
 }
 
 // CreateBookingForGuest is the resolver for the createBookingForGuest field.
-func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error) {
+func (r *bookingOpsResolver) CreateBookingForGuest(ctx context.Context, obj *model.BookingOps, input model.BookingInputForGuest) (*model.Booking, error) {
 	_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input mode
 }
 
 // CreateBooking is the resolver for the createBooking field.
-func (r *mutationResolver) CreateBooking(ctx context.Context, input model.BookingInput) (*model.Booking, error) {
+func (r *bookingOpsResolver) CreateBooking(ctx context.Context, obj *model.BookingOps, input model.BookingInput) (*model.Booking, error) {
 	ticketNums := len(input.Ticket)
 	goingFlight, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
 	if err != nil {
@@ -112,6 +112,11 @@ func (r *mutationResolver) CreateBooking(ctx context.Context, input model.Bookin
 }
 
 // Booking is the resolver for the booking field.
+func (r *mutationResolver) Booking(ctx context.Context) (*model.BookingOps, error) {
+	return &model.BookingOps{}, nil
+}
+
+// Booking is the resolver for the booking field.
 func (r *queryResolver) Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error) {
 	bookingsRes, err := r.client.BookingClient.GetBookings(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
@@ -126,4 +131,8 @@ func (r *queryResolver) CancelBooking(ctx context.Context, input *model.FlightCa
 // Booking returns gql_generated.BookingResolver implementation.
 func (r *Resolver) Booking() gql_generated.BookingResolver { return &bookingResolver{r} }
 
+// BookingOps returns gql_generated.BookingOpsResolver implementation.
+func (r *Resolver) BookingOps() gql_generated.BookingOpsResolver { return &bookingOpsResolver{r} }
+
 type bookingResolver struct{ *Resolver }
+type bookingOpsResolver struct{ *Resolver }

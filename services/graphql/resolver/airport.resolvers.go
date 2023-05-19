@@ -6,12 +6,13 @@ package resolver
 
 import (
 	"context"
+	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 )
 
 // CreateAirport is the resolver for the createAirport field.
-func (r *mutationResolver) CreateAirport(ctx context.Context, input model.AirportInput) (*model.Airport, error) {
+func (r *airportOpsResolver) CreateAirport(ctx context.Context, obj *model.AirportOps, input model.AirportInput) (*model.Airport, error) {
 	airportRes, err := r.client.FlightClient.PostAirport(ctx, internal.ParseAirportInputGraphqlToPb(&input))
 	if err != nil {
 		return nil, err
@@ -20,8 +21,18 @@ func (r *mutationResolver) CreateAirport(ctx context.Context, input model.Airpor
 }
 
 // Airport is the resolver for the airport field.
+func (r *mutationResolver) Airport(ctx context.Context) (*model.AirportOps, error) {
+	return &model.AirportOps{}, nil
+}
+
+// Airport is the resolver for the airport field.
 func (r *queryResolver) Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error) {
 	airportsRes, err := r.client.FlightClient.GetAirports(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseAirportsPbToGraphql(airportsRes), err
 }
+
+// AirportOps returns gql_generated.AirportOpsResolver implementation.
+func (r *Resolver) AirportOps() gql_generated.AirportOpsResolver { return &airportOpsResolver{r} }
+
+type airportOpsResolver struct{ *Resolver }

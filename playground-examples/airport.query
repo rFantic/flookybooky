@@ -13,28 +13,32 @@ query getAirports {
 }
 
 mutation createAirport {
-  createAirport(
-    input: {
-      name: "Noi Bai International Airport (HAN)",
-      address: "Phú Minh, Sóc Sơn, Hanoi",
+  airport {
+    createAirport(
+      input: {
+        name: "Noi Bai International Airport (HAN)",
+        address: "Phú Minh, Sóc Sơn, Hanoi",
+      }
+    ) {
+      id
+      name
+      address
     }
-  ) {
-    id
-    name
-    address
-  }
+  }   
 }
 
 mutation createAirport2 {
-  createAirport(
-    input: {
-      name: "Cam Ranh International Airport (CXR)",
-      address: "Cam Ranh, Khánh Hòa, Nha Trang",
+  airport {
+    createAirport(
+      input: {
+        name: "Cam Ranh International Airport (CXR)",
+        address: "Cam Ranh, Khánh Hòa, Nha Trang",
+      }
+    ) {
+      id
+      name
+      address
     }
-  ) {
-    id
-    name
-    address
   }
 }
 
