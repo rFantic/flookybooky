@@ -1,3 +1,5 @@
+# - user and admin can view ticket list
+
 query getTicket {
   ticket {
     id
@@ -10,6 +12,5 @@ query getTicket {
   }
 }
 
-# update_ticket
-# find ticket
+# find ticket (user)
 # ticket list (user)

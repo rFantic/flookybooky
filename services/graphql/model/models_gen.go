@@ -28,6 +28,10 @@ type Booking struct {
 	Ticket       []*Ticket     `json:"ticket"`
 }
 
+type BookingCancelInput struct {
+	ID string `json:"id"`
+}
+
 type BookingInput struct {
 	CustomerID     string         `json:"customerId"`
 	GoingFlightID  string         `json:"going_flight_id"`
@@ -80,6 +84,10 @@ type Flight struct {
 	DepartureTime  string   `json:"departure_time"`
 	ArrivalTime    string   `json:"arrival_time"`
 	Status         string   `json:"status"`
+}
+
+type FlightCancelInput struct {
+	ID string `json:"id"`
 }
 
 type FlightInput struct {
@@ -170,20 +178,20 @@ type UserUpdateInput struct {
 type BookingStatus string
 
 const (
-	BookingStatusCanceled  BookingStatus = "Canceled"
+	BookingStatusCancelled BookingStatus = "Cancelled"
 	BookingStatusScheduled BookingStatus = "Scheduled"
 	BookingStatusDeparted  BookingStatus = "Departed"
 )
 
 var AllBookingStatus = []BookingStatus{
-	BookingStatusCanceled,
+	BookingStatusCancelled,
 	BookingStatusScheduled,
 	BookingStatusDeparted,
 }
 
 func (e BookingStatus) IsValid() bool {
 	switch e {
-	case BookingStatusCanceled, BookingStatusScheduled, BookingStatusDeparted:
+	case BookingStatusCancelled, BookingStatusScheduled, BookingStatusDeparted:
 		return true
 	}
 	return false
@@ -213,7 +221,7 @@ func (e BookingStatus) MarshalGQL(w io.Writer) {
 type FlightStatus string
 
 const (
-	FlightStatusCanceled  FlightStatus = "Canceled"
+	FlightStatusCancelled FlightStatus = "Cancelled"
 	FlightStatusDeparted  FlightStatus = "Departed"
 	FlightStatusLanded    FlightStatus = "Landed"
 	FlightStatusScheduled FlightStatus = "Scheduled"
@@ -221,7 +229,7 @@ const (
 )
 
 var AllFlightStatus = []FlightStatus{
-	FlightStatusCanceled,
+	FlightStatusCancelled,
 	FlightStatusDeparted,
 	FlightStatusLanded,
 	FlightStatusScheduled,
@@ -230,7 +238,7 @@ var AllFlightStatus = []FlightStatus{
 
 func (e FlightStatus) IsValid() bool {
 	switch e {
-	case FlightStatusCanceled, FlightStatusDeparted, FlightStatusLanded, FlightStatusScheduled, FlightStatusDelayed:
+	case FlightStatusCancelled, FlightStatusDeparted, FlightStatusLanded, FlightStatusScheduled, FlightStatusDelayed:
 		return true
 	}
 	return false
@@ -344,20 +352,20 @@ func (e TicketClass) MarshalGQL(w io.Writer) {
 type TicketStatus string
 
 const (
-	TicketStatusCanceled  TicketStatus = "Canceled"
+	TicketStatusCancelled TicketStatus = "Cancelled"
 	TicketStatusDeparted  TicketStatus = "Departed"
 	TicketStatusScheduled TicketStatus = "Scheduled"
 )
 
 var AllTicketStatus = []TicketStatus{
-	TicketStatusCanceled,
+	TicketStatusCancelled,
 	TicketStatusDeparted,
 	TicketStatusScheduled,
 }
 
 func (e TicketStatus) IsValid() bool {
 	switch e {
-	case TicketStatusCanceled, TicketStatusDeparted, TicketStatusScheduled:
+	case TicketStatusCancelled, TicketStatusDeparted, TicketStatusScheduled:
 		return true
 	}
 	return false

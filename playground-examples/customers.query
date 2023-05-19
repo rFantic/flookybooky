@@ -1,26 +1,33 @@
+# - admin can view customers list
+# - user and admin create and update customer information
+
 query get_customers {
   customers (input:{
     ascFields: ["name", "address"]
   }) {
     id
+    name
+    address
+    license_id
+    phone_number
   }
 }
 
 mutation update_customers {
   updateCustomer (input:{
     id: "3102c90a-54e0-4c98-a4b7-7ed419704b24"
-    address: "change fake address"
+    name: "Nguyen Van Tam"
   })
 }
 
 mutation create_customers {
   createCustomer(
     input: {
-      name: "near nguyen", 
-      address: "fake address", 
+      name: "Nguyen Van Han", 
+      address: "221 Ba Hom Street, Ward 13, District 6, HCM", 
       license_id: "034098021748", 
-      phone_number: "0123456789"
-      email: "near@gmail.com"
+      phone_number: "0869546813"
+      email: "han@gmail.com"
     }) {
     id
     name

@@ -10,6 +10,7 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
+	"fmt"
 )
 
 // Origin is the resolver for the origin field.
@@ -66,6 +67,11 @@ func (r *queryResolver) Flight(ctx context.Context, input *model.Pagination) ([]
 	flightsRes, err := r.client.FlightClient.GetFlights(ctx,
 		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseFlightsPbToGraphql(flightsRes), err
+}
+
+// CancelFlight is the resolver for the cancelFlight field.
+func (r *queryResolver) CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error) {
+	panic(fmt.Errorf("not implemented: CancelFlight - cancelFlight"))
 }
 
 // Flight returns gql_generated.FlightResolver implementation.

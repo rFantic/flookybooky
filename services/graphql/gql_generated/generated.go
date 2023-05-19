@@ -102,14 +102,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Airport   func(childComplexity int, input *model.Pagination) int
-		Booking   func(childComplexity int, input *model.Pagination) int
-		Customers func(childComplexity int, input *model.Pagination) int
-		Flight    func(childComplexity int, input *model.Pagination) int
-		Login     func(childComplexity int, input model.LoginInput) int
-		Logout    func(childComplexity int) int
-		Ticket    func(childComplexity int, input *model.Pagination) int
-		Users     func(childComplexity int, input *model.Pagination) int
+		Airport       func(childComplexity int, input *model.Pagination) int
+		Booking       func(childComplexity int, input *model.Pagination) int
+		CancelBooking func(childComplexity int, input *model.FlightCancelInput) int
+		CancelFlight  func(childComplexity int, input *model.FlightCancelInput) int
+		Customers     func(childComplexity int, input *model.Pagination) int
+		Flight        func(childComplexity int, input *model.Pagination) int
+		Login         func(childComplexity int, input model.LoginInput) int
+		Logout        func(childComplexity int) int
+		Ticket        func(childComplexity int, input *model.Pagination) int
+		Users         func(childComplexity int, input *model.Pagination) int
 	}
 
 	Ticket struct {
@@ -158,8 +160,10 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Airport(ctx context.Context, input *model.Pagination) ([]*model.Airport, error)
 	Booking(ctx context.Context, input *model.Pagination) ([]*model.Booking, error)
+	CancelBooking(ctx context.Context, input *model.FlightCancelInput) (bool, error)
 	Customers(ctx context.Context, input *model.Pagination) ([]*model.Customer, error)
 	Flight(ctx context.Context, input *model.Pagination) ([]*model.Flight, error)
+	CancelFlight(ctx context.Context, input *model.FlightCancelInput) (bool, error)
 	Ticket(ctx context.Context, input *model.Pagination) ([]*model.Ticket, error)
 	Users(ctx context.Context, input *model.Pagination) ([]*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginInfo, error)
@@ -503,6 +507,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Booking(childComplexity, args["input"].(*model.Pagination)), true
 
+	case "Query.cancelBooking":
+		if e.complexity.Query.CancelBooking == nil {
+			break
+		}
+
+		args, err := ec.field_Query_cancelBooking_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CancelBooking(childComplexity, args["input"].(*model.FlightCancelInput)), true
+
+	case "Query.cancelFlight":
+		if e.complexity.Query.CancelFlight == nil {
+			break
+		}
+
+		args, err := ec.field_Query_cancelFlight_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CancelFlight(childComplexity, args["input"].(*model.FlightCancelInput)), true
+
 	case "Query.customers":
 		if e.complexity.Query.Customers == nil {
 			break
@@ -670,10 +698,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAirportInput,
+		ec.unmarshalInputBookingCancelInput,
 		ec.unmarshalInputBookingInput,
 		ec.unmarshalInputBookingInputForGuest,
 		ec.unmarshalInputCustomerInput,
 		ec.unmarshalInputCustomerUpdateInput,
+		ec.unmarshalInputFlightCancelInput,
 		ec.unmarshalInputFlightInput,
 		ec.unmarshalInputFlightUpdateInput,
 		ec.unmarshalInputLoginInput,
@@ -754,14 +784,14 @@ input AirportInput{
 }
 
 extend type Query {
-    airport(input: Pagination): [Airport!]!
+    airport(input: Pagination): [Airport!]! @hasRoles(roles: [user, admin])
 }
 
 extend type Mutation {
-    createAirport(input: AirportInput!): Airport!
+    createAirport(input: AirportInput!): Airport! @hasRoles(roles: [admin])
 }`, BuiltIn: false},
 	{Name: "../schema/booking.graphql", Input: `enum BookingStatus {
-    Canceled
+    Cancelled
     Scheduled
     Departed
 }
@@ -791,13 +821,18 @@ input BookingInputForGuest{
     status: BookingStatus!
 }
 
+input BookingCancelInput {
+    id: String!
+}
+
 extend type Query {
-    booking(input: Pagination): [Booking!]!
+    booking(input: Pagination): [Booking!]! @hasRoles(roles: [admin])
+    cancelBooking(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
     createBookingForGuest(input: BookingInputForGuest!): Booking! 
-    createBooking(input: BookingInput!): Booking!
+    createBooking(input: BookingInput!): Booking! @hasRoles(roles: [user])
 }`, BuiltIn: false},
 	{Name: "../schema/common.graphql", Input: `type Mutation
 type Query 
@@ -835,16 +870,16 @@ input CustomerUpdateInput {
 }
 
 extend type Mutation {
-    createCustomer(input: CustomerInput!): Customer!
-    updateCustomer(input: CustomerUpdateInput!): Boolean!
+    createCustomer(input: CustomerInput!): Customer! @hasRoles(roles: [admin])
+    updateCustomer(input: CustomerUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
 }
 
 extend type Query {
-    customers (input: Pagination): [Customer!]!
+    customers (input: Pagination): [Customer!]! @hasRoles(roles: [admin])
 }
 `, BuiltIn: false},
 	{Name: "../schema/flight.graphql", Input: `enum FlightStatus{
-    Canceled
+    Cancelled
     Departed
     Landed
     Scheduled
@@ -884,8 +919,13 @@ input FlightUpdateInput{
     status: FlightStatus
 }
 
+input FlightCancelInput {
+    id: String!
+}
+
 extend type Query {
-    flight(input: Pagination): [Flight!]! @hasRoles(roles: [user])
+    flight(input: Pagination): [Flight!]! @hasRoles(roles: [user, admin])
+    cancelFlight(input: FlightCancelInput): Boolean! @hasRoles(roles: [admin])
 }
 
 extend type Mutation {
@@ -893,7 +933,7 @@ extend type Mutation {
     updateFlight(input: FlightUpdateInput!): Boolean! @hasRoles(roles: [admin])
 }`, BuiltIn: false},
 	{Name: "../schema/ticket.graphql", Input: `enum TicketStatus {
-    Canceled
+    Cancelled
     Departed
     Scheduled
 }
@@ -925,7 +965,7 @@ input TicketInput{
 }
 
 extend type Query {
-    ticket(input: Pagination): [Ticket!]! @hasRoles(roles: [user])
+    ticket(input: Pagination): [Ticket!]! @hasRoles(roles: [admin])
 }
 `, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `directive @hasRoles(roles: [Role]!) on FIELD_DEFINITION
@@ -974,8 +1014,8 @@ type LoginInfo {
 
 extend type Mutation {
     register(input: UserInput!): User!
-    updateUser(input: UserUpdateInput!): Boolean!
-    updatePassword(input: PasswordUpdateInput!): Boolean!
+    updateUser(input: UserUpdateInput!): Boolean! @hasRoles(roles: [admin])
+    updatePassword(input: PasswordUpdateInput!): Boolean! @hasRoles(roles: [user, admin])
 }
 
 extend type Query {
@@ -1192,6 +1232,36 @@ func (ec *executionContext) field_Query_booking_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOPagination2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_cancelBooking_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.FlightCancelInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_cancelFlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.FlightCancelInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2514,8 +2584,32 @@ func (ec *executionContext) _Mutation_createAirport(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAirport(rctx, fc.Args["input"].(model.AirportInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateAirport(rctx, fc.Args["input"].(model.AirportInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Airport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Airport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2646,8 +2740,32 @@ func (ec *executionContext) _Mutation_createBooking(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateBooking(rctx, fc.Args["input"].(model.BookingInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateBooking(rctx, fc.Args["input"].(model.BookingInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Booking); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Booking`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2715,8 +2833,32 @@ func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCustomer(rctx, fc.Args["input"].(model.CustomerInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateCustomer(rctx, fc.Args["input"].(model.CustomerInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Customer); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *flookybooky/services/graphql/model.Customer`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2784,8 +2926,32 @@ func (ec *executionContext) _Mutation_updateCustomer(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCustomer(rctx, fc.Args["input"].(model.CustomerUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateCustomer(rctx, fc.Args["input"].(model.CustomerUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3084,8 +3250,32 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UserUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UserUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3139,8 +3329,32 @@ func (ec *executionContext) _Mutation_updatePassword(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePassword(rctx, fc.Args["input"].(model.PasswordUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdatePassword(rctx, fc.Args["input"].(model.PasswordUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3194,8 +3408,32 @@ func (ec *executionContext) _Query_airport(ctx context.Context, field graphql.Co
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Airport(rctx, fc.Args["input"].(*model.Pagination))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Airport(rctx, fc.Args["input"].(*model.Pagination))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Airport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*flookybooky/services/graphql/model.Airport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3257,8 +3495,32 @@ func (ec *executionContext) _Query_booking(ctx context.Context, field graphql.Co
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Booking(rctx, fc.Args["input"].(*model.Pagination))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Booking(rctx, fc.Args["input"].(*model.Pagination))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Booking); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*flookybooky/services/graphql/model.Booking`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3313,6 +3575,85 @@ func (ec *executionContext) fieldContext_Query_booking(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_cancelBooking(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_cancelBooking(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CancelBooking(rctx, fc.Args["input"].(*model.FlightCancelInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_cancelBooking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_cancelBooking_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_customers(ctx, field)
 	if err != nil {
@@ -3326,8 +3667,32 @@ func (ec *executionContext) _Query_customers(ctx context.Context, field graphql.
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Customers(rctx, fc.Args["input"].(*model.Pagination))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Customers(rctx, fc.Args["input"].(*model.Pagination))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Customer); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*flookybooky/services/graphql/model.Customer`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3400,7 +3765,7 @@ func (ec *executionContext) _Query_flight(ctx context.Context, field graphql.Col
 			return ec.resolvers.Query().Flight(rctx, fc.Args["input"].(*model.Pagination))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user"})
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user", "admin"})
 			if err != nil {
 				return nil, err
 			}
@@ -3481,6 +3846,85 @@ func (ec *executionContext) fieldContext_Query_flight(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_cancelFlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_cancelFlight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CancelFlight(rctx, fc.Args["input"].(*model.FlightCancelInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRoles == nil {
+				return nil, errors.New("directive hasRoles is not implemented")
+			}
+			return ec.directives.HasRoles(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_cancelFlight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_cancelFlight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ticket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ticket(ctx, field)
 	if err != nil {
@@ -3499,7 +3943,7 @@ func (ec *executionContext) _Query_ticket(ctx context.Context, field graphql.Col
 			return ec.resolvers.Query().Ticket(rctx, fc.Args["input"].(*model.Pagination))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"user"})
+			roles, err := ec.unmarshalNRole2ᚕᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐRole(ctx, []interface{}{"admin"})
 			if err != nil {
 				return nil, err
 			}
@@ -6309,6 +6753,35 @@ func (ec *executionContext) unmarshalInputAirportInput(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputBookingCancelInput(ctx context.Context, obj interface{}) (model.BookingCancelInput, error) {
+	var it model.BookingCancelInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputBookingInput(ctx context.Context, obj interface{}) (model.BookingInput, error) {
 	var it model.BookingInput
 	asMap := map[string]interface{}{}
@@ -6572,6 +7045,35 @@ func (ec *executionContext) unmarshalInputCustomerUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Email = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFlightCancelInput(ctx context.Context, obj interface{}) (model.FlightCancelInput, error) {
+	var it model.FlightCancelInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
 		}
 	}
 
@@ -7631,6 +8133,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "cancelBooking":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_cancelBooking(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "customers":
 			field := field
 
@@ -7664,6 +8189,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_flight(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "cancelFlight":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_cancelFlight(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -9172,6 +9720,14 @@ func (ec *executionContext) unmarshalOCustomerInput2ᚖflookybookyᚋservicesᚋ
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputCustomerInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOFlightCancelInput2ᚖflookybookyᚋservicesᚋgraphqlᚋmodelᚐFlightCancelInput(ctx context.Context, v interface{}) (*model.FlightCancelInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFlightCancelInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -31,5 +31,5 @@ input TicketInput{
 }
 
 extend type Query {
-    ticket(input: Pagination): [Ticket!]! @hasRoles(roles: [user])
+    ticket(input: Pagination): [Ticket!]! @hasRoles(roles: [admin])
 }

@@ -1,9 +1,14 @@
+# - guest (have not registered) can provide their infomation 
+# and book a flight for many passengers
+# - logged user can book a flight using their saved information
+# - user and admin can view bookings list using query
+
 mutation createBookingForGuest {
   createBookingForGuest(
     input: {
-      going_flight_id: "437797ec-2add-4e0a-83b9-406ab091bb4b",
+      going_flight_id: "0e406bb7-6ae8-476d-bb85-cf74a1eaf1e8",
       customer: {
-        name: "near"
+        name: "Nguyen Van Han"
         address: "221 Ba Hom Street, Ward 13, District 6, HCM"
         license_id: "034098003484"
         phone_number: "0123456789"
@@ -11,18 +16,18 @@ mutation createBookingForGuest {
       }
       ticket: [{
         status: Scheduled
-        passenger_license_id: "034098001265"
-        passenger_name: "near.nguyen"
-        passenger_email: "near@gmail.com"
+        passenger_license_id: "034094007912"
+        passenger_name: "Nguyen Nam Lan"
+        passenger_email: "lan@gmail.com"
         seat_number: "A4"
         ticket_class: FirstClass
       },{
         status: Scheduled
-        passenger_license_id: "034098001265"
-        passenger_name: "adsnear.nguyen"
-        passenger_email: "near@gmail.com"
-        seat_number: "A4"
-        ticket_class: FirstClass
+        passenger_license_id: "034094004512"
+        passenger_name: "Nguyen Chuc"
+        passenger_email: "chuc@gmail.com"
+        seat_number: "B5"
+        ticket_class: BusinessClass
       },]
       status: Scheduled
     }) {
@@ -73,6 +78,9 @@ query getBookings {
     ticket {
       id
       status
+      passenger_name
+      passenger_email
+      passenger_license_id
     }
     customer {
       id
@@ -87,4 +95,4 @@ query getBookings {
 
 # set_status (admin)
 # booking history (user)
-# cancel_booking (user)
+# cancel_booking (user, admin)

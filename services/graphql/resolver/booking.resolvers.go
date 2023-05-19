@@ -118,6 +118,11 @@ func (r *queryResolver) Booking(ctx context.Context, input *model.Pagination) ([
 	return internal.ParseBookingsPbToGraphql(bookingsRes), err
 }
 
+// CancelBooking is the resolver for the cancelBooking field.
+func (r *queryResolver) CancelBooking(ctx context.Context, input *model.FlightCancelInput) (bool, error) {
+	panic(fmt.Errorf("not implemented: CancelBooking - cancelBooking"))
+}
+
 // Booking returns gql_generated.BookingResolver implementation.
 func (r *Resolver) Booking() gql_generated.BookingResolver { return &bookingResolver{r} }
 

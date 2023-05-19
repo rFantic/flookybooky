@@ -1,5 +1,11 @@
+# - admin can define new airport with createAirport()
+# - user can view airports list using airport query
+# airport query support pagination (refer to users.query for usage)
+
 query getAirports {
-  airport {
+  airport (input: {
+    desFields: ["address"]
+  }) {
     id
     name
     address
@@ -22,8 +28,8 @@ mutation createAirport {
 mutation createAirport2 {
   createAirport(
     input: {
-      name: "Bardan International Airport (HAN)",
-      address: "Da Nang",
+      name: "Cam Ranh International Airport (CXR)",
+      address: "Cam Ranh, Khánh Hòa, Nha Trang",
     }
   ) {
     id
