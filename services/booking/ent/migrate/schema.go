@@ -12,6 +12,8 @@ var (
 	BookingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "customer_id", Type: field.TypeUUID},
+		{Name: "going_flight_id", Type: field.TypeUUID},
+		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Scheduled", "Departed"}},
 		{Name: "created_at", Type: field.TypeTime},
 	}
@@ -24,8 +26,6 @@ var (
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
-		{Name: "going_flight_id", Type: field.TypeUUID},
-		{Name: "return_flight_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"Canceled", "Departed", "Scheduled"}},
 		{Name: "passenger_name", Type: field.TypeString},
 		{Name: "passenger_license_id", Type: field.TypeString},
@@ -42,7 +42,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tickets_bookings_ticket",
-				Columns:    []*schema.Column{TicketsColumns[9]},
+				Columns:    []*schema.Column{TicketsColumns[7]},
 				RefColumns: []*schema.Column{BookingsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

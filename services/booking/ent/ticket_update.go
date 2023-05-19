@@ -35,32 +35,6 @@ func (tu *TicketUpdate) SetBookingID(u uuid.UUID) *TicketUpdate {
 	return tu
 }
 
-// SetGoingFlightID sets the "going_flight_id" field.
-func (tu *TicketUpdate) SetGoingFlightID(u uuid.UUID) *TicketUpdate {
-	tu.mutation.SetGoingFlightID(u)
-	return tu
-}
-
-// SetReturnFlightID sets the "return_flight_id" field.
-func (tu *TicketUpdate) SetReturnFlightID(u uuid.UUID) *TicketUpdate {
-	tu.mutation.SetReturnFlightID(u)
-	return tu
-}
-
-// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
-func (tu *TicketUpdate) SetNillableReturnFlightID(u *uuid.UUID) *TicketUpdate {
-	if u != nil {
-		tu.SetReturnFlightID(*u)
-	}
-	return tu
-}
-
-// ClearReturnFlightID clears the value of the "return_flight_id" field.
-func (tu *TicketUpdate) ClearReturnFlightID() *TicketUpdate {
-	tu.mutation.ClearReturnFlightID()
-	return tu
-}
-
 // SetStatus sets the "status" field.
 func (tu *TicketUpdate) SetStatus(t ticket.Status) *TicketUpdate {
 	tu.mutation.SetStatus(t)
@@ -170,15 +144,6 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := tu.mutation.GoingFlightID(); ok {
-		_spec.SetField(ticket.FieldGoingFlightID, field.TypeUUID, value)
-	}
-	if value, ok := tu.mutation.ReturnFlightID(); ok {
-		_spec.SetField(ticket.FieldReturnFlightID, field.TypeUUID, value)
-	}
-	if tu.mutation.ReturnFlightIDCleared() {
-		_spec.ClearField(ticket.FieldReturnFlightID, field.TypeUUID)
-	}
 	if value, ok := tu.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeEnum, value)
 	}
@@ -249,32 +214,6 @@ type TicketUpdateOne struct {
 // SetBookingID sets the "booking_id" field.
 func (tuo *TicketUpdateOne) SetBookingID(u uuid.UUID) *TicketUpdateOne {
 	tuo.mutation.SetBookingID(u)
-	return tuo
-}
-
-// SetGoingFlightID sets the "going_flight_id" field.
-func (tuo *TicketUpdateOne) SetGoingFlightID(u uuid.UUID) *TicketUpdateOne {
-	tuo.mutation.SetGoingFlightID(u)
-	return tuo
-}
-
-// SetReturnFlightID sets the "return_flight_id" field.
-func (tuo *TicketUpdateOne) SetReturnFlightID(u uuid.UUID) *TicketUpdateOne {
-	tuo.mutation.SetReturnFlightID(u)
-	return tuo
-}
-
-// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
-func (tuo *TicketUpdateOne) SetNillableReturnFlightID(u *uuid.UUID) *TicketUpdateOne {
-	if u != nil {
-		tuo.SetReturnFlightID(*u)
-	}
-	return tuo
-}
-
-// ClearReturnFlightID clears the value of the "return_flight_id" field.
-func (tuo *TicketUpdateOne) ClearReturnFlightID() *TicketUpdateOne {
-	tuo.mutation.ClearReturnFlightID()
 	return tuo
 }
 
@@ -416,15 +355,6 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := tuo.mutation.GoingFlightID(); ok {
-		_spec.SetField(ticket.FieldGoingFlightID, field.TypeUUID, value)
-	}
-	if value, ok := tuo.mutation.ReturnFlightID(); ok {
-		_spec.SetField(ticket.FieldReturnFlightID, field.TypeUUID, value)
-	}
-	if tuo.mutation.ReturnFlightIDCleared() {
-		_spec.ClearField(ticket.FieldReturnFlightID, field.TypeUUID)
 	}
 	if value, ok := tuo.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeEnum, value)

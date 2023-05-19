@@ -28,6 +28,26 @@ func (bc *BookingCreate) SetCustomerID(u uuid.UUID) *BookingCreate {
 	return bc
 }
 
+// SetGoingFlightID sets the "going_flight_id" field.
+func (bc *BookingCreate) SetGoingFlightID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetGoingFlightID(u)
+	return bc
+}
+
+// SetReturnFlightID sets the "return_flight_id" field.
+func (bc *BookingCreate) SetReturnFlightID(u uuid.UUID) *BookingCreate {
+	bc.mutation.SetReturnFlightID(u)
+	return bc
+}
+
+// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
+func (bc *BookingCreate) SetNillableReturnFlightID(u *uuid.UUID) *BookingCreate {
+	if u != nil {
+		bc.SetReturnFlightID(*u)
+	}
+	return bc
+}
+
 // SetStatus sets the "status" field.
 func (bc *BookingCreate) SetStatus(b booking.Status) *BookingCreate {
 	bc.mutation.SetStatus(b)
@@ -127,6 +147,9 @@ func (bc *BookingCreate) check() error {
 	if _, ok := bc.mutation.CustomerID(); !ok {
 		return &ValidationError{Name: "customer_id", err: errors.New(`ent: missing required field "Booking.customer_id"`)}
 	}
+	if _, ok := bc.mutation.GoingFlightID(); !ok {
+		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Booking.going_flight_id"`)}
+	}
 	if _, ok := bc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Booking.status"`)}
 	}
@@ -176,6 +199,14 @@ func (bc *BookingCreate) createSpec() (*Booking, *sqlgraph.CreateSpec) {
 	if value, ok := bc.mutation.CustomerID(); ok {
 		_spec.SetField(booking.FieldCustomerID, field.TypeUUID, value)
 		_node.CustomerID = value
+	}
+	if value, ok := bc.mutation.GoingFlightID(); ok {
+		_spec.SetField(booking.FieldGoingFlightID, field.TypeUUID, value)
+		_node.GoingFlightID = value
+	}
+	if value, ok := bc.mutation.ReturnFlightID(); ok {
+		_spec.SetField(booking.FieldReturnFlightID, field.TypeUUID, value)
+		_node.ReturnFlightID = value
 	}
 	if value, ok := bc.mutation.Status(); ok {
 		_spec.SetField(booking.FieldStatus, field.TypeEnum, value)

@@ -151,12 +151,8 @@ func ParseTicketInputGraphqlToPb(in *model.TicketInput) (out *pb.TicketInput) {
 		return nil
 	}
 	out = &pb.TicketInput{
-		GoingFlightId:      in.GoingFlightID,
 		PassengerLicenseId: in.PassengerLicenseID,
 		Class:              in.TicketClass.String(),
-	}
-	if in.ReturnFlightID != nil {
-		out.ReturnFlightId = in.ReturnFlightID
 	}
 	copier.Copy(&out, in)
 	return out
@@ -173,10 +169,6 @@ func ParseTicketPbToGraphqlTo(in *pb.Ticket) (out *model.Ticket) {
 	}
 	copier.Copy(&out, in)
 	out.Booking = ParseBookingPbToGraphql(in.Booking)
-	out.GoingFlight = ParseFlightPbToGraphql(in.GoingFlight)
-	if in.ReturnFlight != nil {
-		out.ReturnFlight = ParseFlightPbToGraphql(in.ReturnFlight)
-	}
 	return out
 }
 
@@ -200,6 +192,9 @@ func ParseBookingInputGraphqlToPb(in *model.BookingInput) (out *pb.BookingInput)
 		CustomerId: in.CustomerID,
 	}
 	copier.Copy(&out, in)
+	if in.ReturnFlightID != nil {
+		out.ReturnFlightId = in.ReturnFlightID
+	}
 	out.Tickets = make([]*pb.TicketInput, len(in.Ticket))
 	for i, t := range in.Ticket {
 		out.Tickets[i] = ParseTicketInputGraphqlToPb(t)
@@ -213,6 +208,10 @@ func ParseBookingInputForGuestGraphqlToPb(in *model.BookingInputForGuest) (out *
 	}
 	out = &pb.BookingInputForGuest{
 		CustomerInput: ParseCustomerInputGraphqlToPb(in.Customer),
+		GoingFlightId: in.GoingFlightID,
+	}
+	if in.ReturnFlightID != nil {
+		out.ReturnFlightId = in.ReturnFlightID
 	}
 	copier.Copy(&out, in)
 	out.Tickets = make([]*pb.TicketInput, len(in.Ticket))
@@ -230,6 +229,10 @@ func ParseBookingPbToGraphql(in *pb.Booking) (out *model.Booking) {
 		ID: in.GetId(),
 	}
 	copier.Copy(&out, in)
+	out.GoingFlight = ParseFlightPbToGraphql(in.GoingFlight)
+	if in.ReturnFlight != nil {
+		out.ReturnFlight = ParseFlightPbToGraphql(in.ReturnFlight)
+	}
 	if in.Customer != nil {
 		out.Customer = &model.Customer{
 			ID:        in.Customer.GetId(),

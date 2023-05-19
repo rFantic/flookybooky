@@ -12,6 +12,26 @@ import (
 	"flookybooky/services/graphql/model"
 )
 
+// GoingFlight is the resolver for the going_flight field.
+func (r *bookingResolver) GoingFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
+	if obj.GoingFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx,
+			&pb.UUID{Id: obj.GoingFlight.ID})
+		return internal.ParseFlightPbToGraphql(flightRes), err
+	}
+	return nil, nil
+}
+
+// ReturnFlight is the resolver for the return_flight field.
+func (r *bookingResolver) ReturnFlight(ctx context.Context, obj *model.Booking) (*model.Flight, error) {
+	if obj.ReturnFlight != nil {
+		flightRes, err := r.client.FlightClient.GetFlight(ctx,
+			&pb.UUID{Id: obj.ReturnFlight.ID})
+		return internal.ParseFlightPbToGraphql(flightRes), err
+	}
+	return nil, nil
+}
+
 // Customer is the resolver for the customer field.
 func (r *bookingResolver) Customer(ctx context.Context, obj *model.Booking) (*model.Customer, error) {
 	var out *model.Customer
@@ -32,16 +52,14 @@ func (r *bookingResolver) Ticket(ctx context.Context, obj *model.Booking) ([]*mo
 
 // CreateBookingForGuest is the resolver for the createBookingForGuest field.
 func (r *mutationResolver) CreateBookingForGuest(ctx context.Context, input model.BookingInputForGuest) (*model.Booking, error) {
-	for _, t := range input.Ticket {
-		_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: t.GoingFlightID})
+	_, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
+	if err != nil {
+		return nil, err
+	}
+	if input.ReturnFlightID != nil {
+		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *input.ReturnFlightID})
 		if err != nil {
 			return nil, err
-		}
-		if t.ReturnFlightID != nil {
-			_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *t.ReturnFlightID})
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	bookingRes, err := r.client.BookingClient.PostBookingForGuest(ctx,

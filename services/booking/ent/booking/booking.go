@@ -18,6 +18,10 @@ const (
 	FieldID = "id"
 	// FieldCustomerID holds the string denoting the customer_id field in the database.
 	FieldCustomerID = "customer_id"
+	// FieldGoingFlightID holds the string denoting the going_flight_id field in the database.
+	FieldGoingFlightID = "going_flight_id"
+	// FieldReturnFlightID holds the string denoting the return_flight_id field in the database.
+	FieldReturnFlightID = "return_flight_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -39,6 +43,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCustomerID,
+	FieldGoingFlightID,
+	FieldReturnFlightID,
 	FieldStatus,
 	FieldCreatedAt,
 }
@@ -95,6 +101,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByCustomerID orders the results by the customer_id field.
 func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCustomerID, opts...).ToFunc()
+}
+
+// ByGoingFlightID orders the results by the going_flight_id field.
+func ByGoingFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGoingFlightID, opts...).ToFunc()
+}
+
+// ByReturnFlightID orders the results by the return_flight_id field.
+func ByReturnFlightID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReturnFlightID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

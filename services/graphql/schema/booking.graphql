@@ -6,6 +6,8 @@ enum BookingStatus {
 
 type Booking {
     id: String!
+    going_flight: Flight!
+    return_flight: Flight!
     customer: Customer!
     status: BookingStatus!
     ticket: [Ticket]!
@@ -13,12 +15,16 @@ type Booking {
 
 input BookingInput{
     customerId: String!
+    going_flight_id: String!
+    return_flight_id: String
     ticket: [TicketInput]!
     status: BookingStatus!
 }
 
 input BookingInputForGuest{
     customer: CustomerInput!
+    going_flight_id: String!
+    return_flight_id: String
     ticket: [TicketInput]!
     status: BookingStatus!
 }

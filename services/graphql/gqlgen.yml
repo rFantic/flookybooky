@@ -24,17 +24,14 @@ models:
         resolver: true
       ticket:
         resolver: true
+      going_flight:
+        resolver: true
+      return_flight:
+        resolver: true
   
   Flight:
     fields:
       origin:
         resolver: true
       destination:
-        resolver: true
-  
-  Ticket:
-    fields:
-      going_flight:
-        resolver: true
-      return_flight:
         resolver: true

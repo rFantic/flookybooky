@@ -17,10 +17,6 @@ const (
 	FieldID = "id"
 	// FieldBookingID holds the string denoting the booking_id field in the database.
 	FieldBookingID = "booking_id"
-	// FieldGoingFlightID holds the string denoting the going_flight_id field in the database.
-	FieldGoingFlightID = "going_flight_id"
-	// FieldReturnFlightID holds the string denoting the return_flight_id field in the database.
-	FieldReturnFlightID = "return_flight_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldPassengerName holds the string denoting the passenger_name field in the database.
@@ -50,8 +46,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldBookingID,
-	FieldGoingFlightID,
-	FieldReturnFlightID,
 	FieldStatus,
 	FieldPassengerName,
 	FieldPassengerLicenseID,
@@ -134,16 +128,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByBookingID orders the results by the booking_id field.
 func ByBookingID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBookingID, opts...).ToFunc()
-}
-
-// ByGoingFlightID orders the results by the going_flight_id field.
-func ByGoingFlightID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldGoingFlightID, opts...).ToFunc()
-}
-
-// ByReturnFlightID orders the results by the return_flight_id field.
-func ByReturnFlightID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldReturnFlightID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

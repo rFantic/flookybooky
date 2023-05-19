@@ -20,6 +20,10 @@ type Booking struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// CustomerID holds the value of the "customer_id" field.
 	CustomerID uuid.UUID `json:"customer_id,omitempty"`
+	// GoingFlightID holds the value of the "going_flight_id" field.
+	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
+	// ReturnFlightID holds the value of the "return_flight_id" field.
+	ReturnFlightID uuid.UUID `json:"return_flight_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status booking.Status `json:"status,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -57,7 +61,7 @@ func (*Booking) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case booking.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case booking.FieldID, booking.FieldCustomerID:
+		case booking.FieldID, booking.FieldCustomerID, booking.FieldGoingFlightID, booking.FieldReturnFlightID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -85,6 +89,18 @@ func (b *Booking) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field customer_id", values[i])
 			} else if value != nil {
 				b.CustomerID = *value
+			}
+		case booking.FieldGoingFlightID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field going_flight_id", values[i])
+			} else if value != nil {
+				b.GoingFlightID = *value
+			}
+		case booking.FieldReturnFlightID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
+			} else if value != nil {
+				b.ReturnFlightID = *value
 			}
 		case booking.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -141,6 +157,12 @@ func (b *Booking) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", b.ID))
 	builder.WriteString("customer_id=")
 	builder.WriteString(fmt.Sprintf("%v", b.CustomerID))
+	builder.WriteString(", ")
+	builder.WriteString("going_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", b.GoingFlightID))
+	builder.WriteString(", ")
+	builder.WriteString("return_flight_id=")
+	builder.WriteString(fmt.Sprintf("%v", b.ReturnFlightID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", b.Status))

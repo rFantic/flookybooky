@@ -20,10 +20,6 @@ type Ticket struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// BookingID holds the value of the "booking_id" field.
 	BookingID uuid.UUID `json:"booking_id,omitempty"`
-	// GoingFlightID holds the value of the "going_flight_id" field.
-	GoingFlightID uuid.UUID `json:"going_flight_id,omitempty"`
-	// ReturnFlightID holds the value of the "return_flight_id" field.
-	ReturnFlightID uuid.UUID `json:"return_flight_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status ticket.Status `json:"status,omitempty"`
 	// PassengerName holds the value of the "passenger_name" field.
@@ -71,7 +67,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticket.FieldStatus, ticket.FieldPassengerName, ticket.FieldPassengerLicenseID, ticket.FieldPassengerEmail, ticket.FieldSeatNumber, ticket.FieldClass:
 			values[i] = new(sql.NullString)
-		case ticket.FieldID, ticket.FieldBookingID, ticket.FieldGoingFlightID, ticket.FieldReturnFlightID:
+		case ticket.FieldID, ticket.FieldBookingID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -99,18 +95,6 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field booking_id", values[i])
 			} else if value != nil {
 				t.BookingID = *value
-			}
-		case ticket.FieldGoingFlightID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field going_flight_id", values[i])
-			} else if value != nil {
-				t.GoingFlightID = *value
-			}
-		case ticket.FieldReturnFlightID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field return_flight_id", values[i])
-			} else if value != nil {
-				t.ReturnFlightID = *value
 			}
 		case ticket.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -191,12 +175,6 @@ func (t *Ticket) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
 	builder.WriteString("booking_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.BookingID))
-	builder.WriteString(", ")
-	builder.WriteString("going_flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.GoingFlightID))
-	builder.WriteString(", ")
-	builder.WriteString("return_flight_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.ReturnFlightID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", t.Status))

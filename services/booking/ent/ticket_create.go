@@ -27,26 +27,6 @@ func (tc *TicketCreate) SetBookingID(u uuid.UUID) *TicketCreate {
 	return tc
 }
 
-// SetGoingFlightID sets the "going_flight_id" field.
-func (tc *TicketCreate) SetGoingFlightID(u uuid.UUID) *TicketCreate {
-	tc.mutation.SetGoingFlightID(u)
-	return tc
-}
-
-// SetReturnFlightID sets the "return_flight_id" field.
-func (tc *TicketCreate) SetReturnFlightID(u uuid.UUID) *TicketCreate {
-	tc.mutation.SetReturnFlightID(u)
-	return tc
-}
-
-// SetNillableReturnFlightID sets the "return_flight_id" field if the given value is not nil.
-func (tc *TicketCreate) SetNillableReturnFlightID(u *uuid.UUID) *TicketCreate {
-	if u != nil {
-		tc.SetReturnFlightID(*u)
-	}
-	return tc
-}
-
 // SetStatus sets the "status" field.
 func (tc *TicketCreate) SetStatus(t ticket.Status) *TicketCreate {
 	tc.mutation.SetStatus(t)
@@ -148,9 +128,6 @@ func (tc *TicketCreate) check() error {
 	if _, ok := tc.mutation.BookingID(); !ok {
 		return &ValidationError{Name: "booking_id", err: errors.New(`ent: missing required field "Ticket.booking_id"`)}
 	}
-	if _, ok := tc.mutation.GoingFlightID(); !ok {
-		return &ValidationError{Name: "going_flight_id", err: errors.New(`ent: missing required field "Ticket.going_flight_id"`)}
-	}
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Ticket.status"`)}
 	}
@@ -216,14 +193,6 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if id, ok := tc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
-	}
-	if value, ok := tc.mutation.GoingFlightID(); ok {
-		_spec.SetField(ticket.FieldGoingFlightID, field.TypeUUID, value)
-		_node.GoingFlightID = value
-	}
-	if value, ok := tc.mutation.ReturnFlightID(); ok {
-		_spec.SetField(ticket.FieldReturnFlightID, field.TypeUUID, value)
-		_node.ReturnFlightID = value
 	}
 	if value, ok := tc.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeEnum, value)

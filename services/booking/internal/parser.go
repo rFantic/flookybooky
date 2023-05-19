@@ -13,17 +13,10 @@ func ParseTicketEntToPb(in *ent.Ticket) (out *pb.Ticket) {
 		return nil
 	}
 	out = &pb.Ticket{
-		Id: in.ID.String(),
-		GoingFlight: &pb.Flight{
-			Id: in.GoingFlightID.String(),
-		},
+		Id:                 in.ID.String(),
 		PassengerLicenseId: in.PassengerLicenseID,
 	}
-	if in.ReturnFlightID != uuid.Nil {
-		out.ReturnFlight = &pb.Flight{
-			Id: in.ReturnFlightID.String(),
-		}
-	}
+
 	copier.Copy(&out, in)
 	return out
 }
@@ -48,10 +41,18 @@ func ParseBookingEntToPb(in *ent.Booking) (out *pb.Booking) {
 	}
 	out = &pb.Booking{
 		Id: in.ID.String(),
+		GoingFlight: &pb.Flight{
+			Id: in.GoingFlightID.String(),
+		},
 	}
 	copier.Copy(&out, in)
 	out.Customer = &pb.Customer{
 		Id: in.CustomerID.String(),
+	}
+	if in.ReturnFlightID != uuid.Nil {
+		out.ReturnFlight = &pb.Flight{
+			Id: in.ReturnFlightID.String(),
+		}
 	}
 	return out
 }

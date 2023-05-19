@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"flookybooky/pb"
-	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
 )
@@ -18,28 +16,3 @@ func (r *queryResolver) Ticket(ctx context.Context, input *model.Pagination) ([]
 		internal.ParsePaginationGraphqlToPb(input))
 	return internal.ParseTicketsPbToGraphqlTo(ticketsRes), err
 }
-
-// GoingFlight is the resolver for the going_flight field.
-func (r *ticketResolver) GoingFlight(ctx context.Context, obj *model.Ticket) (*model.Flight, error) {
-	if obj.GoingFlight != nil {
-		flightRes, err := r.client.FlightClient.GetFlight(ctx,
-			&pb.UUID{Id: obj.GoingFlight.ID})
-		return internal.ParseFlightPbToGraphql(flightRes), err
-	}
-	return nil, nil
-}
-
-// ReturnFlight is the resolver for the return_flight field.
-func (r *ticketResolver) ReturnFlight(ctx context.Context, obj *model.Ticket) (*model.Flight, error) {
-	if obj.ReturnFlight != nil {
-		flightRes, err := r.client.FlightClient.GetFlight(ctx,
-			&pb.UUID{Id: obj.ReturnFlight.ID})
-		return internal.ParseFlightPbToGraphql(flightRes), err
-	}
-	return nil, nil
-}
-
-// Ticket returns gql_generated.TicketResolver implementation.
-func (r *Resolver) Ticket() gql_generated.TicketResolver { return &ticketResolver{r} }
-
-type ticketResolver struct{ *Resolver }

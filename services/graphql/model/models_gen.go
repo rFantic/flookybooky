@@ -20,22 +20,28 @@ type AirportInput struct {
 }
 
 type Booking struct {
-	ID       string        `json:"id"`
-	Customer *Customer     `json:"customer"`
-	Status   BookingStatus `json:"status"`
-	Ticket   []*Ticket     `json:"ticket"`
+	ID           string        `json:"id"`
+	GoingFlight  *Flight       `json:"going_flight"`
+	ReturnFlight *Flight       `json:"return_flight"`
+	Customer     *Customer     `json:"customer"`
+	Status       BookingStatus `json:"status"`
+	Ticket       []*Ticket     `json:"ticket"`
 }
 
 type BookingInput struct {
-	CustomerID string         `json:"customerId"`
-	Ticket     []*TicketInput `json:"ticket"`
-	Status     BookingStatus  `json:"status"`
+	CustomerID     string         `json:"customerId"`
+	GoingFlightID  string         `json:"going_flight_id"`
+	ReturnFlightID *string        `json:"return_flight_id,omitempty"`
+	Ticket         []*TicketInput `json:"ticket"`
+	Status         BookingStatus  `json:"status"`
 }
 
 type BookingInputForGuest struct {
-	Customer *CustomerInput `json:"customer"`
-	Ticket   []*TicketInput `json:"ticket"`
-	Status   BookingStatus  `json:"status"`
+	Customer       *CustomerInput `json:"customer"`
+	GoingFlightID  string         `json:"going_flight_id"`
+	ReturnFlightID *string        `json:"return_flight_id,omitempty"`
+	Ticket         []*TicketInput `json:"ticket"`
+	Status         BookingStatus  `json:"status"`
 }
 
 type Customer struct {
@@ -122,8 +128,6 @@ type PasswordUpdateInput struct {
 type Ticket struct {
 	ID                 string       `json:"id"`
 	Booking            *Booking     `json:"booking"`
-	GoingFlight        *Flight      `json:"going_flight"`
-	ReturnFlight       *Flight      `json:"return_flight"`
 	PassengerLicenseID string       `json:"passenger_license_id"`
 	PassengerName      string       `json:"passenger_name"`
 	PassengerEmail     string       `json:"passenger_email"`
@@ -133,8 +137,6 @@ type Ticket struct {
 }
 
 type TicketInput struct {
-	GoingFlightID      string       `json:"going_flight_id"`
-	ReturnFlightID     *string      `json:"return_flight_id,omitempty"`
 	PassengerLicenseID string       `json:"passenger_license_id"`
 	PassengerName      string       `json:"passenger_name"`
 	PassengerEmail     string       `json:"passenger_email"`
