@@ -9,6 +9,7 @@ import (
 	"flookybooky/services/flight/ent/predicate"
 	"flookybooky/services/flight/internal"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -126,6 +127,10 @@ func (h *FlightHandler) PostFlight(ctx context.Context, req *pb.FlightInput) (*p
 	if err != nil {
 		return nil, err
 	}
+	if time.Until(req.DepartureTime.AsTime()).Hours() < 24 {
+		return nil, fmt.Errorf("departure time have to be after tomorrow")
+	}
+
 	query := h.client.Flight.Create().
 		SetTotalSlots(int(*req.TotalSlots)).
 		SetAvailableSlots(int(*req.TotalSlots)).
