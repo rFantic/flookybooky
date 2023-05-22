@@ -55,11 +55,22 @@ func (r *bookingResolver) Ticket(ctx context.Context, obj *model.Booking) ([]*mo
 // CreateBookingForGuest is the resolver for the createBookingForGuest field.
 func (r *bookingOpsResolver) CreateBookingForGuest(ctx context.Context, obj *model.BookingOps, input model.BookingInputForGuest) (*model.Booking, error) {
 	_flightRes, err := r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: input.GoingFlightID})
+	ticketNums := len(input.Ticket)
 	if err != nil {
 		return nil, err
 	}
 	if time.Until(_flightRes.DepartureTime.AsTime()).Hours() < 24 {
 		return nil, fmt.Errorf("booking for flight closed")
+	}
+	if int(_flightRes.AvailableSlots) < ticketNums {
+		return nil, fmt.Errorf("not enough available slots")
+	}
+	_, err = r.client.FlightClient.SetAvailableSlots(ctx, &pb.AvailableSlotsInput{
+		Id:             input.GoingFlightID,
+		AvailableSlots: _flightRes.AvailableSlots - int64(ticketNums),
+	})
+	if err != nil {
+		return nil, err
 	}
 	if input.ReturnFlightID != nil {
 		_, err = r.client.FlightClient.GetFlight(ctx, &pb.UUID{Id: *input.ReturnFlightID})
