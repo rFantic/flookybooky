@@ -14,10 +14,12 @@ query get_customers {
 }
 
 mutation update_customers {
-  updateCustomer (input:{
-    id: "3102c90a-54e0-4c98-a4b7-7ed419704b24"
-    name: "Nguyen Van Tam"
-  })
+  customer {
+    updateCustomer (input:{
+      id: "3102c90a-54e0-4c98-a4b7-7ed419704b24"
+      name: "Nguyen Van Tam"
+    })
+  }
 }
 
 mutation create_customers {

@@ -11,14 +11,13 @@ import (
 	"flookybooky/services/graphql/gql_generated"
 	"flookybooky/services/graphql/internal"
 	"flookybooky/services/graphql/model"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
 // User is the resolver for the user field.
 func (r *mutationResolver) User(ctx context.Context) (*model.UserOps, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+	return &model.UserOps{}, nil
 }
 
 // Users is the resolver for the users field.
